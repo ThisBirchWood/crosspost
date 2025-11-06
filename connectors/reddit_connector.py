@@ -6,6 +6,7 @@ import requests
 class RedditConnector(BaseConnector):
     def __init__(self):
         self.url = "https://www.reddit.com/"
+        self.source_name = "Reddit"
 
     def get_top_posts(self, limit: int = 10, timeframe: str = 'day') -> list[Post]:
         params = {
@@ -16,22 +17,40 @@ class RedditConnector(BaseConnector):
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
-    def search_posts(self, search: str, limit: int = 10, before = None, after = None) -> list[Post]:
+    def search_posts(self, 
+                     search: str, 
+                     limit: int = 10, 
+                     before = None, 
+                     after = None, 
+                     timeframe = 'day'
+                     ) -> list[Post]:
         params = {
             'q': search,
             'limit': limit,
             'before': before,
             'after': after,
             'sort': 'relevance',
-            't': 'day'
+            't': timeframe
         }
-        url = f"search"
+        url = f"search.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
     def get_user(self, username: str) -> User:
         data = self._fetch_data(f"user/{username}/about.json", {})
         return self._parse_user(data)
+    
+    def search_subreddit(self, search: str, subreddit: str, limit: int = 10, timeframe: str = "day") -> list[Post]:
+        params = {
+            'q': search,
+            'limit': limit,
+            'restrict_sr': 'on',
+            'sort': 'top',
+            "t": timeframe
+        }
+        url = f"r/{subreddit}/search.json"
+        data = self._fetch_data(url, params)
+        return self._parse_posts(data)
     
     def _parse_posts(self, data) -> list[Post]:
         posts = []
@@ -42,7 +61,8 @@ class RedditConnector(BaseConnector):
                 title=post_data['title'],
                 content=post_data.get('selftext', ''),
                 url=post_data['url'],
-                timestamp=post_data['created_utc'])
+                timestamp=post_data['created_utc'],
+                source=self.source_name)
             post.subreddit = post_data['subreddit']
             post.upvotes = post_data['ups']
 
