@@ -12,7 +12,7 @@ class RedditConnector(BaseConnector):
             'limit': limit,
             't': timeframe
         }
-        url = f"{self.url}top.json"
+        url = f"top.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
@@ -25,7 +25,7 @@ class RedditConnector(BaseConnector):
             'sort': 'relevance',
             't': 'day'
         }
-        url = f"{self.url}search.json"
+        url = f"search"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
@@ -60,7 +60,7 @@ class RedditConnector(BaseConnector):
     def _fetch_data(self, endpoint: str, params: dict) -> dict:
         url = f"{self.url}{endpoint}"
         try:
-            response = requests.get(url, headers={'User-agent': 'your bot 0.1'}, params=params)
+            response = requests.get(url, headers={'User-agent': 'python:myredditapp:0.1 (by /u/ThisBirchWood)'}, params=params)
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
