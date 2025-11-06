@@ -8,6 +8,7 @@ class RedditConnector(BaseConnector):
         self.url = "https://www.reddit.com/"
         self.source_name = "Reddit"
 
+    # Public Methods #
     def get_top_posts(self, limit: int = 10, timeframe: str = 'day') -> list[Post]:
         params = {
             'limit': limit,
@@ -52,6 +53,7 @@ class RedditConnector(BaseConnector):
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
+    ## Private Methods ##
     def _parse_posts(self, data) -> list[Post]:
         posts = []
         for item in data['data']['children']:
