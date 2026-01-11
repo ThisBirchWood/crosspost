@@ -1,8 +1,8 @@
 # To connect to PostgreSQL database
 import psycopg2
-from psycopg2 import sql
+
 from psycopg2.extras import RealDictCursor
-from typing import List, Dict, Any, Optional
+from typing import Optional
 
 class Database:
     def __init__(self, db_name: str, user: str, password: str, host: str = 'localhost', port: int = 5432):
