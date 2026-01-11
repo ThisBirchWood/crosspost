@@ -7,11 +7,17 @@ db = Database(db_name='ethnograph', user='ethnograph_user', password='ethnograph
 
 reddit_connector = RedditConnector()
 
-@app.route('/get_reddit_posts/<string:search>/<int:limit>', methods=['GET'])
+@app.route('/fetch_reddit/<string:search>/<int:limit>', methods=['GET'])
 def index(search, limit = 10):
     posts = reddit_connector.search_posts(search, limit=limit)
-    return {"posts": [post.__dict__ for post in posts]}
 
+    db.execute_many(
+        """INSERT INTO ethnograph.posts (title, content, author_username, created_utc)
+           VALUES (%s, %s, %s, to_timestamp(%s));""",
+        [(post.title, post.content, post.author, post.timestamp) for post in posts]
+    )
+
+    return {"status": "success", "inserted_posts": len(posts)}
 
 if __name__ == "__main__":
     app.run(debug=True)

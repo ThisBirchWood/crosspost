@@ -21,6 +21,10 @@ class Database:
             if cursor.description:
                 return cursor.fetchall()
             return []
+        
+    def execute_many(self, query: str, params_list: list[tuple]):
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.executemany(query, params_list)
 
     def close(self):
         self.connection.close()
