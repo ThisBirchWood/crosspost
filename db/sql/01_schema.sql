@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS ethnograph.users (
 
 CREATE TABLE IF NOT EXISTS ethnograph.posts (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES ethnograph.users(id),
+    title TEXT NOT NULL,
     content TEXT NOT NULL,
+    author_username VARCHAR(255),
     created_utc TIMESTAMP NOT NULL
 );
