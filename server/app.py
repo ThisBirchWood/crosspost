@@ -2,7 +2,7 @@ from flask import Flask
 from db.database import Database
 
 app = Flask(__name__)
-db = Database(db_name='ethnograph', user='user', password='password')
+db = Database(db_name='ethnograph', user='ethnograph_user', password='ethnograph_pass')
 
 @app.route('/')
 def index():
