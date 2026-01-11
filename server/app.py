@@ -23,9 +23,6 @@ def index(search, limit = 10):
 def fetch_subreddit(subreddit, limit = 10):
     posts = reddit_connector.get_top_subreddit_posts(subreddit, limit=limit, timeframe='all')
 
-    for post in posts:
-        print(f"Post Title: {post.title}, Content: {post.content[:30]}...")
-
     db.execute_many(
         """INSERT INTO ethnograph.posts (title, content, author_username, created_utc)
            VALUES (%s, %s, %s, to_timestamp(%s));""",
