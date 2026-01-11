@@ -9,3 +9,9 @@ Analyse patterns: Use natural language processing (NLP) to detect frequent keywo
 - Have clearly stated and explained ethical and privacy guidelines for users. The student will design the architecture, implement data pipelines, integrate basic NLP models, and create an interactive dashboard. 
 
 Beyond programming, the project involves applying ethical research principles, handling data responsibly, and designing for non-technical users. By the end, the project will demonstrate how computer science can bridge technology and social research — turning raw online interactions into meaningful cultural insights.
+
+# Requirements
+## Ubuntu / Debian
+`sudo apt install libpq-dev python3-dev`
+## Arch
+`sudo pacman -S postgresql-libs postgresql`
