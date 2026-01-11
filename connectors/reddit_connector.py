@@ -91,7 +91,7 @@ class RedditConnector(BaseConnector):
     def _fetch_data(self, endpoint: str, params: dict) -> dict:
         url = f"{self.url}{endpoint}"
         try:
-            response = requests.get(url, headers={'User-agent': 'python:myredditapp:0.1 (by /u/ThisBirchWood)'}, params=params)
+            response = requests.get(url, headers={'User-agent': 'python:ethnography-college-project:0.1 (by /u/ThisBirchWood)'}, params=params)
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
