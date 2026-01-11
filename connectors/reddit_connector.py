@@ -18,6 +18,15 @@ class RedditConnector(BaseConnector):
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
+    def get_top_subreddit_posts(self, subreddit: str, limit: int = 10, timeframe: str = 'day') -> list[Post]:
+        params = {
+            'limit': limit,
+            't': timeframe
+        }
+        url = f"r/{subreddit}/top.json"
+        data = self._fetch_data(url, params)
+        return self._parse_posts(data)
+    
     def search_posts(self, 
                      search: str, 
                      limit: int = 10, 

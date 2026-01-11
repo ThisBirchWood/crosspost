@@ -19,5 +19,20 @@ def index(search, limit = 10):
 
     return {"status": "success", "inserted_posts": len(posts)}
 
+@app.route('/fetch_subreddit/<string:subreddit>/<int:limit>', methods=['GET'])
+def fetch_subreddit(subreddit, limit = 10):
+    posts = reddit_connector.get_top_subreddit_posts(subreddit, limit=limit, timeframe='all')
+
+    for post in posts:
+        print(f"Post Title: {post.title}, Content: {post.content[:30]}...")
+
+    db.execute_many(
+        """INSERT INTO ethnograph.posts (title, content, author_username, created_utc)
+           VALUES (%s, %s, %s, to_timestamp(%s));""",
+        [(post.title, post.content, post.author, post.timestamp) for post in posts]
+    )
+
+    return {"status": "success", "inserted_posts": len(posts)}
+
 if __name__ == "__main__":
     app.run(debug=True)
