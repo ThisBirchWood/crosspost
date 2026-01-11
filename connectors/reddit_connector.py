@@ -68,6 +68,7 @@ class RedditConnector(BaseConnector):
         for item in data['data']['children']:
             post_data = item['data']
             post = Post(
+                id=post_data['id'],
                 author=post_data['author'],
                 title=post_data['title'],
                 content=post_data.get('selftext', ''),
