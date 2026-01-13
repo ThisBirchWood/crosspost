@@ -1,23 +1,13 @@
-from connectors.base_connector import BaseConnector
 from dto.post import Post
 from dto.user import User
 import requests
 
-class RedditConnector(BaseConnector):
+class RedditConnector:
     def __init__(self):
         self.url = "https://www.reddit.com/"
         self.source_name = "Reddit"
 
     # Public Methods #
-    def get_top_posts(self, limit: int = 10, timeframe: str = 'day') -> list[Post]:
-        params = {
-            'limit': limit,
-            't': timeframe
-        }
-        url = f"top.json"
-        data = self._fetch_data(url, params)
-        return self._parse_posts(data)
-    
     def get_top_subreddit_posts(self, subreddit: str, limit: int = 10, timeframe: str = 'day') -> list[Post]:
         params = {
             'limit': limit,
@@ -26,29 +16,6 @@ class RedditConnector(BaseConnector):
         url = f"r/{subreddit}/top.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
-    
-    def search_posts(self, 
-                     search: str, 
-                     limit: int = 10, 
-                     before = None, 
-                     after = None, 
-                     timeframe = 'day'
-                     ) -> list[Post]:
-        params = {
-            'q': search,
-            'limit': limit,
-            'before': before,
-            'after': after,
-            'sort': 'relevance',
-            't': timeframe
-        }
-        url = f"search.json"
-        data = self._fetch_data(url, params)
-        return self._parse_posts(data)
-    
-    def get_user(self, username: str) -> User:
-        data = self._fetch_data(f"user/{username}/about.json", {})
-        return self._parse_user(data)
     
     def search_subreddit(self, search: str, subreddit: str, limit: int = 10, timeframe: str = "day") -> list[Post]:
         params = {
@@ -61,6 +28,10 @@ class RedditConnector(BaseConnector):
         url = f"r/{subreddit}/search.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
+    
+    def get_user(self, username: str) -> User:
+        data = self._fetch_data(f"user/{username}/about.json", {})
+        return self._parse_user(data)
     
     ## Private Methods ##
     def _parse_posts(self, data) -> list[Post]:
