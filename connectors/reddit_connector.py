@@ -29,6 +29,14 @@ class RedditConnector:
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
+    def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
+        params = {
+            'limit': limit
+        }
+        url = f"r/{subreddit}/new.json"
+        data = self._fetch_data(url, params)
+        return self._parse_posts(data)
+    
     def get_user(self, username: str) -> User:
         data = self._fetch_data(f"user/{username}/about.json", {})
         return self._parse_user(data)
