@@ -30,12 +30,30 @@ class RedditConnector:
         return self._parse_posts(data)
     
     def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
-        params = {
-            'limit': limit
-        }
+        
+        posts = []
+        after = None
         url = f"r/{subreddit}/new.json"
-        data = self._fetch_data(url, params)
-        return self._parse_posts(data)
+
+        while len(posts) < limit:
+            batch_limit = min(100, limit - len(posts))
+            params = {
+                'limit': batch_limit,
+                'after': after
+            }
+
+            data = self._fetch_data(url, params)
+            batch = self._parse_posts(data)
+
+            if not batch:
+                break
+            
+            posts.extend(batch)
+            after = data['data'].get('after')
+            if not after:
+                break
+
+        return posts
     
     def get_user(self, username: str) -> User:
         data = self._fetch_data(f"user/{username}/about.json", {})
