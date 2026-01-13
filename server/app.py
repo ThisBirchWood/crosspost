@@ -1,12 +1,12 @@
 from flask import Flask
 from db.database import Database
-from connectors.reddit_connector import RedditConnector
+from connectors.reddit_api import RedditAPI
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 db = Database(db_name='ethnograph', user='ethnograph_user', password='ethnograph_pass')
 
-reddit_connector = RedditConnector()
+reddit_connector = RedditAPI()
 
 @app.route('/fetch_subreddit/<string:subreddit>/<int:limit>', methods=['GET'])
 def fetch_subreddit(subreddit, limit = 10):

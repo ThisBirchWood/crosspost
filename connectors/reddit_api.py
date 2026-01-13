@@ -2,7 +2,7 @@ from dto.post import Post
 from dto.user import User
 import requests
 
-class RedditConnector:
+class RedditAPI:
     def __init__(self):
         self.url = "https://www.reddit.com/"
         self.source_name = "Reddit"
@@ -26,6 +26,14 @@ class RedditConnector:
             "t": timeframe
         }
         url = f"r/{subreddit}/search.json"
+        data = self._fetch_data(url, params)
+        return self._parse_posts(data)
+    
+    def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
+        params = {
+            'limit': limit
+        }
+        url = f"r/{subreddit}/new.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
