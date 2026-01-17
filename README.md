@@ -13,10 +13,9 @@ Beyond programming, the project involves applying ethical research principles, h
 # Requirements
 
 - **Python** ≥ 3.9
-- **Docker Compose**
 - **Python packages** listed in `requirements.txt`  
 
-⚠️ Some packages require system-level PostgreSQL libraries. Install them as follows:
+**Note**: Some packages require system-level PostgreSQL libraries. Install them as follows:
 
 ### Ubuntu / Debian
 `sudo apt install libpq-dev python3-dev`
