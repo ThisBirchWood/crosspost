@@ -5,6 +5,8 @@ import re
 from dto.post import Post
 from bs4 import BeautifulSoup
 
+logger = logging.getLogger(__name__)
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; ForumScraper/1.0)"
 }
@@ -18,14 +20,14 @@ class BoardsAPI:
         urls = []
         current_page = 1
 
-        logging.info(f"Fetching posts from category: {category}")
+        logger.info(f"Fetching posts from category: {category}")
 
         while len(urls) < limit:
             url = f"{self.url}/categories/{category}/p{current_page}"
             html = self._fetch_page(url)
             soup = BeautifulSoup(html, "html.parser")
 
-            logging.debug(f"Processing page {current_page} for category {category}")
+            logger.debug(f"Processing page {current_page} for category {category}")
             for a in soup.select("a.threadbit-threadlink"):
                 href = a.get("href")
                 if href and len(urls) < limit:
@@ -33,13 +35,13 @@ class BoardsAPI:
             
             current_page += 1
 
-        logging.debug(f"Fetched {len(urls)} post URLs from category {category}")
+        logger.debug(f"Fetched {len(urls)} post URLs from category {category}")
 
         # Fetch post details for each URL and create Post objects
         posts = []
 
         for post_url in urls:
-            logging.debug(f"Fetching post details from URL: {post_url}")
+            logger.debug(f"Fetching post details from URL: {post_url}")
             html = self._fetch_page(post_url)
 
             soup = BeautifulSoup(html, "html.parser")
