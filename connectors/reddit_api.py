@@ -3,6 +3,7 @@ import logging
 
 from dto.post import Post
 from dto.user import User
+from dto.comment import Comment
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,13 @@ class RedditAPI:
     ## Private Methods ##
     def _parse_posts(self, data) -> list[Post]:
         posts = []
+        total_num_posts = len(data['data']['children'])
+        current_index = 0
+
         for item in data['data']['children']:
+            current_index += 1
+            logger.debug(f"Parsing post {current_index} of {total_num_posts}")
+
             post_data = item['data']
             post = Post(
                 id=post_data['id'],
@@ -85,9 +92,48 @@ class RedditAPI:
                 source=self.source_name)
             post.subreddit = post_data['subreddit']
             post.upvotes = post_data['ups']
+            post.comments = self._get_post_comments(post.id)
 
             posts.append(post)
         return posts
+    
+    def _get_post_comments(self, post_id: str) -> list[Comment]:
+        comments: list[Comment] = []
+        url = f"comments/{post_id}.json"
+
+        data = self._fetch_data(url, {})
+        if len(data) < 2:
+            return comments
+
+        comment_data = data[1]['data']['children']
+
+        def _parse_comment_tree(items, parent_id=None):
+            for item in items:
+                if item['kind'] != 't1':
+                    continue
+
+                comment_info = item['data']
+                comment = Comment(
+                    id=comment_info['id'],
+                    post_id=post_id,
+                    author=comment_info['author'],
+                    content=comment_info.get('body', ''),
+                    timestamp=comment_info['created_utc'],
+                    reply_to=parent_id or comment_info.get('parent_id', None),
+                    source=self.source_name
+                )
+                comment.upvotes = comment_info.get('ups', 0)
+
+                comments.append(comment)
+
+                # Process replies recursively
+                replies = comment_info.get('replies')
+                if replies and isinstance(replies, dict):
+                    reply_items = replies.get('data', {}).get('children', [])
+                    _parse_comment_tree(reply_items, parent_id=comment.id)
+
+        _parse_comment_tree(comment_data)
+        return comments
     
     def _parse_user(self, data) -> User:
         user_data = data['data']
