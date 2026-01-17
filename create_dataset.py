@@ -19,7 +19,10 @@ def main():
     reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=500)
     reddit_posts = remove_empty_posts(reddit_posts)
 
-    posts = boards_posts + reddit_posts
+    ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=500, timeframe='year')
+    ireland_posts = remove_empty_posts(ireland_posts)
+
+    posts = boards_posts + reddit_posts + ireland_posts
 
     with open(data_file, 'w') as f:
         json.dump([post.__dict__ for post in posts], f, indent=4)
