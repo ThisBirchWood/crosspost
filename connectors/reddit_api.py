@@ -1,5 +1,6 @@
 import requests
 import logging
+import time
 
 from dto.post import Post
 from dto.user import User
@@ -145,10 +146,24 @@ class RedditAPI:
     
     def _fetch_data(self, endpoint: str, params: dict) -> dict:
         url = f"{self.url}{endpoint}"
-        try:
-            response = requests.get(url, headers={'User-agent': 'python:ethnography-college-project:0.1 (by /u/ThisBirchWood)'}, params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            print(f"Error fetching data from Reddit API: {e}")
-            return {}
+        max_retries = 15
+        backoff = 1 # seconds
+
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, headers={'User-agent': 'python:ethnography-college-project:0.1 (by /u/ThisBirchWood)'}, params=params)
+
+                if response.status_code == 429:
+                    wait_time = response.headers.get("Retry-After", backoff)
+
+                    logger.warning(f"Rate limited by Reddit API. Retrying in {wait_time} seconds...")
+
+                    time.sleep(wait_time)
+                    backoff *= 2
+                    continue
+
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                print(f"Error fetching data from Reddit API: {e}")
+                return {}
