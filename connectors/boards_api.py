@@ -29,8 +29,11 @@ class BoardsAPI:
 
             logger.debug(f"Processing page {current_page} for category {category}")
             for a in soup.select("a.threadbit-threadlink"):
+                if len(urls) >= limit:
+                    break
+
                 href = a.get("href")
-                if href and len(urls) < limit:
+                if href:
                     urls.append(href)
             
             current_page += 1
