@@ -48,7 +48,7 @@ class BoardsAPI:
             html = self._fetch_page(post_url)
             return self._parse_thread(html, post_url)
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(fetch_and_parse, url): url for url in urls}
 
             for i, future in enumerate(as_completed(futures)):
