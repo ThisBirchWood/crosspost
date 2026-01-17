@@ -64,7 +64,7 @@ class BoardsAPI:
             content = content_tag.get_text(separator="\n", strip=True) if content_tag else None
 
             # Title
-            title_tag = soup.select_one("h1.DiscussionTitle") or soup.select_one("h1.PageTitle")
+            title_tag = soup.select_one(".PageTitle h1")
             title = title_tag.text.strip() if title_tag else None
 
             post = Post(
