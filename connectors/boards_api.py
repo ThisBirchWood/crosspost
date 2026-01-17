@@ -4,6 +4,7 @@ import re
 
 from dto.post import Post
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +44,20 @@ class BoardsAPI:
         # Fetch post details for each URL and create Post objects
         posts = []
 
-        for index, post_url in enumerate(urls):
-            logger.debug(f"Fetching Post {index + 1} / {len(urls)} details from URL: {post_url}")
-            
+        def fetch_and_parse(post_url):
             html = self._fetch_page(post_url)
-            post = self._parse_thread(html, post_url)
-            posts.append(post)
+            return self._parse_thread(html, post_url)
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(fetch_and_parse, url): url for url in urls}
+
+            for i, future in enumerate(as_completed(futures)):
+                post_url = futures[future]
+                logger.debug(f"Fetching Post {i + 1} / {len(urls)} details from URL: {post_url}")
+                posts.append(future.result())
 
         return posts
+
 
     def _fetch_page(self, url: str) -> str:
         response = requests.get(url, headers=HEADERS)
