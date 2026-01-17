@@ -1,6 +1,10 @@
+import requests
+import logging
+
 from dto.post import Post
 from dto.user import User
-import requests
+
+logger = logging.getLogger(__name__)
 
 class RedditAPI:
     def __init__(self):
@@ -13,6 +17,8 @@ class RedditAPI:
             'limit': limit,
             't': timeframe
         }
+
+        logger.info(f"Fetching top posts from subreddit: {subreddit} with limit {limit} and timeframe '{timeframe}'")
         url = f"r/{subreddit}/top.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
@@ -25,15 +31,18 @@ class RedditAPI:
             'sort': 'top',
             "t": timeframe
         }
+
+        logger.info(f"Searching subreddit '{subreddit}' for '{search}' with limit {limit} and timeframe '{timeframe}'")
         url = f"r/{subreddit}/search.json"
         data = self._fetch_data(url, params)
         return self._parse_posts(data)
     
     def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
-        
         posts = []
         after = None
         url = f"r/{subreddit}/new.json"
+
+        logger.info(f"Fetching new posts from subreddit: {subreddit}")
 
         while len(posts) < limit:
             batch_limit = min(100, limit - len(posts))
@@ -44,6 +53,8 @@ class RedditAPI:
 
             data = self._fetch_data(url, params)
             batch = self._parse_posts(data)
+
+            logger.debug(f"Fetched {len(batch)} new posts from subreddit {subreddit}")
 
             if not batch:
                 break
