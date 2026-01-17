@@ -43,45 +43,11 @@ class BoardsAPI:
         # Fetch post details for each URL and create Post objects
         posts = []
 
-        for post_url in urls:
-            logger.debug(f"Fetching post details from URL: {post_url}")
-            html = self._fetch_page(post_url)
-
-            soup = BeautifulSoup(html, "html.parser")
+        for index, post_url in enumerate(urls):
+            logger.debug(f"Fetching Post {index + 1} / {len(urls)} details from URL: {post_url}")
             
-            # Author
-            author_tag = soup.select_one(".userinfo-username-title")
-            author = author_tag.text.strip() if author_tag else None
-
-            # Timestamp
-            timestamp_tag = soup.select_one(".postbit-header")
-            timestamp = None
-            if timestamp_tag:
-                match = re.search(r"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}[AP]M", timestamp_tag.get_text())
-                timestamp = match.group(0) if match else None
-
-            # Post ID
-            post_link = soup.select_one(".post-couunt .post-link")
-            post_num = post_link.get_text(strip=True) if post_link else None
-
-            # Content
-            content_tag = soup.select_one(".Message.userContent")
-            content = content_tag.get_text(separator="\n", strip=True) if content_tag else None
-
-            # Title
-            title_tag = soup.select_one(".PageTitle h1")
-            title = title_tag.text.strip() if title_tag else None
-
-            post = Post(
-                id=post_num,
-                author=author,
-                title=title,
-                content=content,
-                url=post_url,
-                timestamp=timestamp,
-                source=self.source_name
-            )
-
+            html = self._fetch_page(post_url)
+            post = self._parse_thread(html, post_url)
             posts.append(post)
 
         return posts
@@ -90,4 +56,43 @@ class BoardsAPI:
         response = requests.get(url, headers=HEADERS)
         response.raise_for_status()
         return response.text
+
+    def _parse_thread(self, html: str, post_url: str) -> Post:
+        soup = BeautifulSoup(html, "html.parser")
+        
+        # Author
+        author_tag = soup.select_one(".userinfo-username-title")
+        author = author_tag.text.strip() if author_tag else None
+
+        # Timestamp
+        timestamp_tag = soup.select_one(".postbit-header")
+        timestamp = None
+        if timestamp_tag:
+            match = re.search(r"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}[AP]M", timestamp_tag.get_text())
+            timestamp = match.group(0) if match else None
+
+        # Post ID
+        post_link = soup.select_one(".post-count .post-link")
+        post_num = post_link.get_text(strip=True) if post_link else None
+
+        # Content
+        content_tag = soup.select_one(".Message.userContent")
+        content = content_tag.get_text(separator="\n", strip=True) if content_tag else None
+
+        # Title
+        title_tag = soup.select_one(".PageTitle h1")
+        title = title_tag.text.strip() if title_tag else None
+
+        post = Post(
+            id=post_num,
+            author=author,
+            title=title,
+            content=content,
+            url=post_url,
+            timestamp=timestamp,
+            source=self.source_name
+        )
+
+        return post
+
 
