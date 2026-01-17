@@ -3,7 +3,7 @@ import logging
 from connectors.reddit_api import RedditAPI
 from connectors.boards_api import BoardsAPI
 
-data_file = 'data/reddit_posts.json'
+data_file = 'data/posts.json'
 reddit_connector = RedditAPI()
 boards_connector = BoardsAPI()
 
