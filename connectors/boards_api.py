@@ -79,8 +79,8 @@ class BoardsAPI:
             timestamp = match.group(0) if match else None
 
         # Post ID
-        post_link = soup.select_one(".post-count .post-link")
-        post_num = post_link.get_text(strip=True) if post_link else None
+        post_num = re.search(r"discussion/(\d+)", post_url)
+        post_num = post_num.group(1) if post_num else None
 
         # Content
         content_tag = soup.select_one(".Message.userContent")
