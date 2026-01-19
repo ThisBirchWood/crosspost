@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from dto.post import Post
 from dto.comment import Comment
 
@@ -30,7 +31,12 @@ class YouTubeAPI:
             maxResults=limit,
             textFormat='plainText'
         )
-        response = request.execute()
+
+        try:
+            response = request.execute()
+        except HttpError as e:
+            print(f"Error fetching comments for video {video_id}: {e}")
+            return []
         return response.get('items', [])
     
     def fetch_and_parse_videos(self, query, video_limit, comment_limit):
