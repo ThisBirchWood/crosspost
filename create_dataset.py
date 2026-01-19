@@ -2,10 +2,12 @@ import json
 import logging
 from connectors.reddit_api import RedditAPI
 from connectors.boards_api import BoardsAPI
+from connectors.youtube_api import YouTubeAPI
 
-data_file = 'data/posts.json'
+data_file = 'data/posts.jsonl'
 reddit_connector = RedditAPI()
 boards_connector = BoardsAPI()
+youtube_connector = YouTubeAPI()
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -39,6 +41,9 @@ def main():
     ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=350, timeframe='year')
     ireland_posts = remove_empty_posts(ireland_posts)
     save_to_jsonl(data_file, ireland_posts)
+
+    youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 50, 50)
+    save_to_jsonl(data_file, youtube_videos)
 
 if __name__ == "__main__":
     main()
