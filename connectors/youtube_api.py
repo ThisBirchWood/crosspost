@@ -8,7 +8,6 @@ from dto.comment import Comment
 load_dotenv()
 
 API_KEY = os.getenv("YOUTUBE_API_KEY")
-print(API_KEY)
 
 class YouTubeAPI:
     def __init__(self):
