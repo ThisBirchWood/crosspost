@@ -3,6 +3,7 @@ import logging
 import re
 
 from dto.post import Post
+from dto.comment import Comment
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -100,6 +101,67 @@ class BoardsAPI:
             source=self.source_name
         )
 
+        post.comments = self._parse_comments(post_url, post.id)
+
         return post
+    
+    def _parse_comments(self, url: str, post_id: str) -> list[Comment]:
+        comments = []
+        current_url = url
+
+        while current_url:
+            html = self._fetch_page(current_url)
+            page_comments = self._parse_page_comments(html, post_id)
+            comments.extend(page_comments)
+
+            # Check for next page
+            soup = BeautifulSoup(html, "html.parser")
+            next_link = soup.find("a", class_="Next")
+
+            if next_link and next_link.get('href'):
+                href = next_link.get('href')
+                current_url = href if href.startswith('http') else self.url + href
+            else:
+                current_url = None
+
+        return comments
+
+    def _parse_page_comments(self, html: str, post_id: str) -> list:
+        comments = []
+        soup = BeautifulSoup(html, "html.parser")
+        comment_tags = soup.find_all("li", class_="ItemComment")
+
+        for tag in comment_tags:
+            # COmment ID
+            comment_id = tag.get("id")
+
+            # Author
+            user_elem = tag.find('span', class_='userinfo-username-title')
+            username = user_elem.get_text(strip=True) if user_elem else None
+
+            # Timestamp
+            date_elem = tag.find('span', class_='DateCreated')
+            timestamp = date_elem.get_text(strip=True) if date_elem else None
+
+            # Content
+            message_div = tag.find('div', class_='Message userContent')
+
+            if message_div.blockquote:
+                message_div.blockquote.decompose()
+
+            content = message_div.get_text(separator="\n", strip=True) if message_div else None
+
+            comment = Comment(
+                id=comment_id,
+                post_id=post_id,
+                author=username,
+                content=content,
+                timestamp=timestamp,
+                reply_to=None,
+                source=self.source_name
+            )
+            comments.append(comment)
+
+        return comments
 
 
