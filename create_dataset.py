@@ -20,20 +20,25 @@ def post_to_dict(post):
         d["comments"] = [c.__dict__ for c in post.comments]
     return d
 
+def save_to_jsonl(filename, posts):
+    with open(filename, 'a', encoding='utf-8') as f:
+        for post in posts:
+            # Convert post object to dict if it's a dataclass
+            data = post_to_dict(post)
+            f.write(json.dumps(data) + '\n')
+
 
 def main():
-    boards_posts = boards_connector.get_new_category_posts('cork-city', limit=400)
+    boards_posts = boards_connector.get_new_category_posts('cork-city', limit=350)
+    save_to_jsonl(data_file, boards_posts)
     
-    reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=400)
+    reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=350)
     reddit_posts = remove_empty_posts(reddit_posts)
-
-    ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=400, timeframe='year')
+    save_to_jsonl(data_file, reddit_posts)
+    
+    ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=350, timeframe='year')
     ireland_posts = remove_empty_posts(ireland_posts)
-
-    posts = boards_posts + reddit_posts + ireland_posts
-
-    with open(data_file, 'w') as f:
-        json.dump([post_to_dict(post) for post in posts], f, indent=4)
+    save_to_jsonl(data_file, ireland_posts)
 
 if __name__ == "__main__":
     main()
