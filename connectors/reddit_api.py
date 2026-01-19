@@ -162,6 +162,12 @@ class RedditAPI:
                     backoff *= 2
                     continue
 
+                if response.status_code == 500:
+                    logger.warning("Server error from Reddit API. Retrying...")
+                    time.sleep(backoff)
+                    backoff *= 2
+                    continue
+
                 response.raise_for_status()
                 return response.json()
             except requests.RequestException as e:
