@@ -105,11 +105,11 @@ class BoardsAPI:
 
         return post
     
-    def _parse_comments(self, url: str, post_id: str) -> list[Comment]:
+    def _parse_comments(self, url: str, post_id: str, comment_limit: int = 500) -> list[Comment]:
         comments = []
         current_url = url
 
-        while current_url:
+        while current_url and len(comments) < comment_limit:
             html = self._fetch_page(current_url)
             page_comments = self._parse_page_comments(html, post_id)
             comments.extend(page_comments)
