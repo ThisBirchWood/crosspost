@@ -1,4 +1,5 @@
 import os
+import datetime
 
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
@@ -48,7 +49,7 @@ class YouTubeAPI:
             snippet = video['snippet']
             title = snippet['title']
             description = snippet['description']
-            published_at = snippet['publishedAt']
+            published_at = datetime.datetime.strptime(snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp()
             channel_title = snippet['channelTitle']
 
             post = Post(
