@@ -19,7 +19,7 @@ class BoardsAPI:
         self.url = "https://www.boards.ie"
         self.source_name = "Boards.ie"
 
-    def get_new_category_posts(self, category: str, limit: int = 100) -> list[Post]:
+    def get_new_category_posts(self, category: str, limit: int = 100) -> tuple[list[Post], list[Comment]]:
         urls = []
         current_page = 1
 
@@ -45,10 +45,13 @@ class BoardsAPI:
 
         # Fetch post details for each URL and create Post objects
         posts = []
+        comments = []
 
         def fetch_and_parse(post_url):
             html = self._fetch_page(post_url)
-            return self._parse_thread(html, post_url)
+            post = self._parse_thread(html, post_url)
+            comments = self._parse_comments(post_url, post.id, comment_limit=500)
+            return (post, comments)
 
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(fetch_and_parse, url): url for url in urls}
@@ -56,9 +59,14 @@ class BoardsAPI:
             for i, future in enumerate(as_completed(futures)):
                 post_url = futures[future]
                 logger.debug(f"Fetching Post {i + 1} / {len(urls)} details from URL: {post_url}")
-                posts.append(future.result())
+                try:
+                    post, post_comments = future.result()
+                    posts.append(post)
+                    comments.extend(post_comments)
+                except Exception as e:
+                    logger.error(f"Error fetching post from {post_url}: {e}")
 
-        return posts
+        return posts, comments
 
 
     def _fetch_page(self, url: str) -> str:
@@ -104,10 +112,8 @@ class BoardsAPI:
             source=self.source_name
         )
 
-        post.comments = self._parse_comments(post_url, post.id)
-
         return post
-    
+
     def _parse_comments(self, url: str, post_id: str, comment_limit: int = 500) -> list[Comment]:
         comments = []
         current_url = url

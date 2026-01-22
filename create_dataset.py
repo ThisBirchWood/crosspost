@@ -4,7 +4,9 @@ from connectors.reddit_api import RedditAPI
 from connectors.boards_api import BoardsAPI
 from connectors.youtube_api import YouTubeAPI
 
-data_file = 'data/posts.jsonl'
+posts_file = 'data/posts.jsonl'
+comments_file = 'data/comments.jsonl'
+
 reddit_connector = RedditAPI()
 boards_connector = BoardsAPI()
 youtube_connector = YouTubeAPI()
@@ -17,9 +19,6 @@ def remove_empty_posts(posts):
 
 def post_to_dict(post):
     d = post.__dict__.copy()
-
-    if post.comments:
-        d["comments"] = [c.__dict__ for c in post.comments]
     return d
 
 def save_to_jsonl(filename, posts):
@@ -31,19 +30,20 @@ def save_to_jsonl(filename, posts):
 
 
 def main():
-    boards_posts = boards_connector.get_new_category_posts('cork-city', limit=350)
-    save_to_jsonl(data_file, boards_posts)
-    
-    reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=350)
-    reddit_posts = remove_empty_posts(reddit_posts)
-    save_to_jsonl(data_file, reddit_posts)
-    
-    ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=350, timeframe='year')
-    ireland_posts = remove_empty_posts(ireland_posts)
-    save_to_jsonl(data_file, ireland_posts)
+    boards_posts, boards_comments = boards_connector.get_new_category_posts('cork-city', limit=5)
+    save_to_jsonl(posts_file, boards_posts)
+    save_to_jsonl(comments_file, boards_comments)
 
-    youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 100, 100)
-    save_to_jsonl(data_file, youtube_videos)
+    #reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=350)
+    #reddit_posts = remove_empty_posts(reddit_posts)
+    #save_to_jsonl(data_file, reddit_posts)
+    
+    #ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=350, timeframe='year')
+    #ireland_posts = remove_empty_posts(ireland_posts)
+    #save_to_jsonl(data_file, ireland_posts)
+
+    #youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 100, 100)
+    #save_to_jsonl(data_file, youtube_videos)
 
 if __name__ == "__main__":
     main()

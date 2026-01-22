@@ -93,7 +93,6 @@ class RedditAPI:
                 source=self.source_name)
             post.subreddit = post_data['subreddit']
             post.upvotes = post_data['ups']
-            post.comments = self._get_post_comments(post.id)
 
             posts.append(post)
         return posts

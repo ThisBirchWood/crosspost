@@ -18,4 +18,3 @@ class Post:
         # Optionals
         self.subreddit = None
         self.upvotes = None
-        self.comments = None
