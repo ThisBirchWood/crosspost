@@ -14,17 +14,6 @@ class RedditAPI:
         self.source_name = "Reddit"
 
     # Public Methods #
-    def get_top_subreddit_posts(self, subreddit: str, limit: int = 10, timeframe: str = 'day') -> list[Post]:
-        params = {
-            'limit': limit,
-            't': timeframe
-        }
-
-        logger.info(f"Fetching top posts from subreddit: {subreddit} with limit {limit} and timeframe '{timeframe}'")
-        url = f"r/{subreddit}/top.json"
-        data = self._fetch_data(url, params)
-        return self._parse_posts(data)
-    
     def search_subreddit(self, search: str, subreddit: str, limit: int = 10, timeframe: str = "day") -> list[Post]:
         params = {
             'q': search,
