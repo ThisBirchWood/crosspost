@@ -1,3 +1,4 @@
+import datetime
 import requests
 import logging
 import re
@@ -78,6 +79,8 @@ class BoardsAPI:
         if timestamp_tag:
             match = re.search(r"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}[AP]M", timestamp_tag.get_text())
             timestamp = match.group(0) if match else None
+            # convert to unix epoch
+            timestamp = datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp() if timestamp else None
 
         # Post ID
         post_num = re.search(r"discussion/(\d+)", post_url)
@@ -142,6 +145,7 @@ class BoardsAPI:
             # Timestamp
             date_elem = tag.find('span', class_='DateCreated')
             timestamp = date_elem.get_text(strip=True) if date_elem else None
+            timestamp = datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp() if timestamp else None
 
             # Content
             message_div = tag.find('div', class_='Message userContent')
