@@ -42,7 +42,7 @@ def main():
     ireland_posts = remove_empty_posts(ireland_posts)
     save_to_jsonl(data_file, ireland_posts)
 
-    youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 50, 50)
+    youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 100, 100)
     save_to_jsonl(data_file, youtube_videos)
 
 if __name__ == "__main__":
