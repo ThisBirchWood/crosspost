@@ -14,19 +14,34 @@ class RedditAPI:
         self.source_name = "Reddit"
 
     # Public Methods #
-    def search_subreddit(self, search: str, subreddit: str, limit: int = 10, timeframe: str = "day") -> list[Post]:
+    def search_new_subreddit_posts(self, search: str, subreddit: str, limit: int = 10) -> tuple[list[Post], list[Comment]]:
         params = {
             'q': search,
             'limit': limit,
             'restrict_sr': 'on',
-            'sort': 'top',
-            "t": timeframe
+            'sort': 'new'
         }
 
-        logger.info(f"Searching subreddit '{subreddit}' for '{search}' with limit {limit} and timeframe '{timeframe}'")
+        logger.info(f"Searching subreddit '{subreddit}' for '{search}' with limit {limit}")
         url = f"r/{subreddit}/search.json"
-        data = self._fetch_data(url, params)
-        return self._parse_posts(data)
+        posts = []
+        comments = []
+        
+        while len(posts) < limit:
+            batch_limit = min(100, limit - len(posts))
+            params['limit'] = batch_limit
+
+            data = self._fetch_data(url, params)
+            batch_posts, batch_comments = self._parse_posts(data)
+
+            logger.debug(f"Fetched {len(batch_posts)} posts and {len(batch_comments)} comments from search in subreddit {subreddit}")
+
+            if not batch_posts:
+                break
+
+            posts.extend(batch_posts)
+            comments.extend(batch_comments)
+        return posts, comments
     
     def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> tuple[list[Post], list[Comment]]:
         posts = []
