@@ -30,20 +30,23 @@ def save_to_jsonl(filename, posts):
 
 
 def main():
-    boards_posts, boards_comments = boards_connector.get_new_category_posts('cork-city', limit=5)
+    boards_posts, boards_comments = boards_connector.get_new_category_posts('cork-city', limit=400)
     save_to_jsonl(posts_file, boards_posts)
     save_to_jsonl(comments_file, boards_comments)
 
-    #reddit_posts = reddit_connector.get_new_subreddit_posts('cork', limit=350)
-    #reddit_posts = remove_empty_posts(reddit_posts)
-    #save_to_jsonl(data_file, reddit_posts)
-    
-    #ireland_posts = reddit_connector.search_subreddit('cork', 'ireland', limit=350, timeframe='year')
-    #ireland_posts = remove_empty_posts(ireland_posts)
-    #save_to_jsonl(data_file, ireland_posts)
+    reddit_posts, reddit_comments = reddit_connector.get_new_subreddit_posts('cork', limit=400)
+    reddit_posts = remove_empty_posts(reddit_posts)
+    save_to_jsonl(posts_file, reddit_posts)
+    save_to_jsonl(comments_file, reddit_comments)
 
-    #youtube_videos = youtube_connector.fetch_and_parse_videos('cork city', 100, 100)
-    #save_to_jsonl(data_file, youtube_videos)
+    ireland_posts, ireland_comments = reddit_connector.search_new_subreddit_posts('cork', 'ireland', limit=10)
+    ireland_posts = remove_empty_posts(ireland_posts)
+    save_to_jsonl(posts_file, ireland_posts)
+    save_to_jsonl(comments_file, ireland_comments)
+
+    youtube_videos, youtube_comments = youtube_connector.fetch_video_and_comments('cork city', 100, 100)
+    save_to_jsonl(posts_file, youtube_videos)
+    save_to_jsonl(comments_file, youtube_comments)
 
 if __name__ == "__main__":
     main()
