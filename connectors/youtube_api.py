@@ -71,7 +71,7 @@ class YouTubeAPI:
                     post_id=video_id,
                     content=comment_snippet['textDisplay'],
                     author=comment_snippet['authorDisplayName'],
-                    timestamp=comment_snippet['publishedAt'],
+                    timestamp=datetime.datetime.strptime(comment_snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp(),
                     reply_to=None,
                     source="YouTube"
                 )
