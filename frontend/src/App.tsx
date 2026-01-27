@@ -1,29 +1,42 @@
-import { useState } from 'react'
 import axios from 'axios'
 import './App.css'
 
 function App() {
+  let postFile: File | undefined
+  let commentFile: File | undefined
 
-  const uploadPosts = async (file: React.ChangeEvent<HTMLInputElement>) => {
-    if (file.target.files) {
-      const formData = new FormData()
-      formData.append('file', file.target.files[0])
-      try {
-        const response = await axios.post('http://localhost:5000/upload_posts', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        console.log('File uploaded successfully:', response.data)
-      } catch (error) {
-        console.error('Error uploading file:', error)
-      }
+  const uploadFiles = async () => {
+    if (!postFile || !commentFile) {
+      alert('Please select both files before uploading.')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('posts', postFile)
+    formData.append('comments', commentFile)
+
+    try {
+      const response = await axios.post('http://localhost:5000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      console.log('Files uploaded successfully:', response.data)
+    } catch (error) {
+      console.error('Error uploading files:', error)
     }
   }
-
   return (
     <div>
-      <input type="file" onChange={uploadPosts} />
+      <div className="post-file-upload">
+        <h2>Posts File</h2>
+        <input type="file" onChange={(e) => postFile = e.target.files?.[0]}></input>
+      </div>
+      <div className="comment-file-upload">
+        <h2>Comments File</h2>
+        <input type="file" onChange={(e) => commentFile = e.target.files?.[0]}></input>
+      </div>
+      <button onClick={uploadFiles}>Upload</button>
     </div>
   )
 }
