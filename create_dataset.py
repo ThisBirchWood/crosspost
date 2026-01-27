@@ -4,8 +4,8 @@ from connectors.reddit_api import RedditAPI
 from connectors.boards_api import BoardsAPI
 from connectors.youtube_api import YouTubeAPI
 
-posts_file = 'data/posts.jsonl'
-comments_file = 'data/comments.jsonl'
+posts_file = 'posts.jsonl'
+comments_file = 'comments.jsonl'
 
 reddit_connector = RedditAPI()
 boards_connector = BoardsAPI()
