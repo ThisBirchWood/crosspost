@@ -1,9 +1,13 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import pandas as pd
 
 app = Flask(__name__)
 
-@app.route('/upload', methods=['POST'])
+# Allow for CORS from localhost:5173
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+
+@app.route('/upload_posts', methods=['POST'])
 def upload_data():
     if "file" not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
