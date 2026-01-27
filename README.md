@@ -1,5 +1,9 @@
-# ethnograph-view
-Digital ethnography is the practice of observing and analysing people’s interactions in online environments — such as forums, social media groups, and game communities — to understand their culture and behaviour. This project aims to develop a user-friendly, browser-based tool that supports this process for students, social scientists, and journalists.
+# crosspost
+**crosspost** is a browser-based tool designed to support *digital ethnography*, the study of how people interact, communicate, and form culture in online spaces such as forums, social media platforms, and comment-driven communities.
+
+The project aims to make it easier for students, researchers, and journalists to collect, organise, and explore online discourse in a structured and ethical way, without requiring deep technical expertise.
+
+By combining data ingestion, analysis, and visualisation in a single system, crosspost turns raw online interactions into meaningful insights about how conversations emerge, evolve, and spread across platforms.
 
 ## Goals for this project
 - Collect data ethically: enable users to link/upload text, images, and interaction data (messages etc) from specified online communities. Potentially and automated method for importing (using APIs or scraping techniques) could be included as well.
@@ -9,6 +13,14 @@ Analyse patterns: Use natural language processing (NLP) to detect frequent keywo
 - Have clearly stated and explained ethical and privacy guidelines for users. The student will design the architecture, implement data pipelines, integrate basic NLP models, and create an interactive dashboard. 
 
 Beyond programming, the project involves applying ethical research principles, handling data responsibly, and designing for non-technical users. By the end, the project will demonstrate how computer science can bridge technology and social research — turning raw online interactions into meaningful cultural insights.
+
+## Scope
+
+This project focuses on:
+- Designing a modular data ingestion pipeline
+- Implementing backend data processing and storage
+- Integrating lightweight NLP-based analysis
+- Building a simple, accessible frontend for exploration and visualisation
 
 # Requirements
 
