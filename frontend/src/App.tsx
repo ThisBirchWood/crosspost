@@ -1,9 +1,11 @@
 import axios from 'axios'
 import './App.css'
+import { useState } from 'react'
 
 function App() {
   let postFile: File | undefined
   let commentFile: File | undefined
+  const [returnMessage, setReturnMessage] = useState('')
 
   const uploadFiles = async () => {
     if (!postFile || !commentFile) {
@@ -22,8 +24,10 @@ function App() {
         },
       })
       console.log('Files uploaded successfully:', response.data)
+      setReturnMessage(`Upload successful! Posts: ${response.data.posts_count}, Comments: ${response.data.comments_count}`)
     } catch (error) {
       console.error('Error uploading files:', error)
+      setReturnMessage('Error uploading files. Error details: ' + error)
     }
   }
   return (
@@ -37,6 +41,8 @@ function App() {
         <input type="file" onChange={(e) => commentFile = e.target.files?.[0]}></input>
       </div>
       <button onClick={uploadFiles}>Upload</button>
+
+      <p>{returnMessage}</p>
     </div>
   )
 }
