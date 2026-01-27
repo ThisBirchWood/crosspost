@@ -4,3 +4,7 @@ __pycache__/
 *.jsonl
 *.code-workspace
 .env
+
+# React App Vite
+node_modules/
+dist/
