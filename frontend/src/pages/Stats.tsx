@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import WordCloud from "../stats/WordCloud";
 
-function PostsPerDay() {
+const StatPage = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,9 +50,10 @@ function PostsPerDay() {
         </LineChart>
       </ResponsiveContainer>
 
+      <h2>Word Cloud</h2>
       <WordCloud />
     </div>
   );
 }
 
-export default PostsPerDay;
+export default StatPage;
