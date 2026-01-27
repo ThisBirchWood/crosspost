@@ -10,13 +10,18 @@ import {
   ResponsiveContainer
 } from "recharts";
 import WordCloud from "../stats/WordCloud";
+import ActivityHeatmap from "../stats/ActivityHeatmap";
+
 
 const StatPage = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [heatmapData, setHeatmapData] = useState([]);
+
   useEffect(() => {
+    // Posts per Day
     axios
       .get("http://localhost:5000/stats/posts_per_day")
       .then(res => {
@@ -25,6 +30,18 @@ const StatPage = () => {
       })
       .catch(err => {
         setError(err.response?.data?.error || "Failed to load data");
+        setLoading(false);
+      });
+
+      // Heatmap
+      axios
+      .get("http://localhost:5000/stats/heatmap")
+      .then(res => {
+        setHeatmapData(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.response?.data?.error || "Failed to load heatmap data");
         setLoading(false);
       });
   }, []);
@@ -52,6 +69,10 @@ const StatPage = () => {
 
       <h2>Word Cloud</h2>
       <WordCloud />
+
+      <h2>Heatmap</h2>
+      <ActivityHeatmap data={heatmapData} />
+
     </div>
   );
 }
