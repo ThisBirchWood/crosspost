@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   ResponsiveContainer
 } from "recharts";
+import WordCloud from "../stats/WordCloud";
 
 function PostsPerDay() {
   const [data, setData] = useState([]);
@@ -19,7 +20,7 @@ function PostsPerDay() {
     axios
       .get("http://localhost:5000/stats/posts_per_day")
       .then(res => {
-        setData(res.data);
+        setData(res.data.filter((item: any) => new Date(item.date) >= new Date("2025-06-01")));
         setLoading(false);
       })
       .catch(err => {
@@ -35,7 +36,7 @@ function PostsPerDay() {
     <div>
       <h2>Posts per Day</h2>
 
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width={800} height={350}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
@@ -48,6 +49,8 @@ function PostsPerDay() {
           />
         </LineChart>
       </ResponsiveContainer>
+
+      <WordCloud />
     </div>
   );
 }
