@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import nltk
+from nltk.corpus import stopwords
 import pandas as pd
 
 app = Flask(__name__)
@@ -10,6 +12,9 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 # Global State
 posts_df = None
 comments_df = None
+
+nltk.download('stopwords')
+EXCLUDE_WORDS = set(stopwords.words('english'))
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
@@ -75,6 +80,31 @@ def comments_per_day():
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
     return jsonify(comments_per_day.to_dict(orient='records')), 200
+
+@app.route('/stats/word_frequencies', methods=['GET'])
+def word_frequencies():
+    if posts_df is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    try:
+        all_text = " ".join(posts_df['content'].fillna(''))
+        words = all_text.split()
+        word_freq = {}
+        for word in words:
+            clean_word = ''.join(c.lower() for c in word if c.isalnum())
+            if clean_word and clean_word not in EXCLUDE_WORDS:
+                word_freq[clean_word] = word_freq.get(clean_word, 0) + 1
+
+        sorted_words = sorted(word_freq.items(), key=lambda item: item[1], reverse=True)
+
+        # Get top 100 words and their frequencies and return as list of dicts
+        sorted_words = [{"word": word, "frequency": freq} for word, freq in sorted_words]
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+    return jsonify(sorted_words[:100]), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
