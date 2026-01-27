@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import nltk
 from nltk.corpus import stopwords
+from datetime import datetime
+
+import nltk
 import pandas as pd
 
 app = Flask(__name__)
@@ -80,6 +82,38 @@ def comments_per_day():
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
     return jsonify(comments_per_day.to_dict(orient='records')), 200
+
+@app.route("/stats/heatmap", methods=['GET'])
+def get_heatmap():
+    try:
+        posts_df["dt"] = pd.to_datetime(posts_df["timestamp"], unit='s', utc=True)
+        posts_df["hour"] = posts_df["dt"].dt.hour
+        posts_df["weekday"] = posts_df["dt"].dt.day_name()
+
+        weekday_order = [
+        "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday", "Sunday"
+        ]
+
+        posts_df["weekday"] = pd.Categorical(
+            posts_df["weekday"],
+            categories=weekday_order,
+            ordered=True
+        )
+
+        heatmap = (
+            posts_df
+            .groupby(["weekday", "hour"])
+            .size()
+            .unstack(fill_value=0)
+            .reindex(columns=range(24), fill_value=0)
+        )
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+    return jsonify(heatmap.to_dict(orient="records")), 200
 
 @app.route('/stats/word_frequencies', methods=['GET'])
 def word_frequencies():
