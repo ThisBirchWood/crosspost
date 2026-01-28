@@ -26,10 +26,3 @@ This project focuses on:
 
 - **Python** ≥ 3.9
 - **Python packages** listed in `requirements.txt`  
-
-**Note**: Some packages require system-level PostgreSQL libraries. Install them as follows:
-
-### Ubuntu / Debian
-`sudo apt install libpq-dev python3-dev`
-### Arch
-`sudo pacman -S postgresql-libs postgresql`
