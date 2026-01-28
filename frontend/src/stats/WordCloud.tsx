@@ -4,7 +4,7 @@ import axios from "axios";
 
 type BackendWord = {
     word: string;
-    frequency: number;
+    count: number;
 }
 
 const WordCloud = () => {
@@ -17,7 +17,7 @@ const WordCloud = () => {
             .get("http://localhost:5000/stats/word_frequencies")
             .then(res => {
                 const mapped = res.data.map((d: BackendWord) => (
-                    {text: d.word, value: d.frequency}
+                    {text: d.word, value: d.count}
                 ));
                 setWords(mapped);
             })
