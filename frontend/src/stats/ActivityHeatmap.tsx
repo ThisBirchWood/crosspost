@@ -44,6 +44,12 @@ const convertWeeklyData = (dataset: ApiRow[]): ChartSeries[] => {
 const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
     const convertedData = convertWeeklyData(data);
 
+    const maxValue = Math.max(
+    ...convertedData.flatMap(day =>
+      day.data.map(point => point.y)
+    )
+  );
+
     return (
             <ResponsiveHeatMap /* or HeatMap for fixed dimensions */
                 data={convertedData}
@@ -56,7 +62,7 @@ const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
                     scheme: 'red_yellow_blue',
                     divergeAt: 0.3,
                     minValue: 0,
-                    maxValue: 20
+                    maxValue: maxValue
                 }}
         />
     )
