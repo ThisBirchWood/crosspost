@@ -23,7 +23,7 @@ const StatPage = () => {
   useEffect(() => {
     // Posts per Day
     axios
-      .get("http://localhost:5000/stats/posts_per_day")
+      .get("http://localhost:5000/stats/events_per_day")
       .then(res => {
         setData(res.data.filter((item: any) => new Date(item.date) >= new Date("2025-06-01")));
         setLoading(false);

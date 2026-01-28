@@ -66,7 +66,7 @@ class StatGen:
 
         return (
             self.df
-            .groupby(["weekday", "hour"])
+            .groupby(["weekday", "hour"], observed=True)
             .size()
             .unstack(fill_value=0)
             .reindex(columns=range(24), fill_value=0)

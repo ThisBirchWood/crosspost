@@ -34,7 +34,7 @@ def upload_data():
     
     return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
 
-@app.route('/stats/posts_per_day', methods=['GET'])
+@app.route('/stats/events_per_day', methods=['GET'])
 def posts_per_day():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
