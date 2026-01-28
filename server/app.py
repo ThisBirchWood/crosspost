@@ -1,11 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from nltk.corpus import stopwords
-from datetime import datetime
 from server.stat_gen import StatGen
-
-import nltk
-import pandas as pd
 
 app = Flask(__name__)
 
@@ -14,9 +9,6 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Global State
 stat_obj = None
-
-nltk.download('stopwords')
-EXCLUDE_WORDS = set(stopwords.words('english'))
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
