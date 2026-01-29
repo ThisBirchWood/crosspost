@@ -72,7 +72,15 @@ const StatPage = () => {
       </ResponsiveContainer>
 
       <h2>Word Cloud</h2>
-      <ReactWordcloud words={wordFrequencyData}/>
+      <ReactWordcloud 
+        words={wordFrequencyData}
+        options={{
+                rotations: 2,
+                rotationAngles: [0, 90],
+                fontSizes: [14, 60],
+                enableTooltip: true,
+              }}
+      />
 
       <h2>Heatmap</h2>
       <ActivityHeatmap data={heatmapData} />
