@@ -19,61 +19,46 @@ type BackendWord = {
 }
 
 const StatPage = () => {
-  const [data, setData] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [postsPerDay, setPostsPerDay] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
   const [wordFrequencyData, setWordFrequencyData] = useState([]);
 
   useEffect(() => {
-    // Posts per Day
-    axios
-        .get("http://localhost:5000/stats/events_per_day")
-        .then(res => {
-          setData(res.data.filter((item: any) => new Date(item.date) >= new Date("2026-01-10")));
-          setLoading(false);
-        })
-        .catch(err => {
-          setError(err.response?.data?.error || "Failed to load data");
-          setLoading(false);
-      });
-
-      // Heatmap
-    axios
-        .get("http://localhost:5000/stats/heatmap")
-        .then(res => {
-          setHeatmapData(res.data);
-          setLoading(false);
-        })
-        .catch(err => {
-          setError(err.response?.data?.error || "Failed to load heatmap data");
-          setLoading(false);
-      });
-
-      // Word Frequencies
-    axios
-        .get("http://localhost:5000/stats/word_frequencies")
-        .then(res => {
-            const mapped = res.data.map((d: BackendWord) => (
-                {text: d.word, value: d.count}
-            ));
-            setWordFrequencyData(mapped);
-        })
-        .catch(err => {
-            setError(err);
-        });
+    Promise.all([
+      axios.get("http://localhost:5000/stats/events_per_day"),
+      axios.get("http://localhost:5000/stats/heatmap"),
+      axios.get("http://localhost:5000/stats/word_frequencies"),
+    ])
+      .then(([eventsRes, heatmapRes, wordsRes]) => {
+        setPostsPerDay(
+          eventsRes.data.filter(
+            (d: any) => new Date(d.date) >= new Date("2026-01-10")
+          )
+        );
+        setHeatmapData(heatmapRes.data);
+        setWordFrequencyData(
+          wordsRes.data.map((d: BackendWord) => ({
+            text: d.word,
+            value: d.count,
+          }))
+        );
+      })
+      .catch(() => setError("Failed to load statistics"))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p>Loading posts per day…</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (loading) return <p className="p-6">Loading insights…</p>;
+  if (error) return <p className="p-6 text-red-500">{error}</p>;
 
   return (
     <div>
       <h2>Posts per Day</h2>
 
       <ResponsiveContainer width={800} height={350}>
-        <LineChart data={data}>
+        <LineChart data={postsPerDay}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
           <YAxis />

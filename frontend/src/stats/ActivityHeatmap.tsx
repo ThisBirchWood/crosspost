@@ -51,7 +51,7 @@ const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
   );
 
     return (
-            <ResponsiveHeatMap /* or HeatMap for fixed dimensions */
+            <ResponsiveHeatMap
                 data={convertedData}
                 valueFormat=">-.2s"
                 axisTop={{ tickRotation: -90 }}
