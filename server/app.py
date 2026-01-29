@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from server.stat_gen import StatGen
 
+import pandas as pd
+
 app = Flask(__name__)
 
 # Allow for CORS from localhost:5173
@@ -26,7 +28,10 @@ def upload_data():
     
     try:
         global stat_obj
-        stat_obj = StatGen(post_file, comment_file)
+
+        posts_df = pd.read_json(post_file, lines=True)
+        comments_df = pd.read_json(comment_file, lines=True)
+        stat_obj = StatGen(posts_df, comments_df)
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:

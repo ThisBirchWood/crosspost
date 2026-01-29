@@ -19,10 +19,7 @@ nltk.download('stopwords')
 EXCLUDE_WORDS = set(stopwords.words('english')) | DOMAIN_STOPWORDS
 
 class StatGen:
-    def __init__(self, posts: list, comments: list) -> None:
-        posts_df = pd.read_json(posts, lines=True)
-        comments_df = pd.read_json(comments, lines=True)
-
+    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame) -> None:
         posts_df["type"] = "post"
         posts_df["parent_id"] = None
 
