@@ -55,36 +55,52 @@ const StatPage = () => {
 
   return (
     <div>
-      <h2>Posts per Day</h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 24,
+          maxWidth: 1100,
+          margin: "0 auto",
+          width: "100%"
+        }}
+      >
+        <div>
+          <h2>Posts per Day</h2>
 
-      <ResponsiveContainer width={800} height={350}>
-        <LineChart data={postsPerDay}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="posts_count"
-            name="Posts"
+          <ResponsiveContainer width={800} height={350}>
+            <LineChart data={postsPerDay}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="posts_count"
+                name="Posts"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div>
+          <h2>Word Cloud</h2>
+          <ReactWordcloud 
+            words={wordFrequencyData}
+            options={{
+                    rotations: 2,
+                    rotationAngles: [0, 90],
+                    fontSizes: [14, 60],
+                    enableTooltip: true,
+                  }}
           />
-        </LineChart>
-      </ResponsiveContainer>
+        </div>
+      </div>
 
-      <h2>Word Cloud</h2>
-      <ReactWordcloud 
-        words={wordFrequencyData}
-        options={{
-                rotations: 2,
-                rotationAngles: [0, 90],
-                fontSizes: [14, 60],
-                enableTooltip: true,
-              }}
-      />
-
-      <h2>Heatmap</h2>
-      <ActivityHeatmap data={heatmapData} />
-
+      <div style={{ width: "100%", height: 320}}>
+        <h2>Heatmap</h2>
+        <ActivityHeatmap data={heatmapData} />
+      </div>
     </div>
   );
 }
