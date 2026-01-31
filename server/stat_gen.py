@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import nltk
+import datetime
 
 from nltk.corpus import stopwords
 from collections import Counter
@@ -27,8 +28,9 @@ class StatGen:
         comments_df["parent_id"] = comments_df.get("post_id")
 
         self.df = pd.concat([posts_df, comments_df])
-        self.original_df = self.df.copy(deep=True)
         self._add_date_cols(self.df)
+
+        self.original_df = self.df.copy(deep=True)
 
     ## Private Methods
     def _add_date_cols(self, df: pd.DataFrame) -> None:
@@ -123,9 +125,26 @@ class StatGen:
             "word_frequencies": word_frequencies.to_dict(orient='records')
         }
     
-    def filter_events(self, search_query: str) -> pd.DataFrame:
-        self.df = self.df[self.df["content"].str.contains(search_query)]
-        return self.df
+    def search(self, search_query: str) -> pd.DataFrame:
+        self.df = self.df[
+            self.df["content"].str.contains(search_query)
+        ]
+
+        return {
+            "rows": len(self.df),
+            "data": self.df.to_dict(orient="records")
+        }
+    
+    def set_time_range(self, start: datetime.datetime, end: datetime.datetime):
+        self.df = self.df[
+            (self.df["dt"] >= start) &
+            (self.df["dt"] <= end)
+        ]
+
+        return {
+            "rows": len(self.df),
+            "data": self.df.to_dict(orient="records")
+        }
     
     def reset_dataset(self) -> None:
         self.df = self.original_df.copy(deep=True)

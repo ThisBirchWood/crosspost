@@ -55,19 +55,6 @@ def word_frequencies():
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
-@app.route('/stats/search', methods=["POST"])
-def search_dataset():
-    if stat_obj is None:
-        return jsonify({"error": "No data uploaded"}), 400
-
-    data = request.get_json(silent=True) or {}
-
-    if "query" not in data:
-        return stat_obj.df
-    
-    query = data["query"]
-    return jsonify(stat_obj.filter_events(query).to_dict(orient='records')), 200
-
 @app.route('/stats/summary', methods=["GET"])
 def get_summary():
     if stat_obj is None:
@@ -92,8 +79,45 @@ def get_time_analysis():
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+@app.route('/filter/search', methods=["POST"])
+def search_dataset():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
 
-@app.route('/reset', methods=["GET"])
+    data = request.get_json(silent=True) or {}
+
+    if "query" not in data:
+        return stat_obj.df
+    
+    query = data["query"]
+    filtered_df = stat_obj.search(query)
+
+    return jsonify(filtered_df), 200
+
+@app.route('/filter/time', methods=["POST"])
+def filter_time():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+    if "start" not in data or "end" not in data:
+        return jsonify({"error": "Please include both start and end dates"}), 400
+    
+    try:
+        start = pd.to_datetime(data["start"], utc=True)
+        end = pd.to_datetime(data["end"], utc=True)
+    except Exception:
+        return jsonify({"error": "Invalid datetime format"}), 400
+
+    filtered_df = stat_obj.set_time_range(start, end)
+
+    return jsonify(filtered_df), 200
+    
+@app.route('/filter/reset', methods=["GET"])
 def reset_dataset():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
