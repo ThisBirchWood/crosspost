@@ -38,25 +38,35 @@ class StatGen:
         df["weekday"] = df["dt"].dt.day_name()
     
     ## Public
-    def get_heatmap(self) -> pd.DataFrame:
+    def time_analysis(self) -> pd.DataFrame:
+        per_day = (
+            self.df.groupby("date")
+            .size()
+            .reset_index(name="count")
+        )
+
         weekday_order = [
             "Monday", "Tuesday", "Wednesday",
             "Thursday", "Friday", "Saturday", "Sunday"
         ]
 
-        self.df["weekday"] = pd.Categorical(
-            self.df["weekday"],
-            categories=weekday_order,
-            ordered=True
-        )
-
-        return (
+        heatmap = (
             self.df
-            .groupby(["weekday", "hour"], observed=True)
+            .assign(weekday=pd.Categorical(self.df["weekday"], weekday_order, ordered=True))
+            .groupby(["weekday", "hour"])
             .size()
             .unstack(fill_value=0)
             .reindex(columns=range(24), fill_value=0)
         )
+        heatmap.columns = heatmap.columns.map(str)
+        
+        burst_index = per_day["count"].std() / max(per_day["count"].mean(), 1)
+
+        return {
+            "events_per_day": per_day.to_dict(orient="records"),
+            "weekday_hour_heatmap": heatmap.reset_index().to_dict(orient="records"),
+            "burstiness": round(burst_index, 2)
+        }
     
     def get_word_frequencies(self, limit: int = 100) -> pd.DataFrame:
         texts = (

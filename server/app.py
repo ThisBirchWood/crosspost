@@ -3,6 +3,7 @@ from flask_cors import CORS
 from server.stat_gen import StatGen
 
 import pandas as pd
+import traceback
 
 app = Flask(__name__)
 
@@ -101,6 +102,19 @@ def get_summary():
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+@app.route("/stats/time", methods=["GET"])
+def get_time_analysis():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    try:
+        return jsonify(stat_obj.time_analysis()), 200
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 @app.route('/reset', methods=["GET"])
