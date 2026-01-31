@@ -1,6 +1,6 @@
 import { ResponsiveHeatMap } from "@nivo/heatmap";
 
-type ApiRow = Record<string, number>;
+type ApiRow = Record<number, number>;
 type ActivityHeatmapProps = {
   data: ApiRow[];
 };

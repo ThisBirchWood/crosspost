@@ -28,17 +28,15 @@ const StatPage = () => {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/stats/events_per_day"),
-      axios.get("http://localhost:5000/stats/heatmap"),
+      axios.get("http://localhost:5000/stats/time"),
       axios.get("http://localhost:5000/stats/word_frequencies"),
     ])
-      .then(([eventsRes, heatmapRes, wordsRes]) => {
-        setPostsPerDay(
-          eventsRes.data.filter(
-            (d: any) => new Date(d.date) >= new Date("2026-01-10")
-          )
-        );
-        setHeatmapData(heatmapRes.data);
+      .then(([timeRes, wordsRes]) => {
+        setPostsPerDay(timeRes.data["events_per_day"].filter(
+          (d: any) => new Date(d.date) >= new Date('2026-01-10')
+        ))
+        setHeatmapData(timeRes.data["weekday_hour_heatmap"])
+
         setWordFrequencyData(
           wordsRes.data.map((d: BackendWord) => ({
             text: d.word,
@@ -76,8 +74,8 @@ const StatPage = () => {
               <Tooltip />
               <Line
                 type="monotone"
-                dataKey="posts_count"
-                name="Posts"
+                dataKey="count"
+                name="Events"
               />
             </LineChart>
           </ResponsiveContainer>

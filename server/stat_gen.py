@@ -50,21 +50,27 @@ class StatGen:
             "Thursday", "Friday", "Saturday", "Sunday"
         ]
 
+        self.df["weekday"] = pd.Categorical(
+            self.df["weekday"],
+            categories=weekday_order,
+            ordered=True
+        )
+
         heatmap = (
             self.df
-            .assign(weekday=pd.Categorical(self.df["weekday"], weekday_order, ordered=True))
-            .groupby(["weekday", "hour"])
+            .groupby(["weekday", "hour"], observed=True)
             .size()
             .unstack(fill_value=0)
             .reindex(columns=range(24), fill_value=0)
         )
+    
         heatmap.columns = heatmap.columns.map(str)
         
         burst_index = per_day["count"].std() / max(per_day["count"].mean(), 1)
 
         return {
             "events_per_day": per_day.to_dict(orient="records"),
-            "weekday_hour_heatmap": heatmap.reset_index().to_dict(orient="records"),
+            "weekday_hour_heatmap": heatmap.to_dict(orient="records"),
             "burstiness": round(burst_index, 2)
         }
     
