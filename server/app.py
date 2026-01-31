@@ -110,21 +110,22 @@ def filter_time():
     try:
         start = pd.to_datetime(data["start"], utc=True)
         end = pd.to_datetime(data["end"], utc=True)
+        filtered_df = stat_obj.set_time_range(start, end)
+        return jsonify(filtered_df), 200
     except Exception:
         return jsonify({"error": "Invalid datetime format"}), 400
-
-    filtered_df = stat_obj.set_time_range(start, end)
-
-    return jsonify(filtered_df), 200
     
 @app.route('/filter/reset', methods=["GET"])
 def reset_dataset():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
     
-    stat_obj.reset_dataset()
-
-    return jsonify({"success": "Dataset successfully reset"})
+    try:
+        stat_obj.reset_dataset()
+        return jsonify({"success": "Dataset successfully reset"})
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
 
 if __name__ == "__main__":
