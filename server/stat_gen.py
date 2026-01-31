@@ -103,3 +103,6 @@ class StatGen:
     
     def get_events_per_day(self) -> pd.DataFrame:
         return self.events_per_day
+    
+    def get_events_containing(self, search_query: str) -> pd.DataFrame:
+        return self.df[self.df["content"].str.contains(search_query)]

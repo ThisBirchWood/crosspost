@@ -75,6 +75,19 @@ def word_frequencies():
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+@app.route('/stats/search', methods=["POST"])
+def search_dataset():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+
+    data = request.get_json(silent=True) or {}
+
+    if "query" not in data:
+        return stat_obj.df
+    
+    query = data["query"]
+    return jsonify(stat_obj.get_events_containing(query).to_dict(orient='records')), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
