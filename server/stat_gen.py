@@ -27,7 +27,7 @@ class StatGen:
         comments_df["parent_id"] = comments_df.get("post_id")
 
         self.df = pd.concat([posts_df, comments_df])
-        self.original_df = self.df
+        self.original_df = self.df.copy(deep=True)
         self._add_date_cols(self.df)
 
     ## Private Methods
@@ -96,4 +96,4 @@ class StatGen:
         return self.df
     
     def reset_dataset(self) -> None:
-        self.df = self.original_df
+        self.df = self.original_df.copy(deep=True)
