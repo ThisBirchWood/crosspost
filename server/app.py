@@ -10,7 +10,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Global State
-stat_obj = None
+posts_df = pd.read_json('posts.jsonl', lines=True)
+comments_df = pd.read_json('comments.jsonl', lines=True)
+stat_obj = StatGen(posts_df, comments_df)
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
@@ -88,6 +90,18 @@ def search_dataset():
     
     query = data["query"]
     return jsonify(stat_obj.filter_events(query).to_dict(orient='records')), 200
+
+@app.route('/stats/summary', methods=["GET"])
+def get_summary():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    try:
+        return jsonify(stat_obj.get_summary()), 200
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 @app.route('/reset', methods=["GET"])
 def reset_dataset():

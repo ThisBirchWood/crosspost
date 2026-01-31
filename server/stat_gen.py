@@ -88,7 +88,7 @@ class StatGen:
             self.df
             .groupby('date')
             .size()
-            .reset_index(name='posts_count')
+            .reset_index(name='event_count')
         )
     
     def filter_events(self, search_query: str) -> pd.DataFrame:
@@ -97,3 +97,17 @@ class StatGen:
     
     def reset_dataset(self) -> None:
         self.df = self.original_df.copy(deep=True)
+
+    def get_summary(self) -> dict:
+        return {
+            "total_events": int(len(self.df)),
+            "total_posts": int((self.df["type"] == "post").sum()),
+            "total_comments": int((self.df["type"] == "comment").sum()),
+            "unique_users": int(self.df["author"].nunique()),
+            "time_range": {
+                "start": int(self.df["dt"].min().timestamp()),
+                "end": int(self.df["dt"].max().timestamp())
+            }
+        }
+
+
