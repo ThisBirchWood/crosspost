@@ -25,4 +25,5 @@ This project focuses on:
 # Requirements
 
 - **Python** ≥ 3.9
-- **Python packages** listed in `requirements.txt`  
+- **Python packages** listed in `requirements.txt`
+- npm ≥ version 11 
