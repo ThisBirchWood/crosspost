@@ -42,31 +42,6 @@ def upload_data():
     
     return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
 
-@app.route('/stats/events_per_day', methods=['GET'])
-def posts_per_day():
-    if stat_obj is None:
-        return jsonify({"error": "No data uploaded"}), 400
-
-    try:
-        return jsonify(stat_obj.get_events_per_day().to_dict(orient='records')), 200
-    except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
-    except Exception as e:
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-
-@app.route("/stats/heatmap", methods=["GET"])
-def get_heatmap():
-    if stat_obj is None:
-        return jsonify({"error": "No data uploaded"}), 400
-
-    try:
-        return jsonify(stat_obj.get_heatmap().to_dict(orient="records")), 200
-    except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/stats/word_frequencies', methods=['GET'])
 def word_frequencies():
     if stat_obj is None:
