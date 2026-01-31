@@ -27,12 +27,8 @@ class StatGen:
         comments_df["parent_id"] = comments_df.get("post_id")
 
         self.df = pd.concat([posts_df, comments_df])
+        self.original_df = self.df
         self._add_date_cols(self.df)
-
-        # Datasets
-        self.heatmap = self._generate_heatmap()
-        self.word_frequencies = self._get_word_frequencies(100)
-        self.events_per_day = self._get_events_per_day()
 
     ## Private Methods
     def _add_date_cols(self, df: pd.DataFrame) -> None:
@@ -40,16 +36,9 @@ class StatGen:
         df["dt"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
         df["hour"] = df["dt"].dt.hour
         df["weekday"] = df["dt"].dt.day_name()
-
-    def _get_events_per_day(self) -> pd.DataFrame:
-        return (
-            self.df
-            .groupby('date')
-            .size()
-            .reset_index(name='posts_count')
-        )
-
-    def _generate_heatmap(self) -> pd.DataFrame:
+    
+    ## Public
+    def get_heatmap(self) -> pd.DataFrame:
         weekday_order = [
             "Monday", "Tuesday", "Wednesday",
             "Thursday", "Friday", "Saturday", "Sunday"
@@ -68,8 +57,8 @@ class StatGen:
             .unstack(fill_value=0)
             .reindex(columns=range(24), fill_value=0)
         )
-
-    def _get_word_frequencies(self, limit: int) -> pd.DataFrame:
+    
+    def get_word_frequencies(self, limit: int = 100) -> pd.DataFrame:
         texts = (
             self.df["content"]
             .dropna()
@@ -94,15 +83,17 @@ class StatGen:
             .reset_index(drop=True)
         )
     
-    ## Public
-    def get_heatmap(self) -> pd.DataFrame:
-        return self.heatmap
-    
-    def get_word_frequencies(self) -> pd.DataFrame:
-        return self.word_frequencies
-    
     def get_events_per_day(self) -> pd.DataFrame:
-        return self.events_per_day
+        return (
+            self.df
+            .groupby('date')
+            .size()
+            .reset_index(name='posts_count')
+        )
     
-    def get_events_containing(self, search_query: str) -> pd.DataFrame:
-        return self.df[self.df["content"].str.contains(search_query)]
+    def filter_events(self, search_query: str) -> pd.DataFrame:
+        self.df = self.df[self.df["content"].str.contains(search_query)]
+        return self.df
+    
+    def reset_dataset(self) -> None:
+        self.df = self.original_df

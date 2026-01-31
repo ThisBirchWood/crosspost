@@ -87,7 +87,17 @@ def search_dataset():
         return stat_obj.df
     
     query = data["query"]
-    return jsonify(stat_obj.get_events_containing(query).to_dict(orient='records')), 200
+    return jsonify(stat_obj.filter_events(query).to_dict(orient='records')), 200
+
+@app.route('/reset', methods=["GET"])
+def reset_dataset():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    stat_obj.reset_dataset()
+
+    return jsonify({"success": "Dataset successfully reset"})
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
