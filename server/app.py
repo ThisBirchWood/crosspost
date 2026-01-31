@@ -74,7 +74,7 @@ def get_summary():
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.get_summary()), 200
+        return jsonify(stat_obj.summary()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
