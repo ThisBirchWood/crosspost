@@ -99,15 +99,23 @@ class StatGen:
         self.df = self.original_df.copy(deep=True)
 
     def get_summary(self) -> dict:
+        total_posts = (self.df["type"] == "post").sum()
+        total_comments = (self.df["type"] == "comment").sum()
+
+        events_per_user = self.df.groupby("author").size()
+
         return {
             "total_events": int(len(self.df)),
-            "total_posts": int((self.df["type"] == "post").sum()),
-            "total_comments": int((self.df["type"] == "comment").sum()),
-            "unique_users": int(self.df["author"].nunique()),
+            "total_posts": int(total_posts),
+            "total_comments": int(total_comments),
+            "unique_users": int(events_per_user.count()),
+            "comments_per_post": round(total_comments / max(total_posts, 1), 2),
+            "lurker_ratio": round((events_per_user == 1).mean(), 2),
             "time_range": {
                 "start": int(self.df["dt"].min().timestamp()),
                 "end": int(self.df["dt"].max().timestamp())
-            }
+            },
+            "sources": self.df["source"].unique().tolist()
         }
 
 
