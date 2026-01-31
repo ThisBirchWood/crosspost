@@ -99,14 +99,6 @@ class StatGen:
             .reset_index(drop=True)
         )
     
-    def get_events_per_day(self) -> pd.DataFrame:
-        return (
-            self.df
-            .groupby('date')
-            .size()
-            .reset_index(name='event_count')
-        )
-    
     def filter_events(self, search_query: str) -> pd.DataFrame:
         self.df = self.df[self.df["content"].str.contains(search_query)]
         return self.df
