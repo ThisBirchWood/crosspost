@@ -29,22 +29,24 @@ const StatPage = () => {
   useEffect(() => {
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
-      axios.get("http://localhost:5000/stats/word_frequencies"),
+      axios.get("http://localhost:5000/stats/content"),
     ])
       .then(([timeRes, wordsRes]) => {
+
         setPostsPerDay(timeRes.data["events_per_day"].filter(
           (d: any) => new Date(d.date) >= new Date('2026-01-10')
         ))
+
         setHeatmapData(timeRes.data["weekday_hour_heatmap"])
 
         setWordFrequencyData(
-          wordsRes.data.map((d: BackendWord) => ({
+          wordsRes.data["word_frequencies"].map((d: BackendWord) => ({
             text: d.word,
             value: d.count,
           }))
         );
       })
-      .catch(() => setError("Failed to load statistics"))
+      .catch((e) => setError("Failed to load statistics: " + e))
       .finally(() => setLoading(false));
   }, []);
 
@@ -64,7 +66,7 @@ const StatPage = () => {
         }}
       >
         <div>
-          <h2>Posts per Day</h2>
+          <h2>Events per Day</h2>
 
           <ResponsiveContainer width={800} height={350}>
             <LineChart data={postsPerDay}>

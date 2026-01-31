@@ -42,16 +42,17 @@ def upload_data():
     
     return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
 
-@app.route('/stats/word_frequencies', methods=['GET'])
+@app.route('/stats/content', methods=['GET'])
 def word_frequencies():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.get_word_frequencies().to_dict(orient='records')), 200
+        return jsonify(stat_obj.content_analysis()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
+        print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
 @app.route('/stats/search', methods=["POST"])

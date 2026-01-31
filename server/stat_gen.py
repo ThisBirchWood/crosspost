@@ -74,39 +74,7 @@ class StatGen:
             "burstiness": round(burst_index, 2)
         }
     
-    def get_word_frequencies(self, limit: int = 100) -> pd.DataFrame:
-        texts = (
-            self.df["content"]
-            .dropna()
-            .astype(str)
-            .str.lower()
-        )
-
-        words = []
-        for text in texts:
-            tokens = re.findall(r"\b[a-z]{3,}\b", text)
-            words.extend(
-                w for w in tokens
-                if w not in EXCLUDE_WORDS
-            )
-
-        counts = Counter(words)
-
-        return (
-            pd.DataFrame(counts.items(), columns=["word", "count"])
-            .sort_values("count", ascending=False)
-            .head(limit)
-            .reset_index(drop=True)
-        )
-    
-    def filter_events(self, search_query: str) -> pd.DataFrame:
-        self.df = self.df[self.df["content"].str.contains(search_query)]
-        return self.df
-    
-    def reset_dataset(self) -> None:
-        self.df = self.original_df.copy(deep=True)
-
-    def get_summary(self) -> dict:
+    def summary(self) -> dict:
         total_posts = (self.df["type"] == "post").sum()
         total_comments = (self.df["type"] == "comment").sum()
 
@@ -126,4 +94,39 @@ class StatGen:
             "sources": self.df["source"].unique().tolist()
         }
 
+    def content_analysis(self, limit: int = 100) -> dict:
+        texts = (
+            self.df["content"]
+            .dropna()
+            .astype(str)
+            .str.lower()
+        )
+
+        words = []
+        for text in texts:
+            tokens = re.findall(r"\b[a-z]{3,}\b", text)
+            words.extend(
+                w for w in tokens
+                if w not in EXCLUDE_WORDS
+            )
+
+        counts = Counter(words)
+
+        word_frequencies = (
+            pd.DataFrame(counts.items(), columns=["word", "count"])
+            .sort_values("count", ascending=False)
+            .head(limit)
+            .reset_index(drop=True)
+        )
+
+        return {
+            "word_frequencies": word_frequencies.to_dict(orient='records')
+        }
+    
+    def filter_events(self, search_query: str) -> pd.DataFrame:
+        self.df = self.df[self.df["content"].str.contains(search_query)]
+        return self.df
+    
+    def reset_dataset(self) -> None:
+        self.df = self.original_df.copy(deep=True)
 
