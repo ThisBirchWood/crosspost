@@ -29,27 +29,41 @@ const StatPage = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getStats = () => {
+    setError("");
+
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
       axios.get("http://localhost:5000/stats/content"),
     ])
       .then(([timeRes, wordsRes]) => {
+        const eventsPerDay = Array.isArray(timeRes.data?.events_per_day)
+          ? timeRes.data.events_per_day
+          : [];
 
-        setPostsPerDay(timeRes.data["events_per_day"].filter(
-          (d: any) => new Date(d.date) >= new Date('2026-01-10')
-        ))
+        const weekdayHourHeatmap = Array.isArray(timeRes.data?.weekday_hour_heatmap)
+          ? timeRes.data.weekday_hour_heatmap
+          : [];
 
-        setHeatmapData(timeRes.data["weekday_hour_heatmap"])
+        const wordFrequencies = Array.isArray(wordsRes.data?.word_frequencies)
+          ? wordsRes.data.word_frequencies
+          : [];
+
+        setPostsPerDay(
+          eventsPerDay.filter(
+            (d: any) => new Date(d.date) >= new Date("2026-01-10")
+          )
+        );
+
+        setHeatmapData(weekdayHourHeatmap);
 
         setWordFrequencyData(
-          wordsRes.data["word_frequencies"].map((d: BackendWord) => ({
+          wordFrequencies.map((d: BackendWord) => ({
             text: d.word,
             value: d.count,
           }))
         );
       })
-      .catch((e) => setError("Failed to load statistics: " + e))
-      .finally(() => setLoading(false));
+      .catch((e) => setError("Failed to load statistics: " + String(e)));
   };
 
   const onSearch = () => {
@@ -75,7 +89,11 @@ const StatPage = () => {
     })
   };
 
-  useEffect(getStats, [])
+  useEffect(() => {
+    setLoading(true);
+    getStats();
+    setLoading(false);
+  }, [])
 
   if (loading) return <p className="p-6">Loading insights…</p>;
   if (error) return <p className="p-6 text-red-500">{error}</p>;
