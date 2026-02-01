@@ -39,7 +39,7 @@ class StatGen:
         df["hour"] = df["dt"].dt.hour
         df["weekday"] = df["dt"].dt.day_name()
 
-    def _tokenize(text: str):
+    def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
         return [t for t in tokens if t not in EXCLUDE_WORDS]
 
