@@ -125,6 +125,31 @@ class StatGen:
             "word_frequencies": word_frequencies.to_dict(orient='records')
         }
     
+    def user_analysis(self) -> dict:
+        counts = (
+            self.df.groupby(["author", "source"])
+            .size()
+            .sort_values(ascending=False)
+        )
+
+        per_user = (
+            self.df.groupby(["author", "type"])
+            .size()
+            .unstack(fill_value=0)
+        )
+
+        per_user["comment_post_ratio"] = per_user["comment"] / per_user["post"].replace(0, 1)
+        per_user["comment_share"] = per_user["comment"] / (per_user["post"] + per_user["comment"]).replace(0, 1)
+        per_user = per_user.sort_values("comment_post_ratio", ascending=True)
+
+        return {
+            "top_users": [
+                {"author": author, "source": source, "count": int(count)}
+                for (author, source), count in counts.items()
+            ],
+            "users": per_user.reset_index().to_dict(orient="records")
+        }
+    
     def search(self, search_query: str) -> dict:
         self.df = self.df[
             self.df["content"].str.contains(search_query)
