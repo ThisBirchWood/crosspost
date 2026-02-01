@@ -35,12 +35,11 @@ def upload_data():
         posts_df = pd.read_json(post_file, lines=True)
         comments_df = pd.read_json(comment_file, lines=True)
         stat_obj = StatGen(posts_df, comments_df)
+        return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-    
-    return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
 
 @app.route('/stats/content', methods=['GET'])
 def word_frequencies():
@@ -88,7 +87,7 @@ def search_dataset():
     data = request.get_json(silent=True) or {}
 
     if "query" not in data:
-        return stat_obj.df
+        return jsonify(stat_obj.df.to_dict(orient="records")), 200
     
     query = data["query"]
     filtered_df = stat_obj.search(query)
