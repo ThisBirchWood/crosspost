@@ -38,6 +38,44 @@ class StatGen:
         df["dt"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
         df["hour"] = df["dt"].dt.hour
         df["weekday"] = df["dt"].dt.day_name()
+
+    def _tokenize(text: str):
+        tokens = re.findall(r"\b[a-z]{3,}\b", text)
+        return [t for t in tokens if t not in EXCLUDE_WORDS]
+
+    def _vocab_richness_per_user(self, min_words: int = 20) -> dict:
+        df = self.df.copy()
+        df["content"] = df["content"].fillna("").astype(str).str.lower()
+        df["tokens"] = df["content"].apply(self._tokenize)
+
+        rows = []
+        for author, group in df.groupby("author"):
+            all_tokens = [t for tokens in group["tokens"] for t in tokens]
+
+            total_words = len(all_tokens)
+            unique_words = len(set(all_tokens))
+            events = len(group)
+
+            # Min amount of words for a user, any less than this might give weird results
+            if total_words < min_words:
+                continue
+
+            # 100% = they never reused a word (excluding stop words)
+            vocab_richness = unique_words / total_words
+            avg_words = total_words / max(events, 1)
+
+            rows.append({
+                "author": author,
+                "events": int(events),
+                "total_words": int(total_words),
+                "unique_words": int(unique_words),
+                "vocab_richness": round(vocab_richness, 3),
+                "avg_words_per_event": round(avg_words, 2),
+            })
+
+        rows = sorted(rows, key=lambda x: x["vocab_richness"], reverse=True)
+
+        return {"vocab_richness": rows}
     
     ## Public
     def time_analysis(self) -> pd.DataFrame:
@@ -147,7 +185,8 @@ class StatGen:
                 {"author": author, "source": source, "count": int(count)}
                 for (author, source), count in counts.items()
             ],
-            "users": per_user.reset_index().to_dict(orient="records")
+            "users": per_user.reset_index().to_dict(orient="records"),
+            "vocab_per_user": self._vocab_richness_per_user()
         }
     
     def search(self, search_query: str) -> dict:
