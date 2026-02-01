@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   LineChart,
@@ -26,7 +26,9 @@ const StatPage = () => {
   const [heatmapData, setHeatmapData] = useState([]);
   const [wordFrequencyData, setWordFrequencyData] = useState([]);
 
-  useEffect(() => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const getStats = () => {
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
       axios.get("http://localhost:5000/stats/content"),
@@ -48,13 +50,48 @@ const StatPage = () => {
       })
       .catch((e) => setError("Failed to load statistics: " + e))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  const onSearch = () => {
+    const query = inputRef.current?.value ?? ""; // read input only on click
+    axios.post("http://localhost:5000/filter/search", {
+      query: query
+    })
+    .then(() => {
+      getStats();
+    })
+    .catch(e => {
+      setError(e);
+    })
+  };
+
+  const resetFilters = () => {
+    axios.get("http://localhost:5000/filter/reset")
+    .then(() => {
+      getStats();
+    })
+    .catch(e => {
+      setError(e);
+    })
+  };
+
+  useEffect(getStats, [])
 
   if (loading) return <p className="p-6">Loading insights…</p>;
   if (error) return <p className="p-6 text-red-500">{error}</p>;
 
   return (
     <div>
+
+        <input 
+          type="text"
+          id="query"
+          ref={inputRef}
+        />
+
+        <button onClick={onSearch}>Search</button>
+        <button onClick={resetFilters}>Reset</button>
+
       <div
         style={{
           display: "grid",
@@ -65,6 +102,7 @@ const StatPage = () => {
           width: "100%"
         }}
       >
+
         <div>
           <h2>Events per Day</h2>
 
