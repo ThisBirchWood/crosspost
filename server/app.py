@@ -115,6 +115,27 @@ def filter_time():
     except Exception:
         return jsonify({"error": "Invalid datetime format"}), 400
     
+@app.route('/filter/sources', methods=["POST"])
+def filter_sources():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+    
+    if "sources" not in data:
+        return jsonify({"error": "Ensure sources hash map is in 'sources' key"}), 400
+    
+    try:
+        filtered_df = stat_obj.filter_data_sources(data["sources"])
+        return jsonify(filtered_df), 200
+    except ValueError:
+        return jsonify({"error": "Please enable at least one data source"}), 400
+    except Exception as e:
+        return jsonify({"error": "An unexpected server error occured: " + str(e)}), 500
+    
+    
 @app.route('/filter/reset', methods=["GET"])
 def reset_dataset():
     if stat_obj is None:

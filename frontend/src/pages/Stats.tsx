@@ -67,7 +67,7 @@ const StatPage = () => {
   };
 
   const onSearch = () => {
-    const query = inputRef.current?.value ?? ""; // read input only on click
+    const query = inputRef.current?.value ?? "";
     axios.post("http://localhost:5000/filter/search", {
       query: query
     })

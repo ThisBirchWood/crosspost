@@ -125,7 +125,7 @@ class StatGen:
             "word_frequencies": word_frequencies.to_dict(orient='records')
         }
     
-    def search(self, search_query: str) -> pd.DataFrame:
+    def search(self, search_query: str) -> dict:
         self.df = self.df[
             self.df["content"].str.contains(search_query)
         ]
@@ -135,7 +135,7 @@ class StatGen:
             "data": self.df.to_dict(orient="records")
         }
     
-    def set_time_range(self, start: datetime.datetime, end: datetime.datetime):
+    def set_time_range(self, start: datetime.datetime, end: datetime.datetime) -> dict:
         self.df = self.df[
             (self.df["dt"] >= start) &
             (self.df["dt"] <= end)
@@ -145,6 +145,23 @@ class StatGen:
             "rows": len(self.df),
             "data": self.df.to_dict(orient="records")
         }
+    
+    """
+    Input is a hash map (source_name: str -> enabled: bool)
+    """
+    def filter_data_sources(self, data_sources: dict) -> dict:
+        enabled_sources = [src for src, enabled in data_sources.items() if enabled]
+
+        if not enabled_sources:
+            raise ValueError("Please choose at least one data source")
+        
+        self.df = self.df[self.df["source"].isin(enabled_sources)]
+
+        return {
+            "rows": len(self.df),
+            "data": self.df.to_dict(orient="records")
+        }
+
     
     def reset_dataset(self) -> None:
         self.df = self.original_df.copy(deep=True)
