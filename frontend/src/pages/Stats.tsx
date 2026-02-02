@@ -12,6 +12,7 @@ import {
 
 import ActivityHeatmap from "../stats/ActivityHeatmap";
 import { ReactWordcloud } from '@cp949/react-wordcloud';
+import StatsStyling from "../styles/stats_styling";
 
 type BackendWord = {
     word: string;
@@ -23,6 +24,8 @@ type TopUser = {
   source: string;
   count: number;
 };
+
+const styles = StatsStyling;
 
 const StatPage = () => {
   const [error, setError] = useState('');
@@ -110,89 +113,111 @@ const StatPage = () => {
     getStats();
   }, [])
 
-  if (loading) return <p className="p-6">Loading insights…</p>;
-  if (error) return <p className="p-6 text-red-500">{error}</p>;
+  if (loading) return <p style={{...styles.page, minWidth: "100vh", minHeight: "100vh"}}>Loading insights…</p>;
+  if (error) return <p style={{...styles.page}}>{error}</p>;
 
-  return (
-    <div>
-
-        <input 
+return (
+  <div style={styles.page}>
+    <div style={{ ...styles.container, ...styles.card, ...styles.headerBar }}>
+      <div style={styles.controls}>
+        <input
           type="text"
           id="query"
           ref={inputRef}
+          placeholder="Search events..."
+          style={styles.input}
         />
 
-        <button onClick={onSearch}>Search</button>
-        <button onClick={resetFilters}>Reset</button>
+        <button onClick={onSearch} style={styles.buttonPrimary}>
+          Search
+        </button>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 2fr 2fr",
-          gap: 12,
-          margin: "0 auto",
-          width: "100%",
-          height: "100%"
-        }}
-      >
+        <button onClick={resetFilters} style={styles.buttonSecondary}>
+          Reset
+        </button>
+      </div>
 
-        <div>
-          <h2>Events per Day</h2>
+      <div style={{ fontSize: 13, color: "#6b7280" }}>Analytics Dashboard</div>
+    </div>
 
-          <ResponsiveContainer width={600} height={350}>
+    {/* main grid*/}
+    <div style={{ ...styles.container, ...styles.grid }}>
+      {/* events per day */}
+      <div style={{ ...styles.card, gridColumn: "span 5" }}>
+        <h2 style={styles.sectionTitle}>Events per Day</h2>
+        <p style={styles.sectionSubtitle}>Trend of activity over time</p>
+
+        <div style={styles.chartWrapper}>
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={postsPerDay}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="count"
-                name="Events"
-              />
+              <Line type="monotone" dataKey="count" name="Events" />
             </LineChart>
           </ResponsiveContainer>
         </div>
+      </div>
 
-        <div>
-          <h2>Word Cloud</h2>
-          <ReactWordcloud 
+      {/* Word Cloud */}
+      <div style={{ ...styles.card, gridColumn: "span 4" }}>
+        <h2 style={styles.sectionTitle}>Word Cloud</h2>
+        <p style={styles.sectionSubtitle}>Most common terms across events</p>
+
+        <div style={styles.chartWrapper}>
+          <ReactWordcloud
             words={wordFrequencyData}
             options={{
-                    rotations: 2,
-                    rotationAngles: [0, 90],
-                    fontSizes: [14, 60],
-                    enableTooltip: true,
-                  }}
+              rotations: 2,
+              rotationAngles: [0, 90],
+              fontSizes: [14, 60],
+              enableTooltip: true,
+            }}
           />
         </div>
+      </div>
 
-        {topUserData?.length > 0 && (
-          <div
-              style={{
-              maxHeight: 450,
-              width: "100%",
-              overflowY: "auto",
-              padding: 12
-            }}
-          >
-            <h2>Top Users</h2>
+      {/* Top Users */}
+      {topUserData?.length > 0 && (
+        <div
+          style={{
+            ...styles.card,
+            ...styles.scrollArea,
+            gridColumn: "span 3",
+          }}
+        >
+          <h2 style={styles.sectionTitle}>Top Users</h2>
+          <p style={styles.sectionSubtitle}>Most active authors</p>
+
+          <div style={styles.topUsersList}>
             {topUserData.map((item) => (
-              <p key={`${item.author}-${item.source}`}>
-                {item.author} ({item.source}): {item.count}
-              </p>
+              <div
+                key={`${item.author}-${item.source}`}
+                style={styles.topUserItem}
+              >
+                <div style={styles.topUserName}>{item.author}</div>
+                <div style={styles.topUserMeta}>
+                  {item.source} • {item.count} events
+                </div>
+              </div>
             ))}
           </div>
-        )}
-
         </div>
+      )}
 
-      <div style={{ width: "100%", height: 320}}>
-        <h2>Heatmap</h2>
-        <ActivityHeatmap data={heatmapData} />
+      {/* Heatmap */}
+      <div style={{ ...styles.card, gridColumn: "span 12" }}>
+        <h2 style={styles.sectionTitle}>Heatmap</h2>
+        <p style={styles.sectionSubtitle}>Activity density across time</p>
+
+        <div style={styles.heatmapWrapper}>
+          <ActivityHeatmap data={heatmapData} />
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default StatPage;
