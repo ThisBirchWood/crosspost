@@ -43,7 +43,7 @@ class StatGen:
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
         return [t for t in tokens if t not in EXCLUDE_WORDS]
 
-    def _vocab_richness_per_user(self, min_words: int = 20) -> dict:
+    def _vocab_richness_per_user(self, min_words: int = 20, top_most_used_words: int = 100) -> list:
         df = self.df.copy()
         df["content"] = df["content"].fillna("").astype(str).str.lower()
         df["tokens"] = df["content"].apply(self._tokenize)
@@ -64,6 +64,12 @@ class StatGen:
             vocab_richness = unique_words / total_words
             avg_words = total_words / max(events, 1)
 
+            counts = Counter(all_tokens)
+            top_words = [
+                {"word": w, "count": int(c)}
+                for w, c in counts.most_common(top_most_used_words)
+            ]
+
             rows.append({
                 "author": author,
                 "events": int(events),
@@ -71,11 +77,12 @@ class StatGen:
                 "unique_words": int(unique_words),
                 "vocab_richness": round(vocab_richness, 3),
                 "avg_words_per_event": round(avg_words, 2),
+                "top_words": top_words
             })
 
         rows = sorted(rows, key=lambda x: x["vocab_richness"], reverse=True)
 
-        return {"vocab_richness": rows}
+        return rows
     
     ## Public
     def time_analysis(self) -> pd.DataFrame:
