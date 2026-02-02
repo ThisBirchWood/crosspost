@@ -37,6 +37,7 @@ const StatPage = () => {
 
   const getStats = () => {
     setError("");
+    setLoading(true);
 
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
@@ -78,7 +79,8 @@ const StatPage = () => {
         );
 
       })
-      .catch((e) => setError("Failed to load statistics: " + String(e)));
+      .catch((e) => setError("Failed to load statistics: " + String(e)))
+      .finally(() => setLoading(false));
   };
 
   const onSearch = () => {
@@ -105,9 +107,7 @@ const StatPage = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
     getStats();
-    setLoading(false);
   }, [])
 
   if (loading) return <p className="p-6">Loading insights…</p>;
