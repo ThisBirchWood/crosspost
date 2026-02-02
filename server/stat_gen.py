@@ -183,6 +183,11 @@ class StatGen:
             .unstack(fill_value=0)
         )
 
+        # ensure columns always exist
+        for col in ("post", "comment"):
+            if col not in per_user.columns:
+                per_user[col] = 0
+
         per_user["comment_post_ratio"] = per_user["comment"] / per_user["post"].replace(0, 1)
         per_user["comment_share"] = per_user["comment"] / (per_user["post"] + per_user["comment"]).replace(0, 1)
         per_user = per_user.sort_values("comment_post_ratio", ascending=True)
