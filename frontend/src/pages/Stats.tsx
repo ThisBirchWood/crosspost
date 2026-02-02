@@ -29,7 +29,7 @@ const styles = StatsStyling;
 
 const StatPage = () => {
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [postsPerDay, setPostsPerDay] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
@@ -40,7 +40,7 @@ const StatPage = () => {
 
   const getStats = () => {
     setError("");
-    setLoading(true);
+    //setLoading(true);
 
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
@@ -71,9 +71,7 @@ const StatPage = () => {
         );
 
         setTopUserData(topUsers);
-
         setHeatmapData(weekdayHourHeatmap);
-
         setWordFrequencyData(
           wordFrequencies.map((d: BackendWord) => ({
             text: d.word,
@@ -83,7 +81,7 @@ const StatPage = () => {
 
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)))
-      .finally(() => setLoading(false));
+      //.finally(() => setLoading(false));
   };
 
   const onSearch = () => {
