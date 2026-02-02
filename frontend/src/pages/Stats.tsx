@@ -18,12 +18,19 @@ type BackendWord = {
     count: number;
 }
 
+type TopUser = {
+  author: string;
+  source: string;
+  count: number;
+};
+
 const StatPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [postsPerDay, setPostsPerDay] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
+  const [topUserData, setTopUserData] = useState<TopUser[]>([]);
   const [wordFrequencyData, setWordFrequencyData] = useState([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,11 +40,16 @@ const StatPage = () => {
 
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
+      axios.get("http://localhost:5000/stats/user"),
       axios.get("http://localhost:5000/stats/content"),
     ])
-      .then(([timeRes, wordsRes]) => {
+      .then(([timeRes, userRes, wordsRes]) => {
         const eventsPerDay = Array.isArray(timeRes.data?.events_per_day)
           ? timeRes.data.events_per_day
+          : [];
+
+        const topUsers = Array.isArray(userRes.data?.top_users)
+          ? userRes.data.top_users
           : [];
 
         const weekdayHourHeatmap = Array.isArray(timeRes.data?.weekday_hour_heatmap)
@@ -54,6 +66,8 @@ const StatPage = () => {
           )
         );
 
+        setTopUserData(topUsers);
+
         setHeatmapData(weekdayHourHeatmap);
 
         setWordFrequencyData(
@@ -62,6 +76,7 @@ const StatPage = () => {
             value: d.count,
           }))
         );
+
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)));
   };
@@ -113,18 +128,18 @@ const StatPage = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: 24,
-          maxWidth: 1100,
+          gridTemplateColumns: "2fr 2fr 2fr",
+          gap: 12,
           margin: "0 auto",
-          width: "100%"
+          width: "100%",
+          height: "100%"
         }}
       >
 
         <div>
           <h2>Events per Day</h2>
 
-          <ResponsiveContainer width={800} height={350}>
+          <ResponsiveContainer width={600} height={350}>
             <LineChart data={postsPerDay}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
@@ -151,7 +166,26 @@ const StatPage = () => {
                   }}
           />
         </div>
-      </div>
+
+        {topUserData?.length > 0 && (
+          <div
+              style={{
+              maxHeight: 450,
+              width: "100%",
+              overflowY: "auto",
+              padding: 12
+            }}
+          >
+            <h2>Top Users</h2>
+            {topUserData.map((item) => (
+              <p key={`${item.author}-${item.source}`}>
+                {item.author} ({item.source}): {item.count}
+              </p>
+            ))}
+          </div>
+        )}
+
+        </div>
 
       <div style={{ width: "100%", height: 320}}>
         <h2>Heatmap</h2>
