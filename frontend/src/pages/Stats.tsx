@@ -197,6 +197,35 @@ return (
     {/* main grid*/}
     <div style={{ ...styles.container, ...styles.grid}}>
         <Card
+          label="Total Events"
+          value={summary?.total_events ?? "—"}
+          sublabel="Posts + comments"
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+        <Card
+          label="Unique Users"
+          value={summary?.unique_users ?? "—"}
+          sublabel="Distinct authors"
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+        <Card
+          label="Posts / Comments"
+          value={
+            summary
+              ? `${summary.total_posts} / ${summary.total_comments}`
+              : "—"
+          }
+          sublabel={`Comments per post: ${summary?.comments_per_post ?? "—"}`}
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+
+        <Card
           label="Time Range"
           value={
             summary?.time_range
