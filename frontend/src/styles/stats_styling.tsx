@@ -3,15 +3,16 @@ import type { CSSProperties } from "react";
 const StatsStyling: Record<string, CSSProperties> = {
   page: {
     width: "100%",
-    height: "100%",
     minHeight: "100vh",
-    minWidth: "100vh",
     padding: 24,
     background: "#f6f7fb",
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif',
     color: "#111827",
+    overflowX: "hidden",
+    boxSizing: "border-box"
   },
+
 
   container: {
     maxWidth: 1400,
