@@ -15,30 +15,7 @@ import { ReactWordcloud } from '@cp949/react-wordcloud';
 import StatsStyling from "../styles/stats_styling";
 import Card from "../components/Card";
 
-type BackendWord = {
-    word: string;
-    count: number;
-}
-
-type TopUser = {
-  author: string;
-  source: string;
-  count: number;
-};
-
-type SummaryResponse = {
-  total_events: number;
-  total_posts: number;
-  total_comments: number;
-  unique_users: number;
-  comments_per_post: number;
-  lurker_ratio: number;
-  time_range: {
-    start: number;
-    end: number;
-  };
-  sources: string[];
-};
+import type { TopUser, SummaryResponse, FrequencyWord } from '../types/ApiTypes'
 
 const styles = StatsStyling;
 
@@ -105,7 +82,7 @@ const StatPage = () => {
         setTopUserData(topUsers);
         setHeatmapData(weekdayHourHeatmap);
         setWordFrequencyData(
-          wordFrequencies.map((d: BackendWord) => ({
+          wordFrequencies.map((d: FrequencyWord) => ({
             text: d.word,
             value: d.count,
           }))
