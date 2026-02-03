@@ -6,6 +6,8 @@ import datetime
 from nltk.corpus import stopwords
 from collections import Counter
 
+from pprint import pprint
+
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
     "boards", "boardsie",
@@ -84,6 +86,27 @@ class StatGen:
 
         return rows
     
+    def _interaction_graph(self):
+        interactions = {a: {} for a in self.df["author"].dropna().unique()}
+
+        # reply_to refers to the comment id, this allows us to map comment ids to usernames
+        id_to_author = self.df.set_index("id")["author"].to_dict()
+
+        for _, row in self.df.iterrows():
+            a = row["author"]
+            reply_id = row["reply_to"]
+
+            if pd.isna(a) or pd.isna(reply_id) or reply_id == "":
+                continue
+
+            b = id_to_author.get(reply_id)
+            if b is None or a == b:
+                continue
+
+            interactions[a][b] = interactions[a].get(b, 0) + 1
+
+        return interactions
+        
     ## Public
     def time_analysis(self) -> pd.DataFrame:
         per_day = (
@@ -219,6 +242,7 @@ class StatGen:
         return {
             "top_users": top_users,
             "users": merged_users,
+            "interaction_graph": self._interaction_graph()
         }
         
     def search(self, search_query: str) -> dict:
