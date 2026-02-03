@@ -177,6 +177,11 @@ class StatGen:
             .sort_values(ascending=False)
         )
 
+        top_users = [
+            {"author": author, "source": source, "count": int(count)}
+            for (author, source), count in counts.items()
+        ]
+
         per_user = (
             self.df.groupby(["author", "type"])
             .size()
@@ -191,16 +196,31 @@ class StatGen:
         per_user["comment_post_ratio"] = per_user["comment"] / per_user["post"].replace(0, 1)
         per_user["comment_share"] = per_user["comment"] / (per_user["post"] + per_user["comment"]).replace(0, 1)
         per_user = per_user.sort_values("comment_post_ratio", ascending=True)
+        per_user_records = per_user.reset_index().to_dict(orient="records")
+
+        vocab_rows = self._vocab_richness_per_user()
+        vocab_by_author = {row["author"]: row for row in vocab_rows}
+
+        # merge vocab richness + per_user information
+        merged_users = []
+        for row in per_user_records:
+            author = row["author"]
+            merged_users.append({
+                "author": author,
+                "post": int(row.get("post", 0)),
+                "comment": int(row.get("comment", 0)),
+                "comment_post_ratio": float(row.get("comment_post_ratio", 0)),
+                "comment_share": float(row.get("comment_share", 0)),
+                "vocab": vocab_by_author.get(author)
+            })
+
+        merged_users.sort(key=lambda u: u["comment_post_ratio"])
 
         return {
-            "top_users": [
-                {"author": author, "source": source, "count": int(count)}
-                for (author, source), count in counts.items()
-            ],
-            "users": per_user.reset_index().to_dict(orient="records"),
-            "vocab_per_user": self._vocab_richness_per_user()
+            "top_users": top_users,
+            "users": merged_users,
         }
-    
+        
     def search(self, search_query: str) -> dict:
         self.df = self.df[
             self.df["content"].str.contains(search_query)
