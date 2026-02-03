@@ -14,6 +14,7 @@ import ActivityHeatmap from "../stats/ActivityHeatmap";
 import { ReactWordcloud } from '@cp949/react-wordcloud';
 import StatsStyling from "../styles/stats_styling";
 import Card from "../components/Card";
+import UserModal from "../components/UserModal";
 
 import { 
   type TopUser, 
@@ -22,7 +23,8 @@ import {
   type UserAnalysisResponse, 
   type TimeAnalysisResponse,
   type ContentAnalysisResponse,
-  type FilterResponse
+  type FilterResponse,
+  type User
 } from '../types/ApiTypes'
 
 const styles = StatsStyling;
@@ -56,6 +58,9 @@ const StatPage = () => {
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
   const [contentData, setContentData] = useState<ContentAnalysisResponse | null>(null);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
+
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const selectedUserData: User | null = userData?.users.find((u) => u.author === selectedUser) ?? null;
 
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -275,10 +280,11 @@ return (
         <p style={styles.sectionSubtitle}>Most active authors</p>
 
         <div style={styles.topUsersList}>
-          {userData?.top_users.map((item) => (
+          {userData?.top_users.slice(0, 100).map((item) => (
             <div
               key={`${item.author}-${item.source}`}
-              style={styles.topUserItem}
+              style={{ ...styles.topUserItem, cursor: "pointer" }}
+              onClick={() => setSelectedUser(item.author)}
             >
               <div style={styles.topUserName}>{item.author}</div>
               <div style={styles.topUserMeta}>
@@ -299,6 +305,13 @@ return (
         </div>
       </div>
     </div>
+
+    <UserModal
+      open={!!selectedUser}
+      onClose={() => setSelectedUser(null)}
+      username={selectedUser ?? ""}
+      userData={selectedUserData}
+    />
   </div>
 );
 }

@@ -119,6 +119,7 @@ const StatsStyling: Record<string, CSSProperties> = {
   topUserName: {
     fontWeight: 700,
     fontSize: 14,
+    color: "black"
   },
 
   topUserMeta: {
