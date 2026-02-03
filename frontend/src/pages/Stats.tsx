@@ -36,24 +36,26 @@ const StatPage = () => {
   const [topUserData, setTopUserData] = useState<TopUser[]>([]);
   const [wordFrequencyData, setWordFrequencyData] = useState([]);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const beforeDateRef = useRef<HTMLInputElement>(null);
+  const afterDateRef = useRef<HTMLInputElement>(null);
 
   const getStats = () => {
     setError("");
-    //setLoading(true);
+    setLoading(true);
 
     Promise.all([
       axios.get("http://localhost:5000/stats/time"),
       axios.get("http://localhost:5000/stats/user"),
       axios.get("http://localhost:5000/stats/content"),
-    ])
+    ]) 
       .then(([timeRes, userRes, wordsRes]) => {
         const eventsPerDay = Array.isArray(timeRes.data?.events_per_day)
-          ? timeRes.data.events_per_day
+          ? timeRes.data.events_per_day.filter((d: any) => new Date(d.date) >= new Date("2026-01-10"))
           : [];
 
         const topUsers = Array.isArray(userRes.data?.top_users)
-          ? userRes.data.top_users
+          ? userRes.data.top_users.slice(0, 100)
           : [];
 
         const weekdayHourHeatmap = Array.isArray(timeRes.data?.weekday_hour_heatmap)
@@ -65,9 +67,7 @@ const StatPage = () => {
           : [];
 
         setPostsPerDay(
-          eventsPerDay.filter(
-            (d: any) => new Date(d.date) >= new Date("2026-01-10")
-          )
+          eventsPerDay
         );
 
         setTopUserData(topUsers);
@@ -78,22 +78,30 @@ const StatPage = () => {
             value: d.count,
           }))
         );
-
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)))
-      //.finally(() => setLoading(false));
+      .finally(() => setLoading(false));
   };
 
-  const onSearch = () => {
-    const query = inputRef.current?.value ?? "";
-    axios.post("http://localhost:5000/filter/search", {
-      query: query
-    })
+  const onSubmitFilters = () => {
+    const query = searchInputRef.current?.value ?? "";
+    const startDate = beforeDateRef.current?.value;
+    const endDate = afterDateRef.current?.value;
+
+    Promise.all([
+      axios.post("http://localhost:5000/filter/search", {
+        query: query
+      }),
+      //axios.post("http://localhost:5000/filter/time", {
+        //start: startDate,
+        //end: endDate
+      //})
+    ]) 
     .then(() => {
       getStats();
     })
     .catch(e => {
-      setError(e);
+      setError("Failed to load filters: " + e.response);
     })
   };
 
@@ -108,6 +116,7 @@ const StatPage = () => {
   };
 
   useEffect(() => {
+    setError("");
     getStats();
   }, [])
 
@@ -121,12 +130,26 @@ return (
         <input
           type="text"
           id="query"
-          ref={inputRef}
+          ref={searchInputRef}
           placeholder="Search events..."
           style={styles.input}
         />
 
-        <button onClick={onSearch} style={styles.buttonPrimary}>
+        <input 
+          type="date"
+          ref={beforeDateRef}
+          placeholder="Search before date"
+          style={styles.input}
+        />
+
+        <input
+            type="date"
+            ref={afterDateRef}
+            placeholder="Search before date"
+            style={styles.input}
+        />
+
+        <button onClick={onSubmitFilters} style={styles.buttonPrimary}>
           Search
         </button>
 
