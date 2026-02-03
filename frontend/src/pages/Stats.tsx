@@ -15,7 +15,15 @@ import { ReactWordcloud } from '@cp949/react-wordcloud';
 import StatsStyling from "../styles/stats_styling";
 import Card from "../components/Card";
 
-import type { TopUser, SummaryResponse, FrequencyWord } from '../types/ApiTypes'
+import { 
+  type TopUser, 
+  type SummaryResponse, 
+  type FrequencyWord, 
+  type UserAnalysisResponse, 
+  type TimeAnalysisResponse,
+  type ContentAnalysisResponse,
+  type FilterResponse
+} from '../types/ApiTypes'
 
 const styles = StatsStyling;
 
@@ -33,14 +41,20 @@ function formatDateRange(startUnix: number, endUnix: number) {
   return `${fmt(start)} → ${fmt(end)}`;
 }
 
+function convertFrequencyData(data: FrequencyWord[]) {
+    return data.map((d: FrequencyWord) => ({
+        text: d.word,
+        value: d.count,
+      }))
+}
+
 const StatPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [postsPerDay, setPostsPerDay] = useState([]);
-  const [heatmapData, setHeatmapData] = useState([]);
-  const [topUserData, setTopUserData] = useState<TopUser[]>([]);
-  const [wordFrequencyData, setWordFrequencyData] = useState([]);
+  const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
+  const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
+  const [contentData, setContentData] = useState<ContentAnalysisResponse | null>(null);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
 
 
@@ -53,41 +67,16 @@ const StatPage = () => {
     setLoading(true);
 
     Promise.all([
-      axios.get("http://localhost:5000/stats/time"),
-      axios.get("http://localhost:5000/stats/user"),
-      axios.get("http://localhost:5000/stats/content"),
+      axios.get<TimeAnalysisResponse>("http://localhost:5000/stats/time"),
+      axios.get<UserAnalysisResponse>("http://localhost:5000/stats/user"),
+      axios.get<ContentAnalysisResponse>("http://localhost:5000/stats/content"),
       axios.get<SummaryResponse>(`http://localhost:5000/stats/summary`),
     ]) 
-      .then(([timeRes, userRes, wordsRes, summaryRes]) => {
-        const eventsPerDay = Array.isArray(timeRes.data?.events_per_day)
-          ? timeRes.data.events_per_day.filter((d: any) => new Date(d.date) >= new Date("2026-01-10"))
-          : [];
-
-        const topUsers = Array.isArray(userRes.data?.top_users)
-          ? userRes.data.top_users.slice(0, 100)
-          : [];
-
-        const weekdayHourHeatmap = Array.isArray(timeRes.data?.weekday_hour_heatmap)
-          ? timeRes.data.weekday_hour_heatmap
-          : [];
-
-        const wordFrequencies = Array.isArray(wordsRes.data?.word_frequencies)
-          ? wordsRes.data.word_frequencies
-          : [];
-
-        setPostsPerDay(
-          eventsPerDay
-        );
-
-        setTopUserData(topUsers);
-        setHeatmapData(weekdayHourHeatmap);
-        setWordFrequencyData(
-          wordFrequencies.map((d: FrequencyWord) => ({
-            text: d.word,
-            value: d.count,
-          }))
-        );
-        setSummary(summaryRes.data ?? null);
+      .then(([timeRes, userRes, contentRes, summaryRes]) => {
+        setUserData(userRes.data || null);
+        setTimeData(timeRes.data || null);
+        setContentData(contentRes.data || null);
+        setSummary(summaryRes.data || null);
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)))
       .finally(() => setLoading(false));
@@ -249,7 +238,7 @@ return (
 
         <div style={styles.chartWrapper}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={postsPerDay}>
+            <LineChart data={timeData?.events_per_day.filter((d) => new Date(d.date) >= new Date('2026-01-10'))}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
@@ -267,7 +256,7 @@ return (
 
         <div style={styles.chartWrapper}>
           <ReactWordcloud
-            words={wordFrequencyData}
+            words={convertFrequencyData(contentData?.word_frequencies ?? [])}
             options={{
               rotations: 2,
               rotationAngles: [0, 90],
@@ -286,7 +275,7 @@ return (
         <p style={styles.sectionSubtitle}>Most active authors</p>
 
         <div style={styles.topUsersList}>
-          {topUserData.map((item) => (
+          {userData?.top_users.map((item) => (
             <div
               key={`${item.author}-${item.source}`}
               style={styles.topUserItem}
@@ -306,7 +295,7 @@ return (
         <p style={styles.sectionSubtitle}>Activity density across time</p>
 
         <div style={styles.heatmapWrapper}>
-          <ActivityHeatmap data={heatmapData} />
+          <ActivityHeatmap data={timeData?.weekday_hour_heatmap ?? []} />
         </div>
       </div>
     </div>

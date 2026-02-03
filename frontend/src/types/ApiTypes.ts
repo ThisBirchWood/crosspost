@@ -1,9 +1,14 @@
-// User Code
+// User Responses
 type TopUser = { 
     author: string; 
     source: string; 
     count: number 
 };
+
+type FrequencyWord = {
+    word: string;
+    count: number;
+}
 
 type Vocab = {
   author: string;
@@ -12,7 +17,7 @@ type Vocab = {
   unique_words: number;
   vocab_richness: number;
   avg_words_per_event: number;
-  top_words: { word: string; count: number }[];
+  top_words: FrequencyWord[];
 };
 
 type User = {
@@ -48,11 +53,6 @@ type TimeAnalysisResponse = {
 }
 
 // Content Analysis
-type FrequencyWord = {
-    word: string;
-    count: number;
-}
-
 type ContentAnalysisResponse = {
     word_frequencies: FrequencyWord[];
 }
