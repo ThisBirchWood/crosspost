@@ -29,9 +29,32 @@ type UserAnalysisResponse = {
   users: User[];
 };
 
+// Time Analysis
+type EventsPerDay = {
+    date: Date;
+    count: number;
+}
+
+type HeatmapCell = {
+    date: Date;
+    hour: number;
+    count: number;
+}
+
+type TimeAnalysisResponse = {
+    events_per_day: EventsPerDay[];
+    weekday_hour_heatmap: HeatmapCell[];
+    burstiness: number;
+}
+
+// Content Analysis
 type FrequencyWord = {
     word: string;
     count: number;
+}
+
+type ContentAnalysisResponse = {
+    word_frequencies: FrequencyWord[];
 }
 
 // Summary
@@ -49,11 +72,20 @@ type SummaryResponse = {
   sources: string[];
 };
 
+// Filtering Response
+type FilterResponse = {
+    rows: number
+    data: any;
+}
+
 export type {
     TopUser,
     Vocab,
     User,
     UserAnalysisResponse,
     FrequencyWord,
-    SummaryResponse
+    SummaryResponse,
+    TimeAnalysisResponse,
+    ContentAnalysisResponse,
+    FilterResponse
 }
