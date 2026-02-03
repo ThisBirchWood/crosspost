@@ -13,6 +13,7 @@ import {
 import ActivityHeatmap from "../stats/ActivityHeatmap";
 import { ReactWordcloud } from '@cp949/react-wordcloud';
 import StatsStyling from "../styles/stats_styling";
+import Card from "../components/Card";
 
 type BackendWord = {
     word: string;
@@ -25,7 +26,35 @@ type TopUser = {
   count: number;
 };
 
+type SummaryResponse = {
+  total_events: number;
+  total_posts: number;
+  total_comments: number;
+  unique_users: number;
+  comments_per_post: number;
+  lurker_ratio: number;
+  time_range: {
+    start: number;
+    end: number;
+  };
+  sources: string[];
+};
+
 const styles = StatsStyling;
+
+function formatDateRange(startUnix: number, endUnix: number) {
+  const start = new Date(startUnix * 1000);
+  const end = new Date(endUnix * 1000);
+
+  const fmt = (d: Date) =>
+    d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+
+  return `${fmt(start)} → ${fmt(end)}`;
+}
 
 const StatPage = () => {
   const [error, setError] = useState('');
@@ -35,6 +64,8 @@ const StatPage = () => {
   const [heatmapData, setHeatmapData] = useState([]);
   const [topUserData, setTopUserData] = useState<TopUser[]>([]);
   const [wordFrequencyData, setWordFrequencyData] = useState([]);
+  const [summary, setSummary] = useState<SummaryResponse | null>(null);
+
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const beforeDateRef = useRef<HTMLInputElement>(null);
@@ -48,8 +79,9 @@ const StatPage = () => {
       axios.get("http://localhost:5000/stats/time"),
       axios.get("http://localhost:5000/stats/user"),
       axios.get("http://localhost:5000/stats/content"),
+      axios.get<SummaryResponse>(`http://localhost:5000/stats/summary`),
     ]) 
-      .then(([timeRes, userRes, wordsRes]) => {
+      .then(([timeRes, userRes, wordsRes, summaryRes]) => {
         const eventsPerDay = Array.isArray(timeRes.data?.events_per_day)
           ? timeRes.data.events_per_day.filter((d: any) => new Date(d.date) >= new Date("2026-01-10"))
           : [];
@@ -78,6 +110,7 @@ const StatPage = () => {
             value: d.count,
           }))
         );
+        setSummary(summaryRes.data ?? null);
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)))
       .finally(() => setLoading(false));
@@ -162,7 +195,47 @@ return (
     </div>
 
     {/* main grid*/}
-    <div style={{ ...styles.container, ...styles.grid }}>
+    <div style={{ ...styles.container, ...styles.grid}}>
+        <Card
+          label="Time Range"
+          value={
+            summary?.time_range
+              ? formatDateRange(summary.time_range.start, summary.time_range.end)
+              : "—"
+          }
+          sublabel="Based on dataset timestamps"
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+
+        <Card
+          label="Lurker Ratio"
+          value={
+            typeof summary?.lurker_ratio === "number"
+              ? `${Math.round(summary.lurker_ratio * 100)}%`
+              : "—"
+          }
+          sublabel="Users with only 1 event"
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+
+        <Card
+          label="Sources"
+          value={summary?.sources?.length ?? "—"}
+          sublabel={
+            summary?.sources?.length
+              ? summary.sources.slice(0, 3).join(", ") +
+                (summary.sources.length > 3 ? "…" : "")
+              : "—"
+          }
+          style={{
+            gridColumn: "span 4"
+          }}
+        />
+
       {/* events per day */}
       <div style={{ ...styles.card, gridColumn: "span 5" }}>
         <h2 style={styles.sectionTitle}>Events per Day</h2>
@@ -200,32 +273,26 @@ return (
       </div>
 
       {/* Top Users */}
-      {topUserData?.length > 0 && (
-        <div
-          style={{
-            ...styles.card,
-            ...styles.scrollArea,
-            gridColumn: "span 3",
-          }}
-        >
-          <h2 style={styles.sectionTitle}>Top Users</h2>
-          <p style={styles.sectionSubtitle}>Most active authors</p>
+      <div style={{...styles.card, ...styles.scrollArea, gridColumn: "span 3",
+      }}
+      >
+        <h2 style={styles.sectionTitle}>Top Users</h2>
+        <p style={styles.sectionSubtitle}>Most active authors</p>
 
-          <div style={styles.topUsersList}>
-            {topUserData.map((item) => (
-              <div
-                key={`${item.author}-${item.source}`}
-                style={styles.topUserItem}
-              >
-                <div style={styles.topUserName}>{item.author}</div>
-                <div style={styles.topUserMeta}>
-                  {item.source} • {item.count} events
-                </div>
+        <div style={styles.topUsersList}>
+          {topUserData.map((item) => (
+            <div
+              key={`${item.author}-${item.source}`}
+              style={styles.topUserItem}
+            >
+              <div style={styles.topUserName}>{item.author}</div>
+              <div style={styles.topUserMeta}>
+                {item.source} • {item.count} events
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Heatmap */}
       <div style={{ ...styles.card, gridColumn: "span 12" }}>
