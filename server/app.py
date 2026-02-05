@@ -40,6 +40,13 @@ def upload_data():
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+@app.route('/dataset', methods=['GET'])
+def get_dataset():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    return jsonify(stat_obj.df.to_dict(orient="records")), 200
 
 @app.route('/stats/content', methods=['GET'])
 def word_frequencies():
