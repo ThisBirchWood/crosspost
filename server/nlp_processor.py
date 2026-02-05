@@ -2,6 +2,9 @@ import torch
 import pandas as pd
 
 from transformers import pipeline
+from keybert import KeyBERT
+
+kw_model = KeyBERT(model="all-MiniLM-L6-v2")
 
 emotion_classifier = pipeline(
     "text-classification",
@@ -26,3 +29,18 @@ def add_emotion_cols(df: pd.Dataframe, content_col: str) -> None:
             next(item["score"] for item in row if item["label"] == label)
             for row in results
         ]
+
+def add_topic_col(df: pd.DataFrame, content_col: str, top_n: int = 3) -> None:
+    topics = []
+
+    for text in df["content"].astype(str):
+        keywords = kw_model.extract_keywords(
+            text,
+            keyphrase_ngram_range=(1, 3),
+            stop_words="english",
+            top_n=top_n
+        )
+
+        topics.append([kw for kw, _ in keywords])
+
+    df["topics"] = topics

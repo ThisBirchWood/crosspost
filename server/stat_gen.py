@@ -5,7 +5,7 @@ import datetime
 
 from nltk.corpus import stopwords
 from collections import Counter
-from server.nlp_processor import add_emotion_cols
+from server.nlp_processor import add_emotion_cols, add_topic_col
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -41,7 +41,7 @@ class StatGen:
         df["weekday"] = df["dt"].dt.day_name()
         
         add_emotion_cols(df, "content")
-
+        add_topic_col(df, "content")
 
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
