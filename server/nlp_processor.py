@@ -3,18 +3,19 @@ import pandas as pd
 
 from transformers import pipeline
 from keybert import KeyBERT
+from sentence_transformers import SentenceTransformer
 
-kw_model = KeyBERT(model="all-MiniLM-L6-v2")
+sentence_model = SentenceTransformer("all-MiniLM-L6-v2", device="cuda")
 
-emotion_classifier = pipeline(
-    "text-classification",
-    model="j-hartmann/emotion-english-distilroberta-base",
-    top_k=None,
-    truncation=True,
-    device=0 if torch.cuda.is_available() else -1
-)
+def add_emotion_cols(df: pd.DataFrame, content_col: str) -> None:
+    emotion_classifier = pipeline(
+        "text-classification",
+        model="j-hartmann/emotion-english-distilroberta-base",
+        top_k=None,
+        truncation=True,
+        device=0 if torch.cuda.is_available() else -1
+    )
 
-def add_emotion_cols(df: pd.Dataframe, content_col: str) -> None:
     texts = df[content_col].astype(str).str.slice(0, 512).tolist()
 
     results = emotion_classifier(
@@ -30,17 +31,16 @@ def add_emotion_cols(df: pd.Dataframe, content_col: str) -> None:
             for row in results
         ]
 
-def add_topic_col(df: pd.DataFrame, content_col: str, top_n: int = 3) -> None:
-    topics = []
+def add_topic_col(df: pd.DataFrame, content_col: str):
+    kw_model = KeyBERT(model=sentence_model)
 
-    for text in df["content"].astype(str):
-        keywords = kw_model.extract_keywords(
-            text,
-            keyphrase_ngram_range=(1, 3),
-            stop_words="english",
-            top_n=top_n
-        )
+    texts = df[content_col].fillna("").astype(str).tolist()
+    
+    raw_results = kw_model.extract_keywords(
+        texts, 
+        keyphrase_ngram_range=(1, 1), 
+        stop_words='english', 
+        top_n=1
+    )
 
-        topics.append([kw for kw, _ in keywords])
-
-    df["topics"] = topics
+    df['theme'] = [res[0][0] if len(res) > 0 else None for res in raw_results]
