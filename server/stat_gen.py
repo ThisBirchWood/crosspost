@@ -66,9 +66,6 @@ class StatGen:
                 for row in results
             ]
 
-        # strongest emotion per row (much more meaningful than sums)
-        df["emotion_intensity"] = df.filter(like="emotion_").max(axis=1)
-
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
         return [t for t in tokens if t not in EXCLUDE_WORDS]
