@@ -1,13 +1,18 @@
 import torch
 import pandas as pd
+import numpy as np
 
 from transformers import pipeline
-from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
-sentence_model = SentenceTransformer("all-MiniLM-L6-v2", device="cuda")
 
-def add_emotion_cols(df: pd.DataFrame, content_col: str) -> None:
+model = SentenceTransformer("all-MiniLM-L6-v2", device=0 if torch.cuda.is_available() else 1)
+
+def add_emotion_cols(
+        df: pd.DataFrame, 
+        content_col: str
+    ) -> None:
     emotion_classifier = pipeline(
         "text-classification",
         model="j-hartmann/emotion-english-distilroberta-base",
@@ -31,16 +36,32 @@ def add_emotion_cols(df: pd.DataFrame, content_col: str) -> None:
             for row in results
         ]
 
-def add_topic_col(df: pd.DataFrame, content_col: str):
-    kw_model = KeyBERT(model=sentence_model)
-
-    texts = df[content_col].fillna("").astype(str).tolist()
-    
-    raw_results = kw_model.extract_keywords(
-        texts, 
-        keyphrase_ngram_range=(1, 1), 
-        stop_words='english', 
-        top_n=1
+def add_topic_col(
+        df: pd.DataFrame,
+        content_col: str,
+        domain_topics: list[str],
+        confidence_threshold: float = 0.15
+    ) -> None:
+    topic_embeddings = model.encode(
+        domain_topics,
+        normalize_embeddings=True,
     )
 
-    df['theme'] = [res[0][0] if len(res) > 0 else None for res in raw_results]
+    texts = df[content_col].astype(str).tolist()
+    text_embeddings = model.encode(
+        texts,
+        normalize_embeddings=True,
+    )
+
+    # Similarity
+    sims = cosine_similarity(text_embeddings, topic_embeddings)
+
+    # Best match
+    best_idx = sims.argmax(axis=1)
+    best_score = sims.max(axis=1)
+
+    df["topic"] = [domain_topics[i] for i in best_idx]
+    df["topic_confidence"] = best_score
+    df.loc[df["topic_confidence"] < confidence_threshold, "topic"] = "Misc"
+
+    return df

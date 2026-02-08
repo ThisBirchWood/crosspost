@@ -21,12 +21,13 @@ nltk.download('stopwords')
 EXCLUDE_WORDS = set(stopwords.words('english')) | DOMAIN_STOPWORDS
 
 class StatGen:
-    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame) -> None:
+    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame, domain_topics: list) -> None:
         posts_df["type"] = "post"
         posts_df["parent_id"] = None
 
         comments_df["type"] = "comment"
         comments_df["parent_id"] = comments_df.get("post_id")
+        self.domain_topics = domain_topics
 
         self.df = pd.concat([posts_df, comments_df])
         self._add_extra_cols(self.df)
@@ -41,7 +42,7 @@ class StatGen:
         df["weekday"] = df["dt"].dt.day_name()
         
         add_emotion_cols(df, "content")
-        add_topic_col(df, "content")
+        add_topic_col(df, "content", self.domain_topics)
 
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)

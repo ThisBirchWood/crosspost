@@ -13,28 +13,30 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 # Global State
 posts_df = pd.read_json('posts.jsonl', lines=True)
 comments_df = pd.read_json('comments.jsonl', lines=True)
-stat_obj = StatGen(posts_df, comments_df)
+domain_topics = open("topic_buckets.txt").read().splitlines()
+stat_obj = StatGen(posts_df, comments_df, domain_topics)
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
-    if "posts" not in request.files or "comments" not in request.files:
-        return jsonify({"error": "Missing posts or comments file"}), 400
+    if "posts" not in request.files or "comments" not in request.files or "topics" not in request.form:
+        return jsonify({"error": "Missing required files or form data"}), 400
 
     post_file = request.files["posts"]
     comment_file = request.files["comments"]
+    topic_file = request.form["topics"]
 
-    if post_file.filename == "" or comment_file.filename == "":
+    if post_file.filename == "" or comment_file.filename == "" or topic_file == "":
         return jsonify({"error": "Empty filename"}), 400
 
-    if not post_file.filename.endswith('.jsonl') or not comment_file.filename.endswith('.jsonl'):
-        return jsonify({"error": "Invalid file type. Only .jsonl files are allowed."}), 400
+    if not post_file.filename.endswith('.jsonl') or not comment_file.filename.endswith('.jsonl') or not topic_file.endswith('.txt'):
+        return jsonify({"error": "Invalid file type. Only .jsonl and .txt files are allowed."}), 400
     
     try:
         global stat_obj
 
         posts_df = pd.read_json(post_file, lines=True)
         comments_df = pd.read_json(comment_file, lines=True)
-        stat_obj = StatGen(posts_df, comments_df)
+        stat_obj = StatGen(posts_df, comments_df, topic_file.splitlines())
         return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
