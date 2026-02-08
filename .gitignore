@@ -2,9 +2,9 @@
 __pycache__/
 *.pyc
 *.jsonl
+*.json
 *.code-workspace
 .env
-topic_buckets.txt
 
 # React App Vite
 node_modules/

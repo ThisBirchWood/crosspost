@@ -42,7 +42,7 @@ class StatGen:
         df["weekday"] = df["dt"].dt.day_name()
         
         add_emotion_cols(df, "content")
-        add_topic_col(df, "content", self.domain_topics)
+        add_topic_col(df, "title", "content", self.domain_topics)
 
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
