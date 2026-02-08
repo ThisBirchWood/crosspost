@@ -40,7 +40,7 @@ def add_topic_col(
         title_col: str,
         content_col: str,
         domain_topics: dict,
-        confidence_threshold: float = 0.20
+        confidence_threshold: float = 0.3
     ) -> None:
 
     topic_labels = list(domain_topics.keys())
