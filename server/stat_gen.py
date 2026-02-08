@@ -198,6 +198,15 @@ class StatGen:
             if col.startswith("emotion_") and col != "emotion_neutral"
         ]
 
+        counts = (
+            self.df[
+                (self.df["topic"] != "Misc")
+            ]
+            .groupby("topic")
+            .size()
+            .rename("n")
+        )
+
         avg_emotion_by_topic = (
             self.df[
                 (self.df["topic"] != "Misc")
@@ -205,6 +214,11 @@ class StatGen:
             .groupby("topic")[emotion_cols]
             .mean()
             .reset_index()
+        )
+
+        avg_emotion_by_topic = avg_emotion_by_topic.merge(
+            counts,
+            on="topic"
         )
 
         return {
