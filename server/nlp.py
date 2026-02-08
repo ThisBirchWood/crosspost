@@ -5,75 +5,70 @@ from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+class NLP:
+    def __init__(self, df: pd.DataFrame, title_col: str, content_col: str, topics: dict):
+        self.df = df
+        self.title_col = title_col
+        self.content_col = content_col
+        self.device = 0 if torch.cuda.is_available() else 1
+        
+        # Topic model
+        self.topic_model = SentenceTransformer("all-mpnet-base-v2", device=self.device)
 
-model = SentenceTransformer("all-mpnet-base-v2", device=0 if torch.cuda.is_available() else 1)
+        self.topic_labels = list(topics.keys())
+        self.topic_texts = list(topics.values())
 
-def add_emotion_cols(
-        df: pd.DataFrame, 
-        content_col: str
-    ) -> None:
-    emotion_classifier = pipeline(
-        "text-classification",
-        model="j-hartmann/emotion-english-distilroberta-base",
-        top_k=None,
-        truncation=True,
-        device=0 if torch.cuda.is_available() else -1
-    )
+        self.topic_embeddings = self.topic_model.encode(
+            self.topic_texts,
+            normalize_embeddings=True,
+        )
 
-    texts = df[content_col].astype(str).str.slice(0, 512).tolist()
+        # emotion model
+        self.emotion_classifier = pipeline(
+            "text-classification",
+            model="j-hartmann/emotion-english-distilroberta-base",
+            top_k=None,
+            truncation=True,
+            device=self.device
+        )
 
-    results = emotion_classifier(
-        texts,
-        batch_size=64
-    )
+    def add_emotion_cols(self) -> None:
+        texts = self.df[self.content_col].astype(str).str.slice(0, 512).tolist()
 
-    labels = [r["label"] for r in results[0]]
+        results = self.emotion_classifier(
+            texts,
+            batch_size=64
+        )
 
-    for label in labels:
-        df[f"emotion_{label}"] = [
-            next(item["score"] for item in row if item["label"] == label)
-            for row in results
+        labels = [r["label"] for r in results[0]]
+
+        for label in labels:
+            self.df[f"emotion_{label}"] = [
+                next(item["score"] for item in row if item["label"] == label)
+                for row in results
+            ]
+
+    def add_topic_col(self, confidence_threshold: float = 0.3) -> None:
+        titles = self.df[self.title_col].fillna("").astype(str)
+        contents = self.df[self.content_col].fillna("").astype(str)
+
+        texts = [
+            f"{title}. {content}" if title else content
+            for title, content in zip(titles, contents)
         ]
 
-def add_topic_col(
-        df: pd.DataFrame,
-        title_col: str,
-        content_col: str,
-        domain_topics: dict,
-        confidence_threshold: float = 0.3
-    ) -> None:
+        text_embeddings = self.topic_model.encode(
+            texts,
+            normalize_embeddings=True,
+        )
 
-    topic_labels = list(domain_topics.keys())
-    topic_texts = list(domain_topics.values())
+        # Similarity
+        sims = cosine_similarity(text_embeddings, self.topic_embeddings)
 
-    topic_embeddings = model.encode(
-        topic_texts,
-        normalize_embeddings=True,
-    )
+        # Best match
+        best_idx = sims.argmax(axis=1)
+        best_score = sims.max(axis=1)
 
-    titles = df[title_col].fillna("").astype(str)
-    contents = df[content_col].fillna("").astype(str)
-
-    texts = [
-        f"{title}. {content}" if title else content
-        for title, content in zip(titles, contents)
-    ]
-
-    text_embeddings = model.encode(
-        texts,
-        normalize_embeddings=True,
-    )
-
-    # Similarity
-    sims = cosine_similarity(text_embeddings, topic_embeddings)
-
-    # Best match
-    best_idx = sims.argmax(axis=1)
-    best_score = sims.max(axis=1)
-
-    df["topic"] = [topic_labels[i] for i in best_idx]
-    df["topic_confidence"] = best_score
-
-    df.loc[df["topic_confidence"] < confidence_threshold, "topic"] = "Misc"
-
-    return df
+        self.df["topic"] = [self.topic_labels[i] for i in best_idx]
+        self.df["topic_confidence"] = best_score
+        self.df.loc[self.df["topic_confidence"] < confidence_threshold, "topic"] = "Misc"

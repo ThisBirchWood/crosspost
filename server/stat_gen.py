@@ -5,7 +5,7 @@ import datetime
 
 from nltk.corpus import stopwords
 from collections import Counter
-from server.nlp import add_emotion_cols, add_topic_col
+from server.nlp import NLP
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -21,7 +21,7 @@ nltk.download('stopwords')
 EXCLUDE_WORDS = set(stopwords.words('english')) | DOMAIN_STOPWORDS
 
 class StatGen:
-    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame, domain_topics: list) -> None:
+    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame, domain_topics: dict) -> None:
         posts_df["type"] = "post"
         posts_df["parent_id"] = None
 
@@ -30,6 +30,7 @@ class StatGen:
         self.domain_topics = domain_topics
 
         self.df = pd.concat([posts_df, comments_df])
+        self.nlp = NLP(self.df, "title", "content", domain_topics)
         self._add_extra_cols(self.df)
 
         self.original_df = self.df.copy(deep=True)
@@ -41,8 +42,8 @@ class StatGen:
         df["hour"] = df["dt"].dt.hour
         df["weekday"] = df["dt"].dt.day_name()
         
-        add_emotion_cols(df, "content")
-        add_topic_col(df, "title", "content", self.domain_topics)
+        self.nlp.add_emotion_cols()
+        self.nlp.add_topic_col()
 
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
@@ -192,10 +193,14 @@ class StatGen:
             .reset_index(drop=True)
         )
 
-        # avearge emotion by topic (excluding neutral)
+        emotion_exclusions = [
+            "emotion_neutral",
+            "emotion_surprise"
+        ]
+
         emotion_cols = [
             col for col in self.df.columns
-            if col.startswith("emotion_") and col != "emotion_neutral"
+            if col.startswith("emotion_") and col not in emotion_exclusions
         ]
 
         counts = (
