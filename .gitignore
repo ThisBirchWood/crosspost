@@ -4,6 +4,7 @@ __pycache__/
 *.jsonl
 *.code-workspace
 .env
+topic_buckets.txt
 
 # React App Vite
 node_modules/
