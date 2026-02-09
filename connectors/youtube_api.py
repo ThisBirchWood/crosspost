@@ -40,10 +40,9 @@ class YouTubeAPI:
             return []
         return response.get('items', [])
     
-    def fetch_video_and_comments(self, query, video_limit, comment_limit) -> tuple[list[Post], list[Comment]]:
+    def fetch_videos(self, query, video_limit, comment_limit) -> list[Post]:
         videos = self.search_videos(query, video_limit)
         posts = []
-        comments = []
 
         for video in videos:
             video_id = video['id']['videoId']
@@ -53,16 +52,7 @@ class YouTubeAPI:
             published_at = datetime.datetime.strptime(snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp()
             channel_title = snippet['channelTitle']
 
-            post = Post(
-                id=video_id,
-                content=f"{title}\n\n{description}",
-                author=channel_title,
-                timestamp=published_at,
-                url=f"https://www.youtube.com/watch?v={video_id}",
-                title=title,
-                source="YouTube"
-            )
-
+            comments = []
             comments_data = self.get_video_comments(video_id, comment_limit)
             for comment_thread in comments_data:
                 comment_snippet = comment_thread['snippet']['topLevelComment']['snippet']
@@ -77,6 +67,18 @@ class YouTubeAPI:
                 )
 
                 comments.append(comment)
+
+            post = Post(
+                id=video_id,
+                content=f"{title}\n\n{description}",
+                author=channel_title,
+                timestamp=published_at,
+                url=f"https://www.youtube.com/watch?v={video_id}",
+                title=title,
+                source="YouTube",
+                comments=comments
+            )
+
             posts.append(post)
 
-        return posts, comments
+        return posts

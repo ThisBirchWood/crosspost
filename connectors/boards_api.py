@@ -19,20 +19,20 @@ class BoardsAPI:
         self.url = "https://www.boards.ie"
         self.source_name = "Boards.ie"
 
-    def get_new_category_posts(self, category: str, limit: int = 100) -> tuple[list[Post], list[Comment]]:
+    def get_new_category_posts(self, category: str, post_limit: int, comment_limit: int)  -> list[Post]:
         urls = []
         current_page = 1
 
         logger.info(f"Fetching posts from category: {category}")
 
-        while len(urls) < limit:
+        while len(urls) < post_limit:
             url = f"{self.url}/categories/{category}/p{current_page}"
             html = self._fetch_page(url)
             soup = BeautifulSoup(html, "html.parser")
 
             logger.debug(f"Processing page {current_page} for category {category}")
             for a in soup.select("a.threadbit-threadlink"):
-                if len(urls) >= limit:
+                if len(urls) >= post_limit:
                     break
 
                 href = a.get("href")
@@ -45,13 +45,11 @@ class BoardsAPI:
 
         # Fetch post details for each URL and create Post objects
         posts = []
-        comments = []
 
         def fetch_and_parse(post_url):
             html = self._fetch_page(post_url)
-            post = self._parse_thread(html, post_url)
-            comments = self._parse_comments(post_url, post.id, comment_limit=500)
-            return (post, comments)
+            post = self._parse_thread(html, post_url, comment_limit)
+            return post
 
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(fetch_and_parse, url): url for url in urls}
@@ -60,13 +58,12 @@ class BoardsAPI:
                 post_url = futures[future]
                 logger.debug(f"Fetching Post {i + 1} / {len(urls)} details from URL: {post_url}")
                 try:
-                    post, post_comments = future.result()
+                    post = future.result()
                     posts.append(post)
-                    comments.extend(post_comments)
                 except Exception as e:
                     logger.error(f"Error fetching post from {post_url}: {e}")
 
-        return posts, comments
+        return posts
 
 
     def _fetch_page(self, url: str) -> str:
@@ -74,7 +71,7 @@ class BoardsAPI:
         response.raise_for_status()
         return response.text
 
-    def _parse_thread(self, html: str, post_url: str) -> Post:
+    def _parse_thread(self, html: str, post_url: str, comment_limit: int) -> Post:
         soup = BeautifulSoup(html, "html.parser")
         
         # Author
@@ -102,6 +99,9 @@ class BoardsAPI:
         title_tag = soup.select_one(".PageTitle h1")
         title = title_tag.text.strip() if title_tag else None
 
+        # Comments
+        comments = self._parse_comments(post_url, post_num, comment_limit)
+
         post = Post(
             id=post_num,
             author=author,
@@ -109,12 +109,13 @@ class BoardsAPI:
             content=content,
             url=post_url,
             timestamp=timestamp,
-            source=self.source_name
+            source=self.source_name,
+            comments=comments
         )
 
         return post
 
-    def _parse_comments(self, url: str, post_id: str, comment_limit: int = 500) -> list[Comment]:
+    def _parse_comments(self, url: str, post_id: str, comment_limit: int) -> list[Comment]:
         comments = []
         current_url = url
 
