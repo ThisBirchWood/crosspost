@@ -10,6 +10,12 @@ type FrequencyWord = {
     count: number;
 }
 
+type AverageEmotionByTopic = {
+    topic: string;
+    n: number;
+    [emotion: string]: string | number;
+}
+
 type Vocab = {
   author: string;
   events: number;
@@ -55,6 +61,7 @@ type TimeAnalysisResponse = {
 // Content Analysis
 type ContentAnalysisResponse = {
     word_frequencies: FrequencyWord[];
+    average_emotion_by_topic: AverageEmotionByTopic[];
 }
 
 // Summary
@@ -84,6 +91,7 @@ export type {
     User,
     UserAnalysisResponse,
     FrequencyWord,
+    AverageEmotionByTopic,
     SummaryResponse,
     TimeAnalysisResponse,
     ContentAnalysisResponse,
