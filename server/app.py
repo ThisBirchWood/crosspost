@@ -20,17 +20,17 @@ stat_obj = StatGen(posts_df, comments_df, domain_topics)
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
-    if "posts" not in request.files or "comments" not in request.files or "topics" not in request.form:
+    if "posts" not in request.files or "comments" not in request.files or "topics" not in request.files:
         return jsonify({"error": "Missing required files or form data"}), 400
 
     post_file = request.files["posts"]
     comment_file = request.files["comments"]
-    topic_file = request.form["topics"]
+    topic_file = request.files["topics"]
 
     if post_file.filename == "" or comment_file.filename == "" or topic_file == "":
         return jsonify({"error": "Empty filename"}), 400
 
-    if not post_file.filename.endswith('.jsonl') or not comment_file.filename.endswith('.jsonl') or not topic_file.endswith('.json'):
+    if not post_file.filename.endswith('.jsonl') or not comment_file.filename.endswith('.jsonl') or not topic_file.filename.endswith('.json'):
         return jsonify({"error": "Invalid file type. Only .jsonl and .json files are allowed."}), 400
     
     try:

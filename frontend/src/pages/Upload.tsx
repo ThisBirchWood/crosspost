@@ -7,20 +7,22 @@ import StatsStyling from "../styles/stats_styling";
 const styles = StatsStyling;
 
 const UploadPage = () => {
-  let postFile: File | undefined
-  let commentFile: File | undefined
+  let postFile: File | undefined;
+  let commentFile: File | undefined;
+  let topicBucketFile: File | undefined;
   const [returnMessage, setReturnMessage] = useState('')
   const navigate = useNavigate()
 
   const uploadFiles = async () => {
-    if (!postFile || !commentFile) {
-      alert('Please select both files before uploading.')
+    if (!postFile || !commentFile || !topicBucketFile) {
+      alert('Please upload all files before uploading.')
       return
     }
 
     const formData = new FormData()
     formData.append('posts', postFile)
     formData.append('comments', commentFile)
+    formData.append('topics', topicBucketFile)
 
     try {
       const response = await axios.post('http://localhost:5000/upload', formData, {
@@ -40,11 +42,15 @@ const UploadPage = () => {
     <div style={{...styles.container, ...styles.grid, margin: "0"}}>
       <div style={{ ...styles.card }}>
         <h2 style={{color: "black" }}>Posts File</h2>
-        <input type="file" onChange={(e) => postFile = e.target.files?.[0]}></input>
+        <input style={{color: "black" }} type="file" onChange={(e) => postFile = e.target.files?.[0]}></input>
       </div>
       <div style={{ ...styles.card }}>
         <h2 style={{color: "black" }}>Comments File</h2>
-        <input type="file" onChange={(e) => commentFile = e.target.files?.[0]}></input>
+        <input style={{color: "black" }} type="file" onChange={(e) => commentFile = e.target.files?.[0]}></input>
+      </div>
+      <div style={{ ...styles.card }}>
+        <h2 style={{color: "black" }}>Topic Buckets File</h2>
+        <input style={{color: "black" }} type="file" onChange={(e) => topicBucketFile = e.target.files?.[0]}></input>
       </div>
       <button onClick={uploadFiles}>Upload</button>
 
