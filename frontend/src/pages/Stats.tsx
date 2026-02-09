@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import StatsStyling from "../styles/stats_styling";
 import SummaryStats from "../components/SummaryStats";
+import EmotionalStats from "../components/EmotionalStats";
 
 import { 
   type SummaryResponse, 
@@ -15,6 +16,7 @@ const styles = StatsStyling;
 const StatPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeView, setActiveView] = useState<"summary" | "emotional">("summary");
 
   const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
@@ -118,12 +120,39 @@ return (
       <div style={{ fontSize: 13, color: "#6b7280" }}>Analytics Dashboard</div>
     </div>
 
-    <SummaryStats 
-      userData={userData}
-      timeData={timeData}
-      contentData={contentData}
-      summary={summary}
-    />
+    <div style={{ ...styles.container, display: "flex", gap: 8, marginTop: 12 }}>
+      <button
+        onClick={() => setActiveView("summary")}
+        style={activeView === "summary" ? styles.buttonPrimary : styles.buttonSecondary}
+      >
+        Summary
+      </button>
+      <button
+        onClick={() => setActiveView("emotional")}
+        style={activeView === "emotional" ? styles.buttonPrimary : styles.buttonSecondary}
+      >
+        Emotional
+      </button>
+    </div>
+
+    {activeView === "summary" && (
+      <SummaryStats
+        userData={userData}
+        timeData={timeData}
+        contentData={contentData}
+        summary={summary}
+      />
+    )}
+
+    {activeView === "emotional" && contentData && (
+      <EmotionalStats contentData={contentData} />
+    )}
+
+    {activeView === "emotional" && !contentData && (
+      <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
+        No emotional data available.
+      </div>
+    )}
 
   </div>
 );
