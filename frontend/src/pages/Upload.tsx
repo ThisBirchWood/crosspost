@@ -2,6 +2,9 @@ import axios from 'axios'
 import './../App.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import StatsStyling from "../styles/stats_styling";
+
+const styles = StatsStyling;
 
 const UploadPage = () => {
   let postFile: File | undefined
@@ -34,13 +37,13 @@ const UploadPage = () => {
     }
   }
   return (
-    <div>
-      <div className="post-file-upload">
-        <h2>Posts File</h2>
+    <div style={{...styles.container, ...styles.grid, margin: "0"}}>
+      <div style={{ ...styles.card }}>
+        <h2 style={{color: "black" }}>Posts File</h2>
         <input type="file" onChange={(e) => postFile = e.target.files?.[0]}></input>
       </div>
-      <div className="comment-file-upload">
-        <h2>Comments File</h2>
+      <div style={{ ...styles.card }}>
+        <h2 style={{color: "black" }}>Comments File</h2>
         <input type="file" onChange={(e) => commentFile = e.target.files?.[0]}></input>
       </div>
       <button onClick={uploadFiles}>Upload</button>
