@@ -9,6 +9,8 @@ type EmotionalStatsProps = {
 
 const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
   const rows = contentData.average_emotion_by_topic ?? [];
+  const lowSampleThreshold = 20;
+  const stableSampleThreshold = 50;
   const emotionKeys = rows.length
     ? Object.keys(rows[0]).filter((key) => key.startsWith("emotion_"))
     : [];
@@ -38,6 +40,18 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  const sampleSizes = strongestPerTopic
+    .map((topic) => topic.count)
+    .filter((count) => Number.isFinite(count) && count > 0)
+    .sort((a, b) => a - b);
+
+  const lowSampleTopics = strongestPerTopic.filter((topic) => topic.count < lowSampleThreshold).length;
+  const stableSampleTopics = strongestPerTopic.filter((topic) => topic.count >= stableSampleThreshold).length;
+
+  const medianSampleSize = sampleSizes.length
+    ? sampleSizes[Math.floor(sampleSizes.length / 2)]
+    : 0;
+
   if (!rows.length) {
     return (
       <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
@@ -51,7 +65,16 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
     <div style={styles.page}>
       <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
         <h2 style={styles.sectionTitle}>Average Emotion by Topic</h2>
-        <p style={styles.sectionSubtitle}>Mean emotion scores for each detected topic</p>
+        <p style={styles.sectionSubtitle}>Read confidence together with sample size. Topics with fewer than {lowSampleThreshold} events are usually noisy and less reliable.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 13, color: "#4b5563", marginTop: 6 }}>
+          <span><strong style={{ color: "#111827" }}>Topics:</strong> {strongestPerTopic.length}</span>
+          <span><strong style={{ color: "#111827" }}>Median Sample:</strong> {medianSampleSize} events</span>
+          <span><strong style={{ color: "#111827" }}>Low Sample (&lt;{lowSampleThreshold}):</strong> {lowSampleTopics}</span>
+          <span><strong style={{ color: "#111827" }}>Stable Sample ({stableSampleThreshold}+):</strong> {stableSampleTopics}</span>
+        </div>
+        <p style={{ ...styles.sectionSubtitle, marginTop: 10, marginBottom: 0 }}>
+          Confidence reflects how strongly one emotion leads within a topic, not model accuracy. Use larger samples for stronger conclusions.
+        </p>
       </div>
 
       <div style={{ ...styles.container, ...styles.grid }}>
