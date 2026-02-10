@@ -33,6 +33,11 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
     };
   });
 
+  const formatEmotion = (value: string) => {
+    if (!value) return "Unknown";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
+
   if (!rows.length) {
     return (
       <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
@@ -53,10 +58,19 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
         {strongestPerTopic.map((topic) => (
           <div key={topic.topic} style={{ ...styles.card, gridColumn: "span 4" }}>
             <h3 style={{ ...styles.sectionTitle, marginBottom: 6 }}>{topic.topic}</h3>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>Top emotion: {topic.emotion}</div>
-            <p style={styles.sectionSubtitle}>Model Confidence: {topic.value.toFixed(3)}</p>
-            <div style={{ fontSize: 13, color: "#6b7280", marginTop: 6 }}>
-              Based on {topic.count} events
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", letterSpacing: "0.02em", textTransform: "uppercase" }}>
+              Top Emotion
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4, lineHeight: 1.2 }}>
+              {formatEmotion(topic.emotion)}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, fontSize: 13, color: "#6b7280" }}>
+              <span>Confidence</span>
+              <span style={{ fontWeight: 700, color: "#111827" }}>{topic.value.toFixed(3)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4, fontSize: 13, color: "#6b7280" }}>
+              <span>Sample Size</span>
+              <span style={{ fontWeight: 700, color: "#111827" }}>{topic.count} events</span>
             </div>
           </div>
         ))}
