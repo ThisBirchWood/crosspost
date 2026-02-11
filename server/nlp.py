@@ -1,11 +1,10 @@
 import torch
 import pandas as pd
 import numpy as np
-from typing import Any
 
+from typing import Any
 from transformers import pipeline
 from sentence_transformers import SentenceTransformer
-
 
 class NLP:
     _topic_models: dict[str, SentenceTransformer] = {}

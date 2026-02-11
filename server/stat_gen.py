@@ -21,7 +21,11 @@ nltk.download('stopwords')
 EXCLUDE_WORDS = set(stopwords.words('english')) | DOMAIN_STOPWORDS
 
 class StatGen:
-    def __init__(self, posts_df: pd.DataFrame, comments_df: pd.DataFrame, domain_topics: dict) -> None:
+    def __init__(self, df: pd.DataFrame, domain_topics: dict) -> None:
+        comments_df = df[["id", "comments"]].explode("comments")
+        comments_df = pd.json_normalize(comments_df["comments"])
+
+        posts_df = df.drop(columns=["comments"])
         posts_df["type"] = "post"
         posts_df["parent_id"] = None
 
@@ -30,6 +34,7 @@ class StatGen:
         self.domain_topics = domain_topics
 
         self.df = pd.concat([posts_df, comments_df])
+        self.df.drop(columns=["post_id"], inplace=True, errors="ignore")
         self.nlp = NLP(self.df, "title", "content", domain_topics)
         self._add_extra_cols(self.df)
 
@@ -37,6 +42,7 @@ class StatGen:
 
     ## Private Methods
     def _add_extra_cols(self, df: pd.DataFrame) -> None:
+        df['timestamp'] = pd.to_numeric(self.df['timestamp'], errors='coerce')
         df['date'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
         df["dt"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
         df["hour"] = df["dt"].dt.hour
@@ -165,7 +171,7 @@ class StatGen:
                 "start": int(self.df["dt"].min().timestamp()),
                 "end": int(self.df["dt"].max().timestamp())
             },
-            "sources": self.df["source"].unique().tolist()
+            "sources": self.df["source"].dropna().unique().tolist()
         }
 
     def content_analysis(self, limit: int = 100) -> dict:

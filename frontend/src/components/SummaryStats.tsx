@@ -58,6 +58,8 @@ const SummaryStats = ({userData, timeData, contentData, summary}: SummaryStatsPr
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const selectedUserData: User | null = userData?.users.find((u) => u.author === selectedUser) ?? null;
 
+    console.log(summary)
+
     return (
     <div style={styles.page}>
 

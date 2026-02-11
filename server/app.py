@@ -12,33 +12,30 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Global State
-posts_df = pd.read_json('posts.jsonl', lines=True)
-comments_df = pd.read_json('comments.jsonl', lines=True)
+posts_df = pd.read_json('posts_test.jsonl', lines=True)
 with open("topic_buckets.json", "r", encoding="utf-8") as f:
     domain_topics = json.load(f)
-stat_obj = StatGen(posts_df, comments_df, domain_topics)
+stat_obj = StatGen(posts_df, domain_topics)
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
-    if "posts" not in request.files or "comments" not in request.files or "topics" not in request.files:
+    if "posts" not in request.files or "topics" not in request.files:
         return jsonify({"error": "Missing required files or form data"}), 400
 
     post_file = request.files["posts"]
-    comment_file = request.files["comments"]
     topic_file = request.files["topics"]
 
-    if post_file.filename == "" or comment_file.filename == "" or topic_file == "":
+    if post_file.filename == "" or topic_file == "":
         return jsonify({"error": "Empty filename"}), 400
 
-    if not post_file.filename.endswith('.jsonl') or not comment_file.filename.endswith('.jsonl') or not topic_file.filename.endswith('.json'):
+    if not post_file.filename.endswith('.jsonl') or not topic_file.filename.endswith('.json'):
         return jsonify({"error": "Invalid file type. Only .jsonl and .json files are allowed."}), 400
     
     try:
         global stat_obj
 
         posts_df = pd.read_json(post_file, lines=True)
-        comments_df = pd.read_json(comment_file, lines=True)
-        stat_obj = StatGen(posts_df, comments_df, json.load(topic_file))
+        stat_obj = StatGen(posts_df, json.load(topic_file))
         return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
