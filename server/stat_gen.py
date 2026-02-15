@@ -116,7 +116,40 @@ class StatGen:
             interactions[a][b] = interactions[a].get(b, 0) + 1
 
         return interactions
+     
+    def _avg_reply_time_per_emotion(self):
+        df = self.df.copy()
+
+        replies = df[
+            (df["type"] == "comment") &
+            (df["reply_to"].notna()) &
+            (df["reply_to"] != "")
+        ]
+
+        id_to_time = df.set_index("id")["dt"].to_dict()
+
+        def compute_reply_time(row):
+            reply_id = row["reply_to"]
+            parent_time = id_to_time.get(reply_id)
+
+            if parent_time is None:
+                return None
+
+            return (row["dt"] - parent_time).total_seconds()
         
+        replies["reply_time"] = replies.apply(compute_reply_time, axis=1)
+        emotion_cols = [col for col in df.columns if col.startswith("emotion_") and col not in ("emotion_neutral", "emotion_surprise")]
+        replies["dominant_emotion"] = replies[emotion_cols].idxmax(axis=1)
+        
+        grouped = (
+            replies
+            .groupby("dominant_emotion")["reply_time"]
+            .agg(["mean", "count"])
+            .reset_index()
+        )
+
+        return grouped.to_dict(orient="records")
+
     ## Public
     def time_analysis(self) -> pd.DataFrame:
         per_day = (
@@ -234,7 +267,8 @@ class StatGen:
 
         return {
             "word_frequencies": word_frequencies.to_dict(orient='records'),
-            "average_emotion_by_topic": avg_emotion_by_topic.to_dict(orient='records')
+            "average_emotion_by_topic": avg_emotion_by_topic.to_dict(orient='records'),
+            "reply_time_by_emotion": self._avg_reply_time_per_emotion()
         }
     
     def user_analysis(self) -> dict:
