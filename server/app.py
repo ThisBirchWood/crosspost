@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Global State
-posts_df = pd.read_json('posts_test.jsonl', lines=True)
+posts_df = pd.read_json('posts.jsonl', lines=True)
 with open("topic_buckets.json", "r", encoding="utf-8") as f:
     domain_topics = json.load(f)
 stat_obj = StatGen(posts_df, domain_topics)

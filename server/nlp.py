@@ -63,7 +63,7 @@ class NLP:
     def _get_topic_model(cls, device_str: str) -> SentenceTransformer:
         model = cls._topic_models.get(device_str)
         if model is None:
-            model = SentenceTransformer("all-mpnet-base-v2", device=device_str)
+            model = SentenceTransformer("all-MiniLM-L6-v2", device=device_str)
             cls._topic_models[device_str] = model
         return model
 
