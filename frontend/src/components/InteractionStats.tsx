@@ -19,7 +19,18 @@ function ApiToGraphData(apiData: InteractionGraph) {
         }
     }
     
-    return { nodes, links };
+    // drop low-value and deleted interactions to reduce clutter
+    const filteredLinks = links.filter(link => 
+        link.value >= 2 && 
+        link.source !== "[deleted]" && 
+        link.target !== "[deleted]"
+    );
+
+    // also filter out nodes that are no longer connected after link filtering
+    const connectedNodeIds = new Set(filteredLinks.flatMap(link => [link.source, link.target]));
+    const filteredNodes = nodes.filter(node => connectedNodeIds.has(node.id));
+
+    return { nodes: filteredNodes, links: filteredLinks};
 }
 
 
