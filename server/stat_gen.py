@@ -23,6 +23,7 @@ EXCLUDE_WORDS = set(stopwords.words('english')) | DOMAIN_STOPWORDS
 class StatGen:
     def __init__(self, df: pd.DataFrame, domain_topics: dict) -> None:
         comments_df = df[["id", "comments"]].explode("comments")
+        comments_df = comments_df[comments_df["comments"].apply(lambda x: isinstance(x, dict))]
         comments_df = pd.json_normalize(comments_df["comments"])
 
         posts_df = df.drop(columns=["comments"])
