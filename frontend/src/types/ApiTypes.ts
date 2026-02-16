@@ -35,9 +35,12 @@ type User = {
   vocab?: Vocab | null;
 };
 
+type InteractionGraph = Record<string, Record<string, number>>;
+
 type UserAnalysisResponse = {
   top_users: TopUser[];
   users: User[];
+  interaction_graph: InteractionGraph;
 };
 
 // Time Analysis
@@ -89,6 +92,7 @@ export type {
     TopUser,
     Vocab,
     User,
+    InteractionGraph,
     UserAnalysisResponse,
     FrequencyWord,
     AverageEmotionByTopic,

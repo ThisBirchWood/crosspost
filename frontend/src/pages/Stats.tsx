@@ -3,6 +3,7 @@ import axios from "axios";
 import StatsStyling from "../styles/stats_styling";
 import SummaryStats from "../components/SummaryStats";
 import EmotionalStats from "../components/EmotionalStats";
+import InteractionStats from "../components/InteractionStats";
 
 import { 
   type SummaryResponse, 
@@ -16,7 +17,7 @@ const styles = StatsStyling;
 const StatPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"summary" | "emotional">("summary");
+  const [activeView, setActiveView] = useState<"summary" | "emotional" | "interaction">("summary");
 
   const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
@@ -133,6 +134,13 @@ return (
       >
         Emotional
       </button>
+
+      <button
+        onClick={() => setActiveView("interaction")}
+        style={activeView === "interaction" ? styles.buttonPrimary : styles.buttonSecondary}
+      >
+        Interaction
+      </button>
     </div>
 
     {activeView === "summary" && (
@@ -152,6 +160,10 @@ return (
       <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
         No emotional data available.
       </div>
+    )}
+
+    {activeView === "interaction" && userData && (
+      <InteractionStats data={userData} />
     )}
 
   </div>
