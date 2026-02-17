@@ -3,7 +3,7 @@ import datetime
 import nltk
 
 from nltk.corpus import stopwords
-from server.nlp import NLP
+from server.analysis.nlp import NLP
 from server.analysis.temporal import TemporalAnalysis
 from server.analysis.emotional import EmotionalAnalysis
 from server.analysis.interactional import InteractionAnalysis
@@ -38,6 +38,7 @@ class StatGen:
 
         self.df = pd.concat([posts_df, comments_df])
         self.df.drop(columns=["post_id"], inplace=True, errors="ignore")
+
         self.nlp = NLP(self.df, "title", "content", domain_topics)
         self._add_extra_cols(self.df)
 
