@@ -58,6 +58,7 @@ class StatGen:
         
         self.nlp.add_emotion_cols()
         self.nlp.add_topic_col()
+        self.nlp.add_ner_cols()
     
     ## Public
     def time_analysis(self) -> pd.DataFrame:
