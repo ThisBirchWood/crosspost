@@ -6,6 +6,7 @@ import datetime
 from nltk.corpus import stopwords
 from collections import Counter
 from server.nlp import NLP
+from server.analysis.temporal import TemporalAnalysis
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -38,6 +39,8 @@ class StatGen:
         self.df.drop(columns=["post_id"], inplace=True, errors="ignore")
         self.nlp = NLP(self.df, "title", "content", domain_topics)
         self._add_extra_cols(self.df)
+
+        self.temporal_analysis = TemporalAnalysis(self.df)
 
         self.original_df = self.df.copy(deep=True)
 
@@ -117,75 +120,12 @@ class StatGen:
             interactions[a][b] = interactions[a].get(b, 0) + 1
 
         return interactions
-     
-    def _avg_reply_time_per_emotion(self):
-        df = self.df.copy()
-
-        replies = df[
-            (df["type"] == "comment") &
-            (df["reply_to"].notna()) &
-            (df["reply_to"] != "")
-        ]
-
-        id_to_time = df.set_index("id")["dt"].to_dict()
-
-        def compute_reply_time(row):
-            reply_id = row["reply_to"]
-            parent_time = id_to_time.get(reply_id)
-
-            if parent_time is None:
-                return None
-
-            return (row["dt"] - parent_time).total_seconds()
-        
-        replies["reply_time"] = replies.apply(compute_reply_time, axis=1)
-        emotion_cols = [col for col in df.columns if col.startswith("emotion_") and col not in ("emotion_neutral", "emotion_surprise")]
-        replies["dominant_emotion"] = replies[emotion_cols].idxmax(axis=1)
-        
-        grouped = (
-            replies
-            .groupby("dominant_emotion")["reply_time"]
-            .agg(["mean", "count"])
-            .reset_index()
-        )
-
-        return grouped.to_dict(orient="records")
 
     ## Public
     def time_analysis(self) -> pd.DataFrame:
-        per_day = (
-            self.df.groupby("date")
-            .size()
-            .reset_index(name="count")
-        )
-
-        weekday_order = [
-            "Monday", "Tuesday", "Wednesday",
-            "Thursday", "Friday", "Saturday", "Sunday"
-        ]
-
-        self.df["weekday"] = pd.Categorical(
-            self.df["weekday"],
-            categories=weekday_order,
-            ordered=True
-        )
-
-        heatmap = (
-            self.df
-            .groupby(["weekday", "hour"], observed=True)
-            .size()
-            .unstack(fill_value=0)
-            .reindex(columns=range(24), fill_value=0)
-        )
-    
-        heatmap.columns = heatmap.columns.map(str)
-        
-        burst_index = per_day["count"].std() / max(per_day["count"].mean(), 1)
-
         return {
-            "events_per_day": per_day.to_dict(orient="records"),
-            "weekday_hour_heatmap": heatmap.to_dict(orient="records"),
-            "burstiness": round(burst_index, 2)
+            "events_per_day": self.temporal_analysis.posts_per_day(),
+            "weekday_hour_heatmap": self.temporal_analysis.heatmap()
         }
     
     def summary(self) -> dict:
@@ -269,7 +209,7 @@ class StatGen:
         return {
             "word_frequencies": word_frequencies.to_dict(orient='records'),
             "average_emotion_by_topic": avg_emotion_by_topic.to_dict(orient='records'),
-            "reply_time_by_emotion": self._avg_reply_time_per_emotion()
+            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion()
         }
     
     def user_analysis(self) -> dict:
