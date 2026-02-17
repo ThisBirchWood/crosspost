@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 from collections import Counter
 from server.nlp import NLP
 from server.analysis.temporal import TemporalAnalysis
+from server.analysis.emotional import EmotionalAnalysis
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -41,6 +42,7 @@ class StatGen:
         self._add_extra_cols(self.df)
 
         self.temporal_analysis = TemporalAnalysis(self.df)
+        self.emotional_analysis = EmotionalAnalysis(self.df)
 
         self.original_df = self.df.copy(deep=True)
 
@@ -173,42 +175,9 @@ class StatGen:
             .reset_index(drop=True)
         )
 
-        emotion_exclusions = [
-            "emotion_neutral",
-            "emotion_surprise"
-        ]
-
-        emotion_cols = [
-            col for col in self.df.columns
-            if col.startswith("emotion_") and col not in emotion_exclusions
-        ]
-
-        counts = (
-            self.df[
-                (self.df["topic"] != "Misc")
-            ]
-            .groupby("topic")
-            .size()
-            .rename("n")
-        )
-
-        avg_emotion_by_topic = (
-            self.df[
-                (self.df["topic"] != "Misc")
-            ]
-            .groupby("topic")[emotion_cols]
-            .mean()
-            .reset_index()
-        )
-
-        avg_emotion_by_topic = avg_emotion_by_topic.merge(
-            counts,
-            on="topic"
-        )
-
         return {
             "word_frequencies": word_frequencies.to_dict(orient='records'),
-            "average_emotion_by_topic": avg_emotion_by_topic.to_dict(orient='records'),
+            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(),
             "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion()
         }
     
