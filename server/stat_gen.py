@@ -65,6 +65,22 @@ class StatGen:
             "events_per_day": self.temporal_analysis.posts_per_day(),
             "weekday_hour_heatmap": self.temporal_analysis.heatmap()
         }
+
+    def content_analysis(self) -> dict:
+        return {
+            "word_frequencies": self.linguistic_analysis.word_frequencies(),
+            "common_two_phrases": self.linguistic_analysis.ngrams(),
+            "common_three_phrases": self.linguistic_analysis.ngrams(n=3),
+            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(),
+            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion()
+        }
+    
+    def user_analysis(self) -> dict:
+        return {
+            "top_users": self.interaction_analysis.top_users(),
+            "users": self.interaction_analysis.per_user_analysis(),
+            "interaction_graph": self.interaction_analysis.interaction_graph()
+        }
     
     def summary(self) -> dict:
         total_posts = (self.df["type"] == "post").sum()
@@ -84,20 +100,6 @@ class StatGen:
                 "end": int(self.df["dt"].max().timestamp())
             },
             "sources": self.df["source"].dropna().unique().tolist()
-        }
-
-    def content_analysis(self) -> dict:
-        return {
-            "word_frequencies": self.linguistic_analysis.word_frequencies(),
-            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(),
-            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion()
-        }
-    
-    def user_analysis(self) -> dict:
-        return {
-            "top_users": self.interaction_analysis.top_users(),
-            "users": self.interaction_analysis.per_user_analysis(),
-            "interaction_graph": self.interaction_analysis.interaction_graph()
         }
         
     def search(self, search_query: str) -> dict:
