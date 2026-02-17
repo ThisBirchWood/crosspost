@@ -47,7 +47,7 @@ def get_dataset():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
     
-    return jsonify(stat_obj.df.to_dict(orient="records")), 200
+    return stat_obj.df.to_json(orient="records"), 200, {"Content-Type": "application/json"}
 
 @app.route('/stats/content', methods=['GET'])
 def word_frequencies():
