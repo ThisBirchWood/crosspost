@@ -124,3 +124,25 @@ class InteractionAnalysis:
             interactions[a][b] = interactions[a].get(b, 0) + 1
 
         return interactions
+    
+    def average_thread_depth(self):
+        depths = []
+        id_to_reply = self.df.set_index("id")["reply_to"].to_dict()
+        for _, row in self.df.iterrows():
+            depth = 0
+            current_id = row["id"]
+
+            while True:
+                reply_to = id_to_reply.get(current_id)
+                if pd.isna(reply_to) or reply_to == "":
+                    break
+
+                depth += 1
+                current_id = reply_to
+
+            depths.append(depth)
+
+        if not depths:
+            return 0
+        
+        return round(sum(depths) / len(depths), 2)
