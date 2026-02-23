@@ -1,21 +1,61 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity
+)
+
 from server.stat_gen import StatGen
+from db.database import PostgresConnector
 
 import pandas as pd
 import traceback
 import json
 
 app = Flask(__name__)
+db = PostgresConnector()
 
-# Allow for CORS from localhost:5173
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+# Env Variables
+load_dotenv()
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+jwt_secret_key = os.getenv("JWT_SECRET_KEY", "super-secret-change-this")
+jwt_access_token_expires = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 1200)) # Default to 20 minutes
+
+# Flask Configuration
+CORS(app, resources={r"/*": {"origins": frontend_url}})
+app.config["JWT_SECRET_KEY"] = jwt_secret_key
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_access_token_expires 
+
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 
 # Global State
 posts_df = pd.read_json('small.jsonl', lines=True)
 with open("topic_buckets.json", "r", encoding="utf-8") as f:
     domain_topics = json.load(f)
 stat_obj = StatGen(posts_df, domain_topics)
+
+@app.route('/register', methods=['POST'])
+def register_user():
+    data = request.get_json()
+
+    if not data or "username" not in data or "password" not in data:
+        return jsonify({"error": "Missing username or password"}), 400
+    
+    username = data["username"]
+    hashed_password = bcrypt.generate_password_hash(
+        data["password"]
+    ).decode("utf-8")
+
+
+    print(f"Registered new user: {username}")
+    return jsonify({"message": f"User '{username}' registered successfully"}), 200
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
