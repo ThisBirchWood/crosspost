@@ -13,6 +13,7 @@ from flask_jwt_extended import (
 
 from server.stat_gen import StatGen
 from db.database import PostgresConnector
+from server.auth import AuthManager
 
 import pandas as pd
 import traceback
@@ -34,28 +35,57 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_access_token_expires
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+auth_manager = AuthManager(db, bcrypt)
 
 # Global State
-posts_df = pd.read_json('small.jsonl', lines=True)
-with open("topic_buckets.json", "r", encoding="utf-8") as f:
-    domain_topics = json.load(f)
-stat_obj = StatGen(posts_df, domain_topics)
+# posts_df = pd.read_json('small.jsonl', lines=True)
+# with open("topic_buckets.json", "r", encoding="utf-8") as f:
+#     domain_topics = json.load(f)
+# stat_obj = StatGen(posts_df, domain_topics)
+stat_obj = None
 
 @app.route('/register', methods=['POST'])
 def register_user():
+    data = request.get_json()
+
+    if not data or "username" not in data or "email" not in data or "password" not in data: 
+        return jsonify({"error": "Missing username, email, or password"}), 400
+    
+    username = data["username"]
+    email = data["email"]
+    password = data["password"]
+
+    try:
+        auth_manager.register_user(username, email, password)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+    print(f"Registered new user: {username}")
+    return jsonify({"message": f"User '{username}' registered successfully"}), 200
+
+@app.route('/login', methods=['POST'])
+def login_user():
     data = request.get_json()
 
     if not data or "username" not in data or "password" not in data:
         return jsonify({"error": "Missing username or password"}), 400
     
     username = data["username"]
-    hashed_password = bcrypt.generate_password_hash(
-        data["password"]
-    ).decode("utf-8")
+    password = data["password"]
 
-
-    print(f"Registered new user: {username}")
-    return jsonify({"message": f"User '{username}' registered successfully"}), 200
+    try:
+        user = auth_manager.authenticate_user(username, password)
+        if user:
+            access_token = create_access_token(identity=user['id'])
+            return jsonify({"access_token": access_token}), 200
+        else:
+            return jsonify({"error": "Invalid username or password"}), 401
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
