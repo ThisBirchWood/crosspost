@@ -97,6 +97,7 @@ class StatGen:
     def get_interactional_analysis(self) -> dict:
         return {
             "average_thread_depth": self.interaction_analysis.average_thread_depth(),
+            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion()
         }
     
     # detect community jargon

@@ -146,3 +146,63 @@ class InteractionAnalysis:
             return 0
         
         return round(sum(depths) / len(depths), 2)
+    
+    def average_thread_length_by_emotion(self):
+        emotion_exclusions = {"emotion_neutral", "emotion_surprise"}
+
+        emotion_cols = [
+            c for c in self.df.columns
+            if c.startswith("emotion_") and c not in emotion_exclusions
+        ]
+
+        id_to_reply = self.df.set_index("id")["reply_to"].to_dict()
+        length_cache = {}
+
+        def thread_length_from(start_id):
+            if start_id in length_cache:
+                return length_cache[start_id]
+
+            seen = set()
+            length = 1
+            current = start_id
+
+            while True:
+                if current in seen:
+                    # infinite loop shouldn't happen, but just in case
+                    break
+                seen.add(current)
+
+                reply_to = id_to_reply.get(current)
+
+                if reply_to is None or (isinstance(reply_to, float) and pd.isna(reply_to)) or reply_to == "":
+                    break
+
+                length += 1
+                current = reply_to
+
+                if current in length_cache:
+                    length += (length_cache[current] - 1)
+                    break
+
+            length_cache[start_id] = length
+            return length
+
+        emotion_to_lengths = {}
+
+        # Fill NaNs in emotion cols to avoid max() issues
+        emo_df = self.df[["id"] + emotion_cols].copy()
+        emo_df[emotion_cols] = emo_df[emotion_cols].fillna(0)
+
+        for _, row in emo_df.iterrows():
+            msg_id = row["id"]
+            length = thread_length_from(msg_id)
+
+            emotions = {c: row[c] for c in emotion_cols}
+            dominant = max(emotions, key=emotions.get)
+
+            emotion_to_lengths.setdefault(dominant, []).append(length)
+
+        return {
+            emotion: round(sum(lengths) / len(lengths), 2)
+            for emotion, lengths in emotion_to_lengths.items()
+        }
