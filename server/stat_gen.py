@@ -66,14 +66,14 @@ class StatGen:
 
     # topics over time
     # emotions over time
-    def time_analysis(self) -> pd.DataFrame:
+    def get_time_analysis(self) -> pd.DataFrame:
         return {
             "events_per_day": self.temporal_analysis.posts_per_day(),
             "weekday_hour_heatmap": self.temporal_analysis.heatmap()
         }
 
     # average topic duration
-    def content_analysis(self) -> dict:
+    def get_content_analysis(self) -> dict:
         return {
             "word_frequencies": self.linguistic_analysis.word_frequencies(),
             "common_two_phrases": self.linguistic_analysis.ngrams(),
@@ -84,7 +84,7 @@ class StatGen:
     
     # average emotion per user
     # average chain length
-    def user_analysis(self) -> dict:
+    def get_user_analysis(self) -> dict:
         return {
             "top_users": self.interaction_analysis.top_users(),
             "users": self.interaction_analysis.per_user_analysis(),
@@ -94,14 +94,14 @@ class StatGen:
     # average / max thread depth
     # high engagment threads based on volume
 
-    def conversational_analysis(self) -> dict:
+    def get_interactional_analysis(self) -> dict:
         return {
-
+            "average_thread_depth": self.interaction_analysis.average_thread_depth(),
         }
     
     # detect community jargon
     # in-group and out-group linguistic markers
-    def cultural_analysis(self) -> dict:
+    def get_cultural_analysis(self) -> dict:
         return {
             "identity_markers": self.linguistic_analysis.identity_markers()
         }

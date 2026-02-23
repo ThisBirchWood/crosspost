@@ -55,7 +55,7 @@ def word_frequencies():
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.content_analysis()), 200
+        return jsonify(stat_obj.get_content_analysis()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -80,7 +80,7 @@ def get_time_analysis():
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.time_analysis()), 200
+        return jsonify(stat_obj.get_time_analysis()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -93,7 +93,7 @@ def get_user_analysis():
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.user_analysis()), 200
+        return jsonify(stat_obj.get_user_analysis()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -106,13 +106,26 @@ def get_cultural_analysis():
         return jsonify({"error": "No data uploaded"}), 400
     
     try:
-        return jsonify(stat_obj.cultural_analysis()), 200
+        return jsonify(stat_obj.get_cultural_analysis()), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
+@app.route("/stats/interaction", methods=["GET"])
+def get_interaction_analysis():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
     
+    try:
+        return jsonify(stat_obj.get_interactional_analysis()), 200
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
 @app.route('/filter/search', methods=["POST"])
 def search_dataset():
     if stat_obj is None:
