@@ -22,3 +22,8 @@ class AuthManager:
         if user and self.bcrypt.check_password_hash(user['password_hash'], password):
             return user
         return None
+    
+    def get_user_by_id(self, user_id):
+        query = "SELECT id, username, email FROM users WHERE id = %s"
+        result = self.db.execute(query, (user_id,), fetch=True)
+        return result[0] if result else None

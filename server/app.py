@@ -79,13 +79,24 @@ def login_user():
     try:
         user = auth_manager.authenticate_user(username, password)
         if user:
-            access_token = create_access_token(identity=user['id'])
+            access_token = create_access_token(identity=str(user['id']))
             return jsonify({"access_token": access_token}), 200
         else:
             return jsonify({"error": "Invalid username or password"}), 401
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
+@app.route("/profile", methods=["GET"])
+@jwt_required()
+def profile():
+    current_user = get_jwt_identity()
+
+    return jsonify(
+        message="Access granted",
+        user=auth_manager.get_user_by_id(current_user)
+    ), 200
+
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
