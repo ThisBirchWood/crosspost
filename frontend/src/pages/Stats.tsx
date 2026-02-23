@@ -3,7 +3,7 @@ import axios from "axios";
 import StatsStyling from "../styles/stats_styling";
 import SummaryStats from "../components/SummaryStats";
 import EmotionalStats from "../components/EmotionalStats";
-import InteractionStats from "../components/InteractionStats";
+import InteractionStats from "../components/UserStats";
 
 import { 
   type SummaryResponse, 

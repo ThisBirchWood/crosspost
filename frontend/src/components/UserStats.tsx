@@ -34,7 +34,7 @@ function ApiToGraphData(apiData: InteractionGraph) {
 }
 
 
-const InteractionStats = (props: { data: UserAnalysisResponse }) => {
+const UserStats = (props: { data: UserAnalysisResponse }) => {
   const graphData = ApiToGraphData(props.data.interaction_graph);
 
   return (
@@ -44,7 +44,7 @@ const InteractionStats = (props: { data: UserAnalysisResponse }) => {
             This graph visualizes interactions between users based on comments and replies. 
             Nodes represent users, and edges represent interactions (e.g., comments or replies) between them.
         </p>
-        <div style={{ height: "600px", border: "1px solid #ccc", borderRadius: 8, marginTop: 16 }}>
+        <div>
             <ForceGraph3D
                 graphData={graphData}
                 nodeAutoColorBy="id"
@@ -58,4 +58,4 @@ const InteractionStats = (props: { data: UserAnalysisResponse }) => {
   );
 }
 
-export default InteractionStats;
+export default UserStats;
