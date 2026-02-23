@@ -62,12 +62,17 @@ class StatGen:
         self.nlp.add_ner_cols()
     
     ## Public
+
+
+    # topics over time
+    # emotions over time
     def time_analysis(self) -> pd.DataFrame:
         return {
             "events_per_day": self.temporal_analysis.posts_per_day(),
             "weekday_hour_heatmap": self.temporal_analysis.heatmap()
         }
 
+    # average topic duration
     def content_analysis(self) -> dict:
         return {
             "word_frequencies": self.linguistic_analysis.word_frequencies(),
@@ -77,11 +82,28 @@ class StatGen:
             "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion()
         }
     
+    # average emotion per user
+    # average chain length
     def user_analysis(self) -> dict:
         return {
             "top_users": self.interaction_analysis.top_users(),
             "users": self.interaction_analysis.per_user_analysis(),
             "interaction_graph": self.interaction_analysis.interaction_graph()
+        }
+    
+    # average / max thread depth
+    # high engagment threads based on volume
+
+    def conversational_analysis(self) -> dict:
+        return {
+
+        }
+    
+    # detect community jargon
+    # in-group and out-group linguistic markers
+    def cultural_analysis(self) -> dict:
+        return {
+            "identity_markers": self.linguistic_analysis.identity_markers()
         }
     
     def summary(self) -> dict:

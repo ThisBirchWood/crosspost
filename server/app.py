@@ -100,6 +100,19 @@ def get_user_analysis():
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
+@app.route("/stats/cultural", methods=["GET"])
+def get_cultural_analysis():
+    if stat_obj is None:
+        return jsonify({"error": "No data uploaded"}), 400
+    
+    try:
+        return jsonify(stat_obj.cultural_analysis()), 200
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+    
 @app.route('/filter/search', methods=["POST"])
 def search_dataset():
     if stat_obj is None:
