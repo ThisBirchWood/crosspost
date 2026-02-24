@@ -8,6 +8,7 @@ from server.analysis.temporal import TemporalAnalysis
 from server.analysis.emotional import EmotionalAnalysis
 from server.analysis.interactional import InteractionAnalysis
 from server.analysis.linguistic import LinguisticAnalysis
+from server.analysis.cultural import CulturalAnalysis
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -46,6 +47,7 @@ class StatGen:
         self.emotional_analysis = EmotionalAnalysis(self.df)
         self.interaction_analysis = InteractionAnalysis(self.df, EXCLUDE_WORDS)
         self.linguistic_analysis = LinguisticAnalysis(self.df, EXCLUDE_WORDS)
+        self.cultural_analysis = CulturalAnalysis(self.df)
 
         self.original_df = self.df.copy(deep=True)
 
@@ -87,24 +89,23 @@ class StatGen:
     def get_user_analysis(self) -> dict:
         return {
             "top_users": self.interaction_analysis.top_users(),
-            "users": self.interaction_analysis.per_user_analysis(),
-            "interaction_graph": self.interaction_analysis.interaction_graph()
+            "users": self.interaction_analysis.per_user_analysis()
         }
     
     # average / max thread depth
     # high engagment threads based on volume
-
     def get_interactional_analysis(self) -> dict:
         return {
             "average_thread_depth": self.interaction_analysis.average_thread_depth(),
-            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion()
+            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(),
+            "interaction_graph": self.interaction_analysis.interaction_graph()
         }
     
     # detect community jargon
     # in-group and out-group linguistic markers
     def get_cultural_analysis(self) -> dict:
         return {
-            "identity_markers": self.linguistic_analysis.identity_markers()
+            "identity_markers": self.cultural_analysis.get_identity_markers()
         }
     
     def summary(self) -> dict:
