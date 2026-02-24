@@ -105,7 +105,9 @@ class StatGen:
     # in-group and out-group linguistic markers
     def get_cultural_analysis(self) -> dict:
         return {
-            "identity_markers": self.cultural_analysis.get_identity_markers()
+            "identity_markers": self.cultural_analysis.get_identity_markers(),
+            "stance_markers": self.cultural_analysis.get_stance_markers(),
+            "entity_salience": self.cultural_analysis.get_avg_emotions_per_entity()
         }
     
     def summary(self) -> dict:
