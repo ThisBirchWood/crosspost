@@ -5,14 +5,9 @@ class EmotionalAnalysis:
         self.df = df
 
     def avg_emotion_by_topic(self) -> dict:
-        emotion_exclusions = [
-            "emotion_neutral",
-            "emotion_surprise"
-        ]
-
         emotion_cols = [
             col for col in self.df.columns
-            if col.startswith("emotion_") and col not in emotion_exclusions
+            if col.startswith("emotion_")
         ]
 
         counts = (
