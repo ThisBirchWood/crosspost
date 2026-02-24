@@ -30,6 +30,7 @@ class PostgresConnector:
             cursor.executemany(query, param_list)
             self.connection.commit()
 
+    ## User Management Methods
     def save_user(self, username, email, password_hash):
         query = """
             INSERT INTO users (username, email, password_hash)
@@ -46,6 +47,8 @@ class PostgresConnector:
         query = "SELECT id, username, email, password_hash FROM users WHERE email = %s"
         result = self.execute(query, (email,), fetch=True)
         return result[0] if result else None
+    
+    # Dataset Management Methods
 
     def close(self):
         if self.connection:
