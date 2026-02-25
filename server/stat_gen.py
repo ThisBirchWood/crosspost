@@ -8,6 +8,7 @@ from server.analysis.temporal import TemporalAnalysis
 from server.analysis.emotional import EmotionalAnalysis
 from server.analysis.interactional import InteractionAnalysis
 from server.analysis.linguistic import LinguisticAnalysis
+from server.analysis.cultural import CulturalAnalysis
 
 DOMAIN_STOPWORDS = {
     "www", "https", "http",
@@ -15,8 +16,7 @@ DOMAIN_STOPWORDS = {
     "comment", "comments",
     "discussion", "thread",
     "post", "posts",
-    "would", "could", "should",
-    "like", "get", "one"
+    "would", "get", "one"
 }
 
 nltk.download('stopwords')
@@ -40,33 +40,32 @@ class StatGen:
         self.df.drop(columns=["post_id"], inplace=True, errors="ignore")
 
         self.nlp = NLP(self.df, "title", "content", domain_topics)
-        self._add_extra_cols(self.df)
+        self.nlp.add_emotion_cols()
+        self.nlp.add_topic_col()
+        self.nlp.add_ner_cols()
+        self._add_time_cols(self.df)
 
         self.temporal_analysis = TemporalAnalysis(self.df)
         self.emotional_analysis = EmotionalAnalysis(self.df)
         self.interaction_analysis = InteractionAnalysis(self.df, EXCLUDE_WORDS)
         self.linguistic_analysis = LinguisticAnalysis(self.df, EXCLUDE_WORDS)
+        self.cultural_analysis = CulturalAnalysis(self.df)
 
         self.original_df = self.df.copy(deep=True)
 
     ## Private Methods
-    def _add_extra_cols(self, df: pd.DataFrame) -> None:
-        df['timestamp'] = pd.to_numeric(self.df['timestamp'], errors='coerce')
+    def _add_time_cols(self, df: pd.DataFrame) -> None:
+        df['timestamp'] = pd.to_numeric(df['timestamp'], errors='coerce')
         df['date'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
         df["dt"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
         df["hour"] = df["dt"].dt.hour
         df["weekday"] = df["dt"].dt.day_name()
-        
-        self.nlp.add_emotion_cols()
-        self.nlp.add_topic_col()
-        self.nlp.add_ner_cols()
     
     ## Public
 
-
     # topics over time
     # emotions over time
-    def get_time_analysis(self) -> pd.DataFrame:
+    def get_time_analysis(self) -> dict:
         return {
             "events_per_day": self.temporal_analysis.posts_per_day(),
             "weekday_hour_heatmap": self.temporal_analysis.heatmap()
@@ -87,24 +86,25 @@ class StatGen:
     def get_user_analysis(self) -> dict:
         return {
             "top_users": self.interaction_analysis.top_users(),
-            "users": self.interaction_analysis.per_user_analysis(),
-            "interaction_graph": self.interaction_analysis.interaction_graph()
+            "users": self.interaction_analysis.per_user_analysis()
         }
     
     # average / max thread depth
     # high engagment threads based on volume
-
     def get_interactional_analysis(self) -> dict:
         return {
             "average_thread_depth": self.interaction_analysis.average_thread_depth(),
-            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion()
+            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(),
+            "interaction_graph": self.interaction_analysis.interaction_graph()
         }
     
     # detect community jargon
     # in-group and out-group linguistic markers
     def get_cultural_analysis(self) -> dict:
         return {
-            "identity_markers": self.linguistic_analysis.identity_markers()
+            "identity_markers": self.cultural_analysis.get_identity_markers(),
+            "stance_markers": self.cultural_analysis.get_stance_markers(),
+            "entity_salience": self.cultural_analysis.get_avg_emotions_per_entity()
         }
     
     def summary(self) -> dict:
@@ -127,7 +127,7 @@ class StatGen:
             "sources": self.df["source"].dropna().unique().tolist()
         }
         
-    def search(self, search_query: str) -> dict:
+    def filter_by_query(self, search_query: str) -> dict:
         self.df = self.df[
             self.df["content"].str.contains(search_query)
         ]

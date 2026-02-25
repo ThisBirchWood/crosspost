@@ -200,6 +200,35 @@ class NLP:
             if column.startswith("emotion_") and column not in emotion_df.columns:
                 self.df[column] = 0.0
 
+        # drop neutral and surprise columns from df and normalize others to sum to 1
+        drop_cols = ["emotion_neutral", "emotion_surprise"]
+
+        existing_drop = [c for c in drop_cols if c in self.df.columns]
+        self.df.drop(columns=existing_drop, inplace=True)
+
+        remaining_emotion_cols = [
+            c for c in self.df.columns
+            if c.startswith("emotion_")
+        ]
+
+        if remaining_emotion_cols:
+            emotion_matrix = (
+                self.df[remaining_emotion_cols]
+                .apply(pd.to_numeric, errors="coerce")
+                .fillna(0.0)
+            )
+
+            row_sums = emotion_matrix.sum(axis=1)
+
+            # Avoid division by zero
+            row_sums = row_sums.replace(0, 1.0)
+
+            normalized = emotion_matrix.div(row_sums, axis=0)
+
+            self.df[remaining_emotion_cols] = normalized.values
+
+        
+
     def add_topic_col(self, confidence_threshold: float = 0.3) -> None:
         titles = self.df[self.title_col].fillna("").astype(str)
         contents = self.df[self.content_col].fillna("").astype(str)
@@ -276,3 +305,5 @@ class NLP:
             self.df[col_name] = [
                 d.get(label, 0) for d in entity_count_dicts
             ]
+
+
