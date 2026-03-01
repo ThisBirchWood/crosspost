@@ -124,14 +124,14 @@ class StatGen:
             "sources": df["source"].dropna().unique().tolist(),
         }
 
-    def filter_by_query(self, search_query: str) -> None:
+    def set_search_query(self, search_query: str) -> None:
         self.search_query = search_query
 
     def set_time_range(self, start: datetime.datetime, end: datetime.datetime) -> None:
         self.start_date_filter = start
         self.end_date_filter = end
 
-    def filter_data_sources(self, data_sources: set) -> None:
+    def search_data_sources(self, data_sources: set) -> None:
         self.data_source_filters = data_sources
         
     def reset_dataset(self) -> None:
