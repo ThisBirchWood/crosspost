@@ -39,6 +39,37 @@ class StatGen:
         self.linguistic_analysis = LinguisticAnalysis(EXCLUDE_WORDS)
         self.cultural_analysis = CulturalAnalysis()
 
+        self.search_query = ""
+        self.start_date_filter = None
+        self.end_date_filter = None
+        self.data_source_filters = set()
+
+    ## Private Methods
+    def _prepare_filtered_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        filtered_df = df.copy()
+
+        if self.search_query:
+            mask = (
+                filtered_df["content"].str.contains(self.search_query, case=False, na=False)
+                | filtered_df["author"].str.contains(self.search_query, case=False, na=False).fillna(False)
+                | filtered_df["title"].str.contains(self.search_query, case=False, na=False, regex=False).fillna(False)
+            )
+            filtered_df = filtered_df[mask]
+
+        if self.start_date_filter and self.end_date_filter:
+            filtered_df = filtered_df[
+                (filtered_df["dt"] >= self.start_date_filter) & (filtered_df["dt"] <= self.end_date_filter)
+            ]
+
+        if self.data_source_filters:
+            enabled_sources = [src for src, enabled in self.data_source_filters.items() if enabled]
+            if enabled_sources:
+                filtered_df = filtered_df[filtered_df["source"].isin(enabled_sources)]
+
+        return filtered_df
+
+    ## Public Methods
+
     def get_time_analysis(self, df: pd.DataFrame) -> dict:
         return {
             "events_per_day": self.temporal_analysis.posts_per_day(df),
@@ -93,43 +124,18 @@ class StatGen:
             "sources": df["source"].dropna().unique().tolist(),
         }
 
-    # def filter_by_query(self, df: pd.DataFrame, search_query: str) -> dict:
-    #     filtered_df = df[df["content"].str.contains(search_query, na=False)]
+    def filter_by_query(self, search_query: str) -> None:
+        self.search_query = search_query
 
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
+    def set_time_range(self, start: datetime.datetime, end: datetime.datetime) -> None:
+        self.start_date_filter = start
+        self.end_date_filter = end
 
-    # def set_time_range(
-    #     self,
-    #     original_df: pd.DataFrame,
-    #     start: datetime.datetime,
-    #     end: datetime.datetime,
-    # ) -> dict:
-    #     df = self._prepare_df(original_df)
-    #     filtered_df = df[(df["dt"] >= start) & (df["dt"] <= end)]
-
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
-
-    # def filter_data_sources(
-    #     self, original_df: pd.DataFrame, data_sources: dict
-    # ) -> dict:
-    #     df = self._prepare_df(original_df)
-    #     enabled_sources = [src for src, enabled in data_sources.items() if enabled]
-
-    #     if not enabled_sources:
-    #         raise ValueError("Please choose at least one data source")
-
-    #     filtered_df = df[df["source"].isin(enabled_sources)]
-
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
-
-    # def reset_dataset(self, original_df: pd.DataFrame) -> pd.DataFrame:
-    #     return self._prepare_df(original_df)
+    def filter_data_sources(self, data_sources: set) -> None:
+        self.data_source_filters = data_sources
+        
+    def reset_dataset(self) -> None:
+        self.search_query = ""
+        self.start_date_filter = None
+        self.end_date_filter = None
+        self.data_source_filters = set()
