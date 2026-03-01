@@ -64,6 +64,7 @@ class PostgresConnector:
         query = """
             INSERT INTO events (
                 dataset_id,
+                type,
                 parent_id,
                 author,
                 content,
@@ -87,7 +88,7 @@ class PostgresConnector:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s
+                %s, %s, %s, %s, %s
             )
         """
 
@@ -96,6 +97,7 @@ class PostgresConnector:
         for _, row in event_data.iterrows():
             values.append((
                 dataset_id,
+                row["type"],
                 row["parent_id"],
                 row["author"],
                 row["content"],

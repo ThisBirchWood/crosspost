@@ -136,7 +136,7 @@ def upload_data():
         db.save_dataset_content(dataset_id, enriched_df)
 
         return jsonify(
-            {"message": "File uploaded successfully", "event_count": len(enriched_df)}
+            {"message": "File uploaded successfully", "event_count": len(enriched_df), "dataset_id": dataset_id}
         ), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
@@ -171,7 +171,6 @@ def content_endpoint(dataset_id):
         return jsonify({"error": "Unauthorized access to dataset"}), 403
 
     dataset_content = db.get_dataset_content(dataset_id)
-
     try:
         return jsonify(stat_gen.get_content_analysis(dataset_content)), 200
     except ValueError as e:
