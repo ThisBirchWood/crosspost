@@ -1,5 +1,6 @@
 import os
 import psycopg2
+import pandas as pd
 from psycopg2.extras import RealDictCursor
 
 
@@ -49,6 +50,12 @@ class PostgresConnector:
         return result[0] if result else None
     
     # Dataset Management Methods
+    def save_dataset(self, user_id: int, dataset_name: str, dataset_content: pd.DataFrame, topics: dict):
+        query = """
+            INSERT INTO datasets (user_id, name, content, topics)
+            VALUES (%s, %s, %s, %s)
+        """
+        self.execute(query, (user_id, dataset_name, dataset_content.to_json(orient="records"), topics))
 
     def close(self):
         if self.connection:
