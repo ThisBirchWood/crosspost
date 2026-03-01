@@ -132,11 +132,20 @@ def upload_data():
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
 @app.route('/dataset/<int:dataset_id>', methods=['GET'])
+@jwt_required()
 def get_dataset(dataset_id):
-    if stat_obj is None:
-        return jsonify({"error": "No data uploaded"}), 400
+    current_user = get_jwt_identity()
+    dataset = db.get_dataset_info(dataset_id)
+
+    if dataset.get("user_id") != int(current_user):
+        return jsonify({"error": "Unauthorized access to dataset"}), 403
     
-    return stat_obj.df.to_json(orient="records"), 200, {"Content-Type": "application/json"}
+    dataset_content = db.get_dataset_content(dataset_id)
+    
+    if dataset_content.empty:
+        return jsonify({"error": "Dataset content not found"}), 404
+
+    return jsonify(dataset_content.to_dict(orient="records")), 200
 
 @app.route('/stats/content', methods=['GET'])
 def word_frequencies():

@@ -121,14 +121,15 @@ class PostgresConnector:
             execute_batch(cursor, query, values)
             self.connection.commit()
 
-    def get_dataset_by_id(self, dataset_id: int) -> pd.DataFrame:
+    def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
         result = self.execute(query, (dataset_id,), fetch=True)
         return pd.DataFrame(result)
     
-    def get_datasets_for_user(self, user_id: int) -> list:
-        query = "SELECT * FROM datasets WHERE user_id = %s"
-        return self.execute(query, (user_id,), fetch=True)
+    def get_dataset_info(self, dataset_id: int) -> dict:
+        query = "SELECT * FROM datasets WHERE id = %s"
+        result = self.execute(query, (dataset_id,), fetch=True)
+        return result[0] if result else None
 
     def close(self):
         if self.connection:
