@@ -2,6 +2,7 @@ import os
 import psycopg2
 import pandas as pd
 from psycopg2.extras import RealDictCursor
+from psycopg2.extras import execute_batch, Json
 
 
 class PostgresConnector:
@@ -19,14 +20,14 @@ class PostgresConnector:
         )
         self.connection.autocommit = False
 
-    def execute(self, query, params=None, fetch=False):
+    def execute(self, query, params=None, fetch=False) -> list:
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, params)
             if fetch:
                 return cursor.fetchall()
             self.connection.commit()
 
-    def executemany(self, query, param_list):
+    def executemany(self, query, param_list) -> list:
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.executemany(query, param_list)
             self.connection.commit()
@@ -50,12 +51,84 @@ class PostgresConnector:
         return result[0] if result else None
     
     # Dataset Management Methods
-    def save_dataset(self, user_id: int, dataset_name: str, dataset_content: pd.DataFrame, topics: dict):
+    def save_dataset_info(self, user_id: int, dataset_name: str, topics: dict) -> int:
         query = """
-            INSERT INTO datasets (user_id, name, content, topics)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO datasets (user_id, name, topics)
+            VALUES (%s, %s, %s)
+            RETURNING id
         """
-        self.execute(query, (user_id, dataset_name, dataset_content.to_json(orient="records"), topics))
+        result = self.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
+        return result[0]["id"] if result else None
+
+    def save_dataset_content(self, dataset_id: int, event_data: pd.DataFrame):
+        query = """
+            INSERT INTO events (
+                dataset_id,
+                parent_id,
+                author,
+                content,
+                timestamp,
+                date,
+                dt,
+                hour,
+                weekday,
+                reply_to,
+                source,
+                topic,
+                topic_confidence,
+                ner_entities,
+                emotion_anger,
+                emotion_disgust,
+                emotion_fear,
+                emotion_joy,
+                emotion_sadness
+            )
+            VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s
+            )
+        """
+
+        values = []
+
+        for _, row in event_data.iterrows():
+            values.append((
+                dataset_id,
+                row["parent_id"],
+                row["author"],
+                row["content"],
+                row["timestamp"],
+                row["date"],
+                row["dt"],
+                row["hour"],
+                row["weekday"],
+                row.get("reply_to"),
+                row["source"],
+                row.get("topic"),
+                row.get("topic_confidence"),
+                Json(row["ner_entities"]) if row.get("ner_entities") else None,
+                row.get("emotion_anger"),
+                row.get("emotion_disgust"),
+                row.get("emotion_fear"),
+                row.get("emotion_joy"),
+                row.get("emotion_sadness"),
+            ))
+
+        
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            execute_batch(cursor, query, values)
+            self.connection.commit()
+
+    def get_dataset_by_id(self, dataset_id: int) -> pd.DataFrame:
+        query = "SELECT * FROM events WHERE dataset_id = %s"
+        result = self.execute(query, (dataset_id,), fetch=True)
+        return pd.DataFrame(result)
+    
+    def get_datasets_for_user(self, user_id: int) -> list:
+        query = "SELECT * FROM datasets WHERE user_id = %s"
+        return self.execute(query, (user_id,), fetch=True)
 
     def close(self):
         if self.connection:

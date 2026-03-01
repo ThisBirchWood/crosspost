@@ -26,7 +26,7 @@ class DatasetProcessor:
         return df
     
     def enrich(self) -> pd.DataFrame:
-        self.df['timestamp'] = pd.to_numeric(self.df['timestamp'], errors='coerce')
+        self.df['timestamp'] = pd.to_numeric(self.df['timestamp'], errors='raise')
         self.df['date'] = pd.to_datetime(self.df['timestamp'], unit='s').dt.date
         self.df["dt"] = pd.to_datetime(self.df["timestamp"], unit="s", utc=True)
         self.df["hour"] = self.df["dt"].dt.hour

@@ -17,16 +17,24 @@ CREATE TABLE datasets (
 );
 
 CREATE TABLE events (
+    /* Required Fields */
     id SERIAL PRIMARY KEY,
     dataset_id INTEGER NOT NULL,
 
-    parent_post_id INTEGER NOT NULL,
     author VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
+    timestamp BIGINT NOT NULL,
+    date DATE NOT NULL,
+    dt TIMESTAMP NOT NULL,
+    hour INTEGER NOT NULL,
+    weekday VARCHAR(255) NOT NULL,
+
+    /* Comments and Replies */
+    parent_id VARCHAR(255),
     reply_to VARCHAR(255),
     source VARCHAR(255) NOT NULL,
 
+    /* NLP Fields */
     topic VARCHAR(255),
     topic_confidence FLOAT,
 
@@ -38,6 +46,5 @@ CREATE TABLE events (
     emotion_joy FLOAT,
     emotion_sadness FLOAT,
 
-    FOREIGN KEY (parent_post_id) REFERENCES events(id) ON DELETE CASCADE,
     FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
 );

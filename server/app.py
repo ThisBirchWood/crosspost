@@ -12,6 +12,7 @@ from flask_jwt_extended import (
 )
 
 from server.stat_gen import StatGen
+from server.dataset_processor import DatasetProcessor
 from db.database import PostgresConnector
 from server.auth import AuthManager
 
@@ -99,6 +100,7 @@ def profile():
 
 
 @app.route('/upload', methods=['POST'])
+@jwt_required()
 def upload_data():
     if "posts" not in request.files or "topics" not in request.files:
         return jsonify({"error": "Missing required files or form data"}), 400
@@ -113,18 +115,24 @@ def upload_data():
         return jsonify({"error": "Invalid file type. Only .jsonl and .json files are allowed."}), 400
     
     try:
-        global stat_obj
+        current_user = get_jwt_identity()
 
-        posts_df = pd.read_json(post_file, lines=True)
-        stat_obj = StatGen(posts_df, json.load(topic_file))
-        return jsonify({"message": "File uploaded successfully", "event_count": len(stat_obj.df)}), 200
+        posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
+        topics = json.load(topic_file)
+        
+        processor = DatasetProcessor(posts_df, topics)
+        enriched_df = processor.enrich()
+        dataset_id = db.save_dataset_info(current_user, f"dataset_{current_user}", topics)
+        db.save_dataset_content(dataset_id, enriched_df)
+
+        return jsonify({"message": "File uploaded successfully", "event_count": len(enriched_df)}), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     
-@app.route('/dataset', methods=['GET'])
-def get_dataset():
+@app.route('/dataset/<int:dataset_id>', methods=['GET'])
+def get_dataset(dataset_id):
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
     
