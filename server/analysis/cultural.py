@@ -6,13 +6,12 @@ from typing import Any
 
 
 class CulturalAnalysis:
-    def __init__(self, df: pd.DataFrame, content_col: str = "content", topic_col: str = "topic"):
-        self.df = df
+    def __init__(self, content_col: str = "content", topic_col: str = "topic"):
         self.content_col = content_col
         self.topic_col = topic_col
 
-    def get_identity_markers(self):
-        df = self.df.copy()
+    def get_identity_markers(self, original_df: pd.DataFrame) -> dict[str, Any]:
+        df = original_df.copy()
         s = df[self.content_col].fillna("").astype(str).str.lower()
 
         in_group_words = {"we", "us", "our", "ourselves"}
@@ -60,8 +59,8 @@ class CulturalAnalysis:
 
         return result
     
-    def get_stance_markers(self) -> dict[str, Any]:
-        s = self.df[self.content_col].fillna("").astype(str)
+    def get_stance_markers(self, df: pd.DataFrame) -> dict[str, Any]:
+        s = df[self.content_col].fillna("").astype(str)
 
         hedges = {
             "maybe", "perhaps", "possibly", "probably", "likely", "seems", "seem",
@@ -104,13 +103,11 @@ class CulturalAnalysis:
             "permission_per_1k_tokens": round(1000 * perm_counts.sum() / token_counts.sum(), 3),
         }
     
-    def get_avg_emotions_per_entity(self, top_n: int = 25, min_posts: int = 10) -> dict[str, Any]:
-        if "entities" not in self.df.columns:
+    def get_avg_emotions_per_entity(self, df: pd.DataFrame, top_n: int = 25, min_posts: int = 10) -> dict[str, Any]:
+        if "entities" not in df.columns:
             return {"entity_emotion_avg": {}}
 
-        df = self.df
         emotion_cols = [c for c in df.columns if c.startswith("emotion_")]
-
         entity_counter = Counter()
 
         for row in df["entities"].dropna():

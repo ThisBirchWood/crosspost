@@ -5,8 +5,7 @@ from collections import Counter
 
 
 class InteractionAnalysis:
-    def __init__(self, df: pd.DataFrame, word_exclusions: set[str]):
-        self.df = df
+    def __init__(self, word_exclusions: set[str]):
         self.word_exclusions = word_exclusions
 
     def _tokenize(self, text: str):
@@ -14,9 +13,9 @@ class InteractionAnalysis:
         return [t for t in tokens if t not in self.word_exclusions]
 
     def _vocab_richness_per_user(
-        self, min_words: int = 20, top_most_used_words: int = 100
+        self, df: pd.DataFrame, min_words: int = 20, top_most_used_words: int = 100
     ) -> list:
-        df = self.df.copy()
+        df = df.copy()
         df["content"] = df["content"].fillna("").astype(str).str.lower()
         df["tokens"] = df["content"].apply(self._tokenize)
 
@@ -58,10 +57,8 @@ class InteractionAnalysis:
 
         return rows
 
-    def top_users(self) -> list:
-        counts = (
-            self.df.groupby(["author", "source"]).size().sort_values(ascending=False)
-        )
+    def top_users(self, df: pd.DataFrame) -> list:
+        counts = df.groupby(["author", "source"]).size().sort_values(ascending=False)
 
         top_users = [
             {"author": author, "source": source, "count": int(count)}
@@ -70,14 +67,14 @@ class InteractionAnalysis:
 
         return top_users
 
-    def per_user_analysis(self) -> dict:
-        per_user = self.df.groupby(["author", "type"]).size().unstack(fill_value=0)
+    def per_user_analysis(self, df: pd.DataFrame) -> dict:
+        per_user = df.groupby(["author", "type"]).size().unstack(fill_value=0)
 
-        emotion_cols = [col for col in self.df.columns if col.startswith("emotion_")]
+        emotion_cols = [col for col in df.columns if col.startswith("emotion_")]
 
         avg_emotions_by_author = {}
         if emotion_cols:
-            avg_emotions = self.df.groupby("author")[emotion_cols].mean().fillna(0.0)
+            avg_emotions = df.groupby("author")[emotion_cols].mean().fillna(0.0)
             avg_emotions_by_author = {
                 author: {emotion: float(score) for emotion, score in row.items()}
                 for author, row in avg_emotions.iterrows()
@@ -97,7 +94,7 @@ class InteractionAnalysis:
         per_user = per_user.sort_values("comment_post_ratio", ascending=True)
         per_user_records = per_user.reset_index().to_dict(orient="records")
 
-        vocab_rows = self._vocab_richness_per_user()
+        vocab_rows = self._vocab_richness_per_user(df)
         vocab_by_author = {row["author"]: row for row in vocab_rows}
 
         # merge vocab richness + per_user information
@@ -112,7 +109,14 @@ class InteractionAnalysis:
                     "comment_post_ratio": float(row.get("comment_post_ratio", 0)),
                     "comment_share": float(row.get("comment_share", 0)),
                     "avg_emotions": avg_emotions_by_author.get(author, {}),
-                    "vocab": vocab_by_author.get(author, {"vocab_richness": 0, "avg_words_per_event": 0, "top_words": []}),
+                    "vocab": vocab_by_author.get(
+                        author,
+                        {
+                            "vocab_richness": 0,
+                            "avg_words_per_event": 0,
+                            "top_words": [],
+                        },
+                    ),
                 }
             )
 
@@ -120,13 +124,13 @@ class InteractionAnalysis:
 
         return merged_users
 
-    def interaction_graph(self):
-        interactions = {a: {} for a in self.df["author"].dropna().unique()}
+    def interaction_graph(self, df: pd.DataFrame):
+        interactions = {a: {} for a in df["author"].dropna().unique()}
 
         # reply_to refers to the comment id, this allows us to map comment ids to usernames
-        id_to_author = self.df.set_index("id")["author"].to_dict()
+        id_to_author = df.set_index("id")["author"].to_dict()
 
-        for _, row in self.df.iterrows():
+        for _, row in df.iterrows():
             a = row["author"]
             reply_id = row["reply_to"]
 
@@ -141,10 +145,10 @@ class InteractionAnalysis:
 
         return interactions
 
-    def average_thread_depth(self):
+    def average_thread_depth(self, df: pd.DataFrame):
         depths = []
-        id_to_reply = self.df.set_index("id")["reply_to"].to_dict()
-        for _, row in self.df.iterrows():
+        id_to_reply = df.set_index("id")["reply_to"].to_dict()
+        for _, row in df.iterrows():
             depth = 0
             current_id = row["id"]
 
@@ -163,16 +167,16 @@ class InteractionAnalysis:
 
         return round(sum(depths) / len(depths), 2)
 
-    def average_thread_length_by_emotion(self):
+    def average_thread_length_by_emotion(self, df: pd.DataFrame):
         emotion_exclusions = {"emotion_neutral", "emotion_surprise"}
 
         emotion_cols = [
             c
-            for c in self.df.columns
+            for c in df.columns
             if c.startswith("emotion_") and c not in emotion_exclusions
         ]
 
-        id_to_reply = self.df.set_index("id")["reply_to"].to_dict()
+        id_to_reply = df.set_index("id")["reply_to"].to_dict()
         length_cache = {}
 
         def thread_length_from(start_id):
@@ -211,7 +215,7 @@ class InteractionAnalysis:
         emotion_to_lengths = {}
 
         # Fill NaNs in emotion cols to avoid max() issues
-        emo_df = self.df[["id"] + emotion_cols].copy()
+        emo_df = df[["id"] + emotion_cols].copy()
         emo_df[emotion_cols] = emo_df[emotion_cols].fillna(0)
 
         for _, row in emo_df.iterrows():

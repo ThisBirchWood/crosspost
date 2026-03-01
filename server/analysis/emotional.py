@@ -1,18 +1,15 @@
 import pandas as pd
 
 class EmotionalAnalysis:
-    def __init__(self, df: pd.DataFrame):
-        self.df = df
-
-    def avg_emotion_by_topic(self) -> dict:
+    def avg_emotion_by_topic(self, df: pd.DataFrame) -> dict:
         emotion_cols = [
-            col for col in self.df.columns
+            col for col in df.columns
             if col.startswith("emotion_")
         ]
 
         counts = (
-            self.df[
-                (self.df["topic"] != "Misc")
+            df[
+                (df["topic"] != "Misc")
             ]
             .groupby("topic")
             .size()
@@ -20,8 +17,8 @@ class EmotionalAnalysis:
         )
 
         avg_emotion_by_topic = (
-            self.df[
-                (self.df["topic"] != "Misc")
+            df[
+                (df["topic"] != "Misc")
             ]
             .groupby("topic")[emotion_cols]
             .mean()

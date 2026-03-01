@@ -9,3 +9,5 @@ __pycache__/
 # React App Vite
 node_modules/
 dist/
+
+*.sh
