@@ -215,8 +215,8 @@ def get_interaction_analysis():
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-@app.route('/filter/search', methods=["POST"])
-def search_dataset():
+@app.route('/filter/query', methods=["POST"])
+def filter_query():
     if stat_obj is None:
         return jsonify({"error": "No data uploaded"}), 400
 
@@ -226,7 +226,7 @@ def search_dataset():
         return jsonify(stat_obj.df.to_dict(orient="records")), 200
     
     query = data["query"]
-    filtered_df = stat_obj.search(query)
+    filtered_df = stat_obj.filter_by_query(query)
 
     return jsonify(filtered_df), 200
 
