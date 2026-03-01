@@ -12,41 +12,15 @@ CREATE TABLE datasets (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    nlp_completed BOOLEAN DEFAULT FALSE,
+    topics JSONB,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE posts (
+CREATE TABLE events (
     id SERIAL PRIMARY KEY,
     dataset_id INTEGER NOT NULL,
 
-    author VARCHAR(255) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    source VARCHAR(255) NOT NULL,
-
-    topic VARCHAR(255),
-    topic_confidence FLOAT,
-
-    ner_entities JSONB,
-
-    emotion_anger FLOAT,
-    emotion_disgust FLOAT,
-    emotion_fear FLOAT,
-    emotion_joy FLOAT,
-    emotion_neutral FLOAT,
-    emotion_sadness FLOAT,
-    emotion_surprise FLOAT,
-
-    FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
-);
-
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    dataset_id INTEGER NOT NULL,
-
-    post_id INTEGER NOT NULL,
+    parent_post_id INTEGER NOT NULL,
     author VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
@@ -62,10 +36,8 @@ CREATE TABLE comments (
     emotion_disgust FLOAT,
     emotion_fear FLOAT,
     emotion_joy FLOAT,
-    emotion_neutral FLOAT,
     emotion_sadness FLOAT,
-    emotion_surprise FLOAT,
 
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_post_id) REFERENCES events(id) ON DELETE CASCADE,
     FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
 );
