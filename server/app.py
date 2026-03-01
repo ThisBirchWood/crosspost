@@ -1,4 +1,5 @@
 import os
+import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -41,7 +42,6 @@ jwt = JWTManager(app)
 auth_manager = AuthManager(db, bcrypt)
 
 stat_gen = StatGen()
-
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -112,7 +112,7 @@ def upload_data():
     post_file = request.files["posts"]
     topic_file = request.files["topics"]
 
-    if post_file.filename == "" or topic_file == "":
+    if post_file.filename == "" or topic_file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
     if not post_file.filename.endswith(".jsonl") or not topic_file.filename.endswith(
@@ -280,75 +280,34 @@ def get_interaction_analysis(dataset_id):
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 
-# @app.route("/filter/query", methods=["POST"])
-# def filter_query():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
+@app.route("/dataset/query", methods=["POST"])
+@jwt_required()
+def filter_query():
+    data = request.get_json()
 
-#     data = request.get_json(silent=True) or {}
+    if "query" in data:
+        stat_gen.set_search_query(data["query"])
 
-#     if "query" not in data:
-#         return jsonify(stat_obj.df.to_dict(orient="records")), 200
+    if "start" in data:
+        start_timestamp = datetime.datetime.fromisoformat(data["start"])
+        stat_gen.set_start_date(start_timestamp)
 
-#     query = data["query"]
-#     filtered_df = stat_obj.filter_by_query(query)
+    if "end" in data:
+        end_timestamp = datetime.datetime.fromisoformat(data["end"])
+        stat_gen.set_end_date(end_timestamp)
 
-#     return jsonify(filtered_df), 200
+    if "sources" in data:
+        data_sources = set(data["sources"])
+        stat_gen.set_data_sources(data_sources)
 
-
-# @app.route("/filter/time", methods=["POST"])
-# def filter_time():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     data = request.get_json(silent=True)
-#     if not data:
-#         return jsonify({"error": "Invalid or missing JSON body"}), 400
-
-#     if "start" not in data or "end" not in data:
-#         return jsonify({"error": "Please include both start and end dates"}), 400
-
-#     try:
-#         start = pd.to_datetime(data["start"], utc=True)
-#         end = pd.to_datetime(data["end"], utc=True)
-#         filtered_df = stat_obj.set_time_range(start, end)
-#         return jsonify(filtered_df), 200
-#     except Exception:
-#         return jsonify({"error": "Invalid datetime format"}), 400
+    return jsonify({"message": "Filters set successfully"}), 200
 
 
-# @app.route("/filter/sources", methods=["POST"])
-# def filter_sources():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     data = request.get_json(silent=True)
-#     if not data:
-#         return jsonify({"error": "Invalid or missing JSON body"}), 400
-
-#     if "sources" not in data:
-#         return jsonify({"error": "Ensure sources hash map is in 'sources' key"}), 400
-
-#     try:
-#         filtered_df = stat_obj.filter_data_sources(data["sources"])
-#         return jsonify(filtered_df), 200
-#     except ValueError:
-#         return jsonify({"error": "Please enable at least one data source"}), 400
-#     except Exception as e:
-#         return jsonify({"error": "An unexpected server error occured: " + str(e)}), 500
-
-
-# @app.route("/filter/reset", methods=["GET"])
-# def reset_dataset():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     try:
-#         stat_obj.reset_dataset()
-#         return jsonify({"success": "Dataset successfully reset"})
-#     except Exception as e:
-#         print(traceback.format_exc())
-#         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+@app.route("/database/query/reset", methods=["GET"])
+@jwt_required()
+def reset_dataset():
+    stat_gen.reset_filters()
+    return jsonify({"message": "Filters reset successfully"}), 200
 
 
 if __name__ == "__main__":

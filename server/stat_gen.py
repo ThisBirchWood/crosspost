@@ -127,14 +127,16 @@ class StatGen:
     def set_search_query(self, search_query: str) -> None:
         self.search_query = search_query
 
-    def set_time_range(self, start: datetime.datetime, end: datetime.datetime) -> None:
+    def set_start_date(self, start: datetime.datetime) -> None:
         self.start_date_filter = start
+
+    def set_end_date(self, end: datetime.datetime) -> None:
         self.end_date_filter = end
 
-    def search_data_sources(self, data_sources: set) -> None:
+    def set_data_sources(self, data_sources: set) -> None:
         self.data_source_filters = data_sources
         
-    def reset_dataset(self) -> None:
+    def reset_filters(self) -> None:
         self.search_query = ""
         self.start_date_filter = None
         self.end_date_filter = None
