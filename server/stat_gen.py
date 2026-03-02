@@ -55,13 +55,15 @@ class StatGen:
         if search_query:
             mask = (
                 filtered_df["content"].str.contains(search_query, case=False, na=False)
-                | filtered_df["author"]
-                .str.contains(search_query, case=False, na=False)
-                .fillna(False)
-                | filtered_df["title"]
-                .str.contains(search_query, case=False, na=False, regex=False)
-                .fillna(False)
+                | filtered_df["author"].str.contains(search_query, case=False, na=False)
             )
+
+            # Only include title if the column exists
+            if "title" in filtered_df.columns:
+                mask = mask | filtered_df["title"].str.contains(
+                    search_query, case=False, na=False, regex=False
+                )
+
             filtered_df = filtered_df[mask]
 
         if start_date_filter:
@@ -76,6 +78,8 @@ class StatGen:
         return filtered_df
 
     ## Public Methods
+    def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        return self._prepare_filtered_df(df, filters).to_dict(orient="records")
 
     def get_time_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)

@@ -16,6 +16,7 @@ from server.stat_gen import StatGen
 from server.dataset_processor import DatasetProcessor
 from db.database import PostgresConnector
 from server.auth import AuthManager
+from server.utils import get_request_filters, parse_datetime_filter
 
 import pandas as pd
 import traceback
@@ -42,56 +43,6 @@ jwt = JWTManager(app)
 auth_manager = AuthManager(db, bcrypt)
 
 stat_gen = StatGen()
-
-
-def _parse_datetime_filter(value):
-    if not value:
-        return None
-
-    try:
-        return datetime.datetime.fromisoformat(value)
-    except ValueError:
-        try:
-            return datetime.datetime.fromtimestamp(float(value))
-        except ValueError as err:
-            raise ValueError(
-                "Date filters must be ISO-8601 strings or Unix timestamps"
-            ) from err
-
-
-def _get_request_filters() -> dict:
-    filters = {}
-
-    search_query = request.args.get("search_query") or request.args.get("query")
-    if search_query:
-        filters["search_query"] = search_query
-
-    start_date = _parse_datetime_filter(
-        request.args.get("start_date") or request.args.get("start")
-    )
-    if start_date:
-        filters["start_date"] = start_date
-
-    end_date = _parse_datetime_filter(
-        request.args.get("end_date") or request.args.get("end")
-    )
-    if end_date:
-        filters["end_date"] = end_date
-
-    data_sources = request.args.getlist("data_sources")
-    if not data_sources:
-        data_sources = request.args.getlist("sources")
-
-    if len(data_sources) == 1 and "," in data_sources[0]:
-        data_sources = [
-            source.strip() for source in data_sources[0].split(",") if source.strip()
-        ]
-
-    if data_sources:
-        filters["data_sources"] = data_sources
-
-    return filters
-
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -212,7 +163,8 @@ def get_dataset(dataset_id):
     if dataset_content.empty:
         return jsonify({"error": "Dataset content not found"}), 404
 
-    return jsonify(dataset_content.to_dict(orient="records")), 200
+    filters = get_request_filters()
+    return jsonify(stat_gen.filter_dataset(dataset_content, filters)), 200
 
 
 @app.route("/dataset/<int:dataset_id>/content", methods=["GET"])
@@ -226,7 +178,7 @@ def content_endpoint(dataset_id):
 
     dataset_content = db.get_dataset_content(dataset_id)
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
@@ -247,7 +199,7 @@ def get_summary(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(stat_gen.summary(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
@@ -268,7 +220,7 @@ def get_time_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
@@ -289,7 +241,7 @@ def get_user_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
@@ -310,7 +262,7 @@ def get_cultural_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
@@ -331,7 +283,7 @@ def get_interaction_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        filters = _get_request_filters()
+        filters = get_request_filters()
         return jsonify(
             stat_gen.get_interactional_analysis(dataset_content, filters)
         ), 200
