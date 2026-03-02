@@ -1,0 +1,2 @@
+class NotAuthorisedException(Exception):
+    pass
