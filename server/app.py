@@ -1,4 +1,5 @@
 import os
+import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -15,6 +16,7 @@ from server.stat_gen import StatGen
 from server.dataset_processor import DatasetProcessor
 from db.database import PostgresConnector
 from server.auth import AuthManager
+from server.utils import get_request_filters, parse_datetime_filter
 
 import pandas as pd
 import traceback
@@ -41,7 +43,6 @@ jwt = JWTManager(app)
 auth_manager = AuthManager(db, bcrypt)
 
 stat_gen = StatGen()
-
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -112,7 +113,7 @@ def upload_data():
     post_file = request.files["posts"]
     topic_file = request.files["topics"]
 
-    if post_file.filename == "" or topic_file == "":
+    if post_file.filename == "" or topic_file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
     if not post_file.filename.endswith(".jsonl") or not topic_file.filename.endswith(
@@ -136,7 +137,11 @@ def upload_data():
         db.save_dataset_content(dataset_id, enriched_df)
 
         return jsonify(
-            {"message": "File uploaded successfully", "event_count": len(enriched_df), "dataset_id": dataset_id}
+            {
+                "message": "File uploaded successfully",
+                "event_count": len(enriched_df),
+                "dataset_id": dataset_id,
+            }
         ), 200
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
@@ -158,7 +163,8 @@ def get_dataset(dataset_id):
     if dataset_content.empty:
         return jsonify({"error": "Dataset content not found"}), 404
 
-    return jsonify(dataset_content.to_dict(orient="records")), 200
+    filters = get_request_filters()
+    return jsonify(stat_gen.filter_dataset(dataset_content, filters)), 200
 
 
 @app.route("/dataset/<int:dataset_id>/content", methods=["GET"])
@@ -172,7 +178,8 @@ def content_endpoint(dataset_id):
 
     dataset_content = db.get_dataset_content(dataset_id)
     try:
-        return jsonify(stat_gen.get_content_analysis(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -192,7 +199,8 @@ def get_summary(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        return jsonify(stat_gen.summary(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.summary(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -212,7 +220,8 @@ def get_time_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        return jsonify(stat_gen.get_time_analysis(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -232,7 +241,8 @@ def get_user_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        return jsonify(stat_gen.get_user_analysis(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -252,7 +262,8 @@ def get_cultural_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        return jsonify(stat_gen.get_cultural_analysis(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -272,84 +283,15 @@ def get_interaction_analysis(dataset_id):
     dataset_content = db.get_dataset_content(dataset_id)
 
     try:
-        return jsonify(stat_gen.get_interactional_analysis(dataset_content)), 200
+        filters = get_request_filters()
+        return jsonify(
+            stat_gen.get_interactional_analysis(dataset_content, filters)
+        ), 200
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-
-
-# @app.route("/filter/query", methods=["POST"])
-# def filter_query():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     data = request.get_json(silent=True) or {}
-
-#     if "query" not in data:
-#         return jsonify(stat_obj.df.to_dict(orient="records")), 200
-
-#     query = data["query"]
-#     filtered_df = stat_obj.filter_by_query(query)
-
-#     return jsonify(filtered_df), 200
-
-
-# @app.route("/filter/time", methods=["POST"])
-# def filter_time():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     data = request.get_json(silent=True)
-#     if not data:
-#         return jsonify({"error": "Invalid or missing JSON body"}), 400
-
-#     if "start" not in data or "end" not in data:
-#         return jsonify({"error": "Please include both start and end dates"}), 400
-
-#     try:
-#         start = pd.to_datetime(data["start"], utc=True)
-#         end = pd.to_datetime(data["end"], utc=True)
-#         filtered_df = stat_obj.set_time_range(start, end)
-#         return jsonify(filtered_df), 200
-#     except Exception:
-#         return jsonify({"error": "Invalid datetime format"}), 400
-
-
-# @app.route("/filter/sources", methods=["POST"])
-# def filter_sources():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     data = request.get_json(silent=True)
-#     if not data:
-#         return jsonify({"error": "Invalid or missing JSON body"}), 400
-
-#     if "sources" not in data:
-#         return jsonify({"error": "Ensure sources hash map is in 'sources' key"}), 400
-
-#     try:
-#         filtered_df = stat_obj.filter_data_sources(data["sources"])
-#         return jsonify(filtered_df), 200
-#     except ValueError:
-#         return jsonify({"error": "Please enable at least one data source"}), 400
-#     except Exception as e:
-#         return jsonify({"error": "An unexpected server error occured: " + str(e)}), 500
-
-
-# @app.route("/filter/reset", methods=["GET"])
-# def reset_dataset():
-#     if stat_obj is None:
-#         return jsonify({"error": "No data uploaded"}), 400
-
-#     try:
-#         stat_obj.reset_dataset()
-#         return jsonify({"success": "Dataset successfully reset"})
-#     except Exception as e:
-#         print(traceback.format_exc())
-#         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)

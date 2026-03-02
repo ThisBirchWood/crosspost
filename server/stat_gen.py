@@ -39,97 +39,139 @@ class StatGen:
         self.linguistic_analysis = LinguisticAnalysis(EXCLUDE_WORDS)
         self.cultural_analysis = CulturalAnalysis()
 
-    def get_time_analysis(self, df: pd.DataFrame) -> dict:
+    ## Private Methods
+    def _prepare_filtered_df(self, 
+                             df: pd.DataFrame, 
+                             filters: dict | None = None
+                             ) -> pd.DataFrame:
+        filters = filters or {}
+        filtered_df = df.copy()
+
+        search_query = filters.get("search_query", None)
+        start_date_filter = filters.get("start_date", None)
+        end_date_filter = filters.get("end_date", None)
+        data_source_filter = filters.get("data_sources", None)
+
+        if search_query:
+            mask = (
+                filtered_df["content"].str.contains(search_query, case=False, na=False)
+                | filtered_df["author"].str.contains(search_query, case=False, na=False)
+            )
+
+            # Only include title if the column exists
+            if "title" in filtered_df.columns:
+                mask = mask | filtered_df["title"].str.contains(
+                    search_query, case=False, na=False, regex=False
+                )
+
+            filtered_df = filtered_df[mask]
+
+        if start_date_filter:
+            filtered_df = filtered_df[(filtered_df["dt"] >= start_date_filter)]
+
+        if end_date_filter:
+            filtered_df = filtered_df[(filtered_df["dt"] <= end_date_filter)]
+
+        if data_source_filter:
+            filtered_df = filtered_df[filtered_df["source"].isin(data_source_filter)]
+
+        return filtered_df
+
+    ## Public Methods
+    def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        return self._prepare_filtered_df(df, filters).to_dict(orient="records")
+
+    def get_time_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
         return {
-            "events_per_day": self.temporal_analysis.posts_per_day(df),
-            "weekday_hour_heatmap": self.temporal_analysis.heatmap(df),
+            "events_per_day": self.temporal_analysis.posts_per_day(filtered_df),
+            "weekday_hour_heatmap": self.temporal_analysis.heatmap(filtered_df),
         }
 
-    def get_content_analysis(self, df: pd.DataFrame) -> dict:
+    def get_content_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
         return {
-            "word_frequencies": self.linguistic_analysis.word_frequencies(df),
-            "common_two_phrases": self.linguistic_analysis.ngrams(df),
-            "common_three_phrases": self.linguistic_analysis.ngrams(df, n=3),
-            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(df),
-            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion(df),
+            "word_frequencies": self.linguistic_analysis.word_frequencies(filtered_df),
+            "common_two_phrases": self.linguistic_analysis.ngrams(filtered_df),
+            "common_three_phrases": self.linguistic_analysis.ngrams(filtered_df, n=3),
+            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(
+                filtered_df
+            ),
+            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion(
+                filtered_df
+            ),
         }
 
-    def get_user_analysis(self, df: pd.DataFrame) -> dict:
+    def get_user_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
         return {
-            "top_users": self.interaction_analysis.top_users(df),
-            "users": self.interaction_analysis.per_user_analysis(df),
-            "interaction_graph": self.interaction_analysis.interaction_graph(df),
+            "top_users": self.interaction_analysis.top_users(filtered_df),
+            "users": self.interaction_analysis.per_user_analysis(filtered_df),
+            "interaction_graph": self.interaction_analysis.interaction_graph(
+                filtered_df
+            ),
         }
 
-    def get_interactional_analysis(self, df: pd.DataFrame) -> dict:
+    def get_interactional_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
         return {
-            "average_thread_depth": self.interaction_analysis.average_thread_depth(df),
-            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(df),
+            "average_thread_depth": self.interaction_analysis.average_thread_depth(
+                filtered_df
+            ),
+            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(
+                filtered_df
+            ),
         }
 
-    def get_cultural_analysis(self, df: pd.DataFrame) -> dict:
+    def get_cultural_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
         return {
-            "identity_markers": self.cultural_analysis.get_identity_markers(df),
-            "stance_markers": self.cultural_analysis.get_stance_markers(df),
-            "entity_salience": self.cultural_analysis.get_avg_emotions_per_entity(df),
+            "identity_markers": self.cultural_analysis.get_identity_markers(
+                filtered_df
+            ),
+            "stance_markers": self.cultural_analysis.get_stance_markers(filtered_df),
+            "entity_salience": self.cultural_analysis.get_avg_emotions_per_entity(
+                filtered_df
+            ),
         }
 
-    def summary(self, df: pd.DataFrame) -> dict:
-        total_posts = (df["type"] == "post").sum()
-        total_comments = (df["type"] == "comment").sum()
-        events_per_user = df.groupby("author").size()
+    def summary(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
+        total_posts = (filtered_df["type"] == "post").sum()
+        total_comments = (filtered_df["type"] == "comment").sum()
+        events_per_user = filtered_df.groupby("author").size()
+
+        if filtered_df.empty:
+            return {
+                "total_events": 0,
+                "total_posts": 0,
+                "total_comments": 0,
+                "unique_users": 0,
+                "comments_per_post": 0,
+                "lurker_ratio": 0,
+                "time_range": {
+                    "start": None,
+                    "end": None,
+                },
+                "sources": [],
+            }
 
         return {
-            "total_events": int(len(df)),
+            "total_events": int(len(filtered_df)),
             "total_posts": int(total_posts),
             "total_comments": int(total_comments),
             "unique_users": int(events_per_user.count()),
             "comments_per_post": round(total_comments / max(total_posts, 1), 2),
             "lurker_ratio": round((events_per_user == 1).mean(), 2),
             "time_range": {
-                "start": int(df["dt"].min().timestamp()),
-                "end": int(df["dt"].max().timestamp()),
+                "start": int(filtered_df["dt"].min().timestamp()),
+                "end": int(filtered_df["dt"].max().timestamp()),
             },
-            "sources": df["source"].dropna().unique().tolist(),
+            "sources": filtered_df["source"].dropna().unique().tolist(),
         }
-
-    # def filter_by_query(self, df: pd.DataFrame, search_query: str) -> dict:
-    #     filtered_df = df[df["content"].str.contains(search_query, na=False)]
-
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
-
-    # def set_time_range(
-    #     self,
-    #     original_df: pd.DataFrame,
-    #     start: datetime.datetime,
-    #     end: datetime.datetime,
-    # ) -> dict:
-    #     df = self._prepare_df(original_df)
-    #     filtered_df = df[(df["dt"] >= start) & (df["dt"] <= end)]
-
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
-
-    # def filter_data_sources(
-    #     self, original_df: pd.DataFrame, data_sources: dict
-    # ) -> dict:
-    #     df = self._prepare_df(original_df)
-    #     enabled_sources = [src for src, enabled in data_sources.items() if enabled]
-
-    #     if not enabled_sources:
-    #         raise ValueError("Please choose at least one data source")
-
-    #     filtered_df = df[df["source"].isin(enabled_sources)]
-
-    #     return {
-    #         "rows": len(filtered_df),
-    #         "data": filtered_df.to_dict(orient="records"),
-    #     }
-
-    # def reset_dataset(self, original_df: pd.DataFrame) -> pd.DataFrame:
-    #     return self._prepare_df(original_df)

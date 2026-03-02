@@ -110,7 +110,7 @@ class PostgresConnector:
                 row["source"],
                 row.get("topic"),
                 row.get("topic_confidence"),
-                Json(row["ner_entities"]) if row.get("ner_entities") else None,
+                Json(row["entities"]) if row.get("entities") else None,
                 row.get("emotion_anger"),
                 row.get("emotion_disgust"),
                 row.get("emotion_fear"),
