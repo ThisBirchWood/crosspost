@@ -3,6 +3,7 @@ import psycopg2
 import pandas as pd
 from psycopg2.extras import RealDictCursor
 from psycopg2.extras import execute_batch, Json
+from server.exceptions import NotExistentDatasetException
 
 
 class PostgresConnector:
@@ -133,7 +134,7 @@ class PostgresConnector:
         if result:
             return pd.DataFrame(result)
         
-        raise ValueError("Dataset does not exist")
+        raise NotExistentDatasetException("Dataset does not exist")
     
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
@@ -141,7 +142,7 @@ class PostgresConnector:
         if result:
             return result[0] 
         
-        raise ValueError("Dataset does not exist")
+        raise NotExistentDatasetException("Dataset does not exist")
 
     def close(self):
         if self.connection:
