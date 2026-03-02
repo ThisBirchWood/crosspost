@@ -16,14 +16,14 @@ from server.enrichment import DatasetEnrichment
 from server.exceptions import NotAuthorisedException, NotExistentDatasetException
 from server.db.database import PostgresConnector
 from server.auth import AuthManager
-from server.utils import get_request_filters, get_dataset_and_validate
+from server.datasets import DatasetManager
+from server.utils import get_request_filters
 
 import pandas as pd
 import traceback
 import json
 
 app = Flask(__name__)
-db = PostgresConnector()
 
 # Env Variables
 load_dotenv()
@@ -40,10 +40,11 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_access_token_expires
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+db = PostgresConnector()
 auth_manager = AuthManager(db, bcrypt)
-
+dataset_manager = DatasetManager(db)
 stat_gen = StatGen()
-
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -132,10 +133,8 @@ def upload_data():
 
         processor = DatasetEnrichment(posts_df, topics)
         enriched_df = processor.enrich()
-        dataset_id = db.save_dataset_info(
-            current_user, f"dataset_{current_user}", topics
-        )
-        db.save_dataset_content(dataset_id, enriched_df)
+        dataset_id = dataset_manager.save_dataset_info(current_user, f"dataset_{current_user}", topics)
+        dataset_manager.save_dataset_content(dataset_id, enriched_df)
 
         return jsonify(
             {
@@ -154,7 +153,8 @@ def upload_data():
 @jwt_required()
 def get_dataset(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         filtered_dataset = stat_gen.filter_dataset(dataset_content, filters)
         return jsonify(filtered_dataset), 200
@@ -171,7 +171,8 @@ def get_dataset(dataset_id):
 @jwt_required()
 def content_endpoint(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -187,7 +188,8 @@ def content_endpoint(dataset_id):
 @jwt_required()
 def get_summary(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.summary(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -203,7 +205,8 @@ def get_summary(dataset_id):
 @jwt_required()
 def get_time_analysis(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -219,7 +222,8 @@ def get_time_analysis(dataset_id):
 @jwt_required()
 def get_user_analysis(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -235,7 +239,8 @@ def get_user_analysis(dataset_id):
 @jwt_required()
 def get_cultural_analysis(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -251,7 +256,8 @@ def get_cultural_analysis(dataset_id):
 @jwt_required()
 def get_interaction_analysis(dataset_id):
     try:
-        dataset_content = get_dataset_and_validate(dataset_id, db)
+        user_id = get_jwt_identity()
+        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
         filters = get_request_filters()
         return jsonify(stat_gen.get_interactional_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
