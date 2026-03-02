@@ -129,12 +129,19 @@ class PostgresConnector:
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
         result = self.execute(query, (dataset_id,), fetch=True)
-        return pd.DataFrame(result)
+
+        if result:
+            return pd.DataFrame(result)
+        
+        raise ValueError("Dataset does not exist")
     
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
         result = self.execute(query, (dataset_id,), fetch=True)
-        return result[0] if result else None
+        if result:
+            return result[0] 
+        
+        raise ValueError("Dataset does not exist")
 
     def close(self):
         if self.connection:
