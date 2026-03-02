@@ -67,6 +67,7 @@ class PostgresConnector:
                 type,
                 parent_id,
                 author,
+                title,
                 content,
                 timestamp,
                 date,
@@ -88,7 +89,8 @@ class PostgresConnector:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s,
+                %s
             )
         """
 
@@ -100,6 +102,7 @@ class PostgresConnector:
                 row["type"],
                 row["parent_id"],
                 row["author"],
+                row.get("title"),
                 row["content"],
                 row["timestamp"],
                 row["date"],
