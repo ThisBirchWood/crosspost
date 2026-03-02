@@ -30,7 +30,10 @@ CREATE TABLE events (
     hour INTEGER NOT NULL,
     weekday VARCHAR(255) NOT NULL,
 
-    /* Comments and Replies */
+    /* Posts Only */
+    title VARCHAR(255),
+
+    /* Comments Only*/
     parent_id VARCHAR(255),
     reply_to VARCHAR(255),
     source VARCHAR(255) NOT NULL,

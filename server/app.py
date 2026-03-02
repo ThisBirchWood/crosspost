@@ -1,5 +1,4 @@
 import os
-import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -14,9 +13,10 @@ from flask_jwt_extended import (
 
 from server.stat_gen import StatGen
 from server.dataset_processor import DatasetProcessor
+from server.exceptions import NotAuthorisedException, NotExistentDatasetException
 from db.database import PostgresConnector
 from server.auth import AuthManager
-from server.utils import get_request_filters, parse_datetime_filter
+from server.utils import get_request_filters, get_dataset_and_validate
 
 import pandas as pd
 import traceback
@@ -43,6 +43,7 @@ jwt = JWTManager(app)
 auth_manager = AuthManager(db, bcrypt)
 
 stat_gen = StatGen()
+
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -152,34 +153,29 @@ def upload_data():
 @app.route("/dataset/<int:dataset_id>", methods=["GET"])
 @jwt_required()
 def get_dataset(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
-    if dataset_content.empty:
-        return jsonify({"error": "Dataset content not found"}), 404
-
-    filters = get_request_filters()
-    return jsonify(stat_gen.filter_dataset(dataset_content, filters)), 200
+    try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
+        filters = get_request_filters()
+        filtered_dataset = stat_gen.filter_dataset(dataset_content, filters)
+        return jsonify(filtered_dataset), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NotExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "An unexpected error occured"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/content", methods=["GET"])
 @jwt_required()
 def content_endpoint(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
         return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -190,17 +186,12 @@ def content_endpoint(dataset_id):
 @app.route("/dataset/<int:dataset_id>/summary", methods=["GET"])
 @jwt_required()
 def get_summary(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
         return jsonify(stat_gen.summary(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -211,17 +202,12 @@ def get_summary(dataset_id):
 @app.route("/dataset/<int:dataset_id>/time", methods=["GET"])
 @jwt_required()
 def get_time_analysis(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
         return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -232,17 +218,12 @@ def get_time_analysis(dataset_id):
 @app.route("/dataset/<int:dataset_id>/user", methods=["GET"])
 @jwt_required()
 def get_user_analysis(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
         return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -253,17 +234,12 @@ def get_user_analysis(dataset_id):
 @app.route("/dataset/<int:dataset_id>/cultural", methods=["GET"])
 @jwt_required()
 def get_cultural_analysis(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
         return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -274,24 +250,18 @@ def get_cultural_analysis(dataset_id):
 @app.route("/dataset/<int:dataset_id>/interaction", methods=["GET"])
 @jwt_required()
 def get_interaction_analysis(dataset_id):
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        return jsonify({"error": "Unauthorized access to dataset"}), 403
-
-    dataset_content = db.get_dataset_content(dataset_id)
-
     try:
+        dataset_content = get_dataset_and_validate(dataset_id, db)
         filters = get_request_filters()
-        return jsonify(
-            stat_gen.get_interactional_analysis(dataset_content, filters)
-        ), 200
+        return jsonify(stat_gen.get_interactional_analysis(dataset_content, filters)), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
