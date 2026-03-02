@@ -12,9 +12,9 @@ from flask_jwt_extended import (
 )
 
 from server.stat_gen import StatGen
-from server.dataset_processor import DatasetProcessor
+from server.enrichment import DatasetEnrichment
 from server.exceptions import NotAuthorisedException, NotExistentDatasetException
-from db.database import PostgresConnector
+from server.db.database import PostgresConnector
 from server.auth import AuthManager
 from server.utils import get_request_filters, get_dataset_and_validate
 
@@ -130,7 +130,7 @@ def upload_data():
         posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
         topics = json.load(topic_file)
 
-        processor = DatasetProcessor(posts_df, topics)
+        processor = DatasetEnrichment(posts_df, topics)
         enriched_df = processor.enrich()
         dataset_id = db.save_dataset_info(
             current_user, f"dataset_{current_user}", topics

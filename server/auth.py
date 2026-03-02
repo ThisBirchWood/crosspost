@@ -1,4 +1,4 @@
-from db.database import PostgresConnector
+from server.db.database import PostgresConnector
 from flask_bcrypt import Bcrypt
 
 class AuthManager:

@@ -1,5 +1,3 @@
-import datetime
-
 import nltk
 import pandas as pd
 from nltk.corpus import stopwords

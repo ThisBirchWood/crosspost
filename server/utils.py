@@ -3,7 +3,7 @@ import pandas as pd
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from db.database import PostgresConnector
+from server.db.database import PostgresConnector
 from server.exceptions import NotAuthorisedException
 
 def parse_datetime_filter(value):

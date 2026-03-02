@@ -2,7 +2,7 @@ import pandas as pd
 
 from server.analysis.nlp import NLP
 
-class DatasetProcessor:
+class DatasetEnrichment:
     def __init__(self, df, topics):
         self.df = self._explode_comments(df)
         self.topics = topics

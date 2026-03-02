@@ -3,7 +3,6 @@ import psycopg2
 import pandas as pd
 from psycopg2.extras import RealDictCursor
 from psycopg2.extras import execute_batch, Json
-from server.exceptions import NotExistentDatasetException
 
 
 class PostgresConnector:
@@ -68,7 +67,6 @@ class PostgresConnector:
                 type,
                 parent_id,
                 author,
-                title,
                 content,
                 timestamp,
                 date,
@@ -90,8 +88,7 @@ class PostgresConnector:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s,
-                %s
+                %s, %s, %s, %s, %s
             )
         """
 
@@ -103,7 +100,6 @@ class PostgresConnector:
                 row["type"],
                 row["parent_id"],
                 row["author"],
-                row.get("title"),
                 row["content"],
                 row["timestamp"],
                 row["date"],
@@ -114,7 +110,7 @@ class PostgresConnector:
                 row["source"],
                 row.get("topic"),
                 row.get("topic_confidence"),
-                Json(row["entities"]) if row.get("entities") else None,
+                Json(row["ner_entities"]) if row.get("ner_entities") else None,
                 row.get("emotion_anger"),
                 row.get("emotion_disgust"),
                 row.get("emotion_fear"),
@@ -130,19 +126,12 @@ class PostgresConnector:
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
         result = self.execute(query, (dataset_id,), fetch=True)
-
-        if result:
-            return pd.DataFrame(result)
-        
-        raise NotExistentDatasetException("Dataset does not exist")
+        return pd.DataFrame(result)
     
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
         result = self.execute(query, (dataset_id,), fetch=True)
-        if result:
-            return result[0] 
-        
-        raise NotExistentDatasetException("Dataset does not exist")
+        return result[0] if result else None
 
     def close(self):
         if self.connection:
