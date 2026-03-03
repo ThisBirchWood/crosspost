@@ -14,8 +14,31 @@ services:
   redis:
     image: redis:7
     container_name: redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
 
-volumes:
-  postgres_data:
+  backend:
+    build: .
+    container_name: flask_backend
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    command: flask --app server.app run --host=0.0.0.0
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build: .
+    container_name: celery_worker
+    env_file:
+      - .env
+    command: >
+      celery -A server.queue.celery_app.celery worker
+      --loglevel=info
+      --pool=solo
+    depends_on:
+      - postgres
+      - redis
