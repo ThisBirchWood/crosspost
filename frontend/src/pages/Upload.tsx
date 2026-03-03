@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
 const styles = StatsStyling;
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
 
 const UploadPage = () => {
   const [datasetName, setDatasetName] = useState("");

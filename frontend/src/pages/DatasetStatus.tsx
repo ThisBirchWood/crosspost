@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+
 type DatasetStatusResponse = {
   status?: "processing" | "complete" | "error";
   status_message?: string | null;
@@ -10,7 +12,6 @@ type DatasetStatusResponse = {
 };
 
 const styles = StatsStyling;
-const API_BASE_URL = "http://localhost:5000";
 
 const DatasetStatusPage = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const DatasetStatusPage = () => {
 
         if (nextStatus === "complete") {
           window.setTimeout(() => {
-            navigate("/stats", { replace: true });
+            navigate(`/dataset/${parsedDatasetId}/stats`, { replace: true });
           }, 800);
         }
       } catch (error: unknown) {

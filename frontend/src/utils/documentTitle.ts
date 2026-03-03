@@ -11,5 +11,9 @@ export const getDocumentTitle = (pathname: string) => {
     return "Processing Dataset";
   }
 
+  if (pathname.includes("stats")) {
+    return "Ethnography Analysis"
+  }
+
   return STATIC_TITLES[pathname] ?? DEFAULT_TITLE;
 };

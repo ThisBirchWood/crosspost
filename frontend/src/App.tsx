@@ -21,7 +21,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/dataset/:datasetId/status" element={<DatasetStatusPage />} />
-        <Route path="/stats" element={<StatPage />} />
+        <Route path="/dataset/:datasetId/stats" element={<StatPage />} />
       </Route>
     </Routes>
   );

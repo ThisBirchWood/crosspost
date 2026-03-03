@@ -3,8 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+
 const styles = StatsStyling;
-const API_BASE_URL = "http://localhost:5000";
 const controlStyle = {
   width: "100%",
   maxWidth: "100%",
