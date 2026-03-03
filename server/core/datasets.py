@@ -49,6 +49,7 @@ class DatasetManager:
                 type,
                 parent_id,
                 author,
+                title,
                 content,
                 timestamp,
                 date,
@@ -70,7 +71,8 @@ class DatasetManager:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s,
+                %s
             )
         """
 
@@ -80,6 +82,7 @@ class DatasetManager:
                 row["type"],
                 row["parent_id"],
                 row["author"],
+                row.get("title"),
                 row["content"],
                 row["timestamp"],
                 row["date"],
