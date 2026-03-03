@@ -21,17 +21,21 @@ services:
   backend:
     build: .
     container_name: crosspost_flask
+    volumes:
+      - .:/app
     env_file:
       - .env
     ports:
       - "5000:5000"
-    command: flask --app server.app run --host=0.0.0.0
+    command: flask --app server.app run --host=0.0.0.0 --debug
     depends_on:
       - postgres
       - redis
 
   worker:
     build: .
+    volumes:
+      - .:/app
     container_name: crosspost_worker
     env_file:
       - .env
