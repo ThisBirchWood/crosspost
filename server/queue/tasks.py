@@ -5,15 +5,20 @@ from server.analysis.enrichment import DatasetEnrichment
 
 @celery.task(bind=True, max_retries=3)
 def process_dataset(self, dataset_id: int, posts: list, topics: dict):
-    from server.db.database import PostgresConnector
-    from server.core.datasets import DatasetManager
 
-    db = PostgresConnector()
-    dataset_manager = DatasetManager(db)
+    try:
+        from server.db.database import PostgresConnector
+        from server.core.datasets import DatasetManager
 
-    df = pd.DataFrame(posts)
+        db = PostgresConnector()
+        dataset_manager = DatasetManager(db)
 
-    processor = DatasetEnrichment(df, topics)
-    enriched_df = processor.enrich()
+        df = pd.DataFrame(posts)
 
-    dataset_manager.save_dataset_content(dataset_id, enriched_df)
+        processor = DatasetEnrichment(df, topics)
+        enriched_df = processor.enrich()
+
+        dataset_manager.save_dataset_content(dataset_id, enriched_df)
+        dataset_manager.set_dataset_status(dataset_id, "complete", "NLP Processing Completed Successfully")
+    except Exception as e:
+        dataset_manager.set_dataset_status(dataset_id, "error", f"An error occurred: {e}")
