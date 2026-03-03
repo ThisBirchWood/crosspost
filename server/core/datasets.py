@@ -17,6 +17,10 @@ class DatasetManager:
             return False
         
         return True
+    
+    def get_user_datasets(self, user_id: int) -> list[dict]:
+        query = "SELECT * FROM datasets WHERE user_id = %s"
+        return self.db.execute(query, (user_id, ), fetch=True)
 
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"

@@ -104,15 +104,21 @@ def profile():
         message="Access granted", user=auth_manager.get_user_by_id(current_user)
     ), 200
 
+@app.route("/user/datasets")
+@jwt_required()
+def get_user_datasets():
+    current_user = int(get_jwt_identity())
+    return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
 @app.route("/upload", methods=["POST"])
 @jwt_required()
 def upload_data():
-    if "posts" not in request.files or "topics" not in request.files:
+    if "posts" not in request.files or "topics" not in request.files or "name" not in request.form:
         return jsonify({"error": "Missing required files or form data"}), 400
 
     post_file = request.files["posts"]
     topic_file = request.files["topics"]
+    dataset_name = request.form["name"]
 
     if post_file.filename == "" or topic_file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
@@ -129,7 +135,7 @@ def upload_data():
 
         posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
         topics = json.load(topic_file)
-        dataset_id = dataset_manager.save_dataset_info(current_user, f"dataset_{current_user}", topics)
+        dataset_id = dataset_manager.save_dataset_info(current_user, dataset_name, topics)
 
         process_dataset.delay(
             dataset_id,
