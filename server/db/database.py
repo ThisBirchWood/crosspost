@@ -1,8 +1,9 @@
 import os
 import psycopg2
-import pandas as pd
 from psycopg2.extras import RealDictCursor
-from psycopg2.extras import execute_batch, Json
+from psycopg2.extras import execute_batch
+
+from server.exceptions import DatabaseNotConfiguredException
 
 
 class PostgresConnector:
@@ -11,13 +12,18 @@ class PostgresConnector:
     """
 
     def __init__(self):
-        self.connection = psycopg2.connect(
-            host=os.getenv("POSTGRES_HOST", "localhost"),
-            port=os.getenv("POSTGRES_PORT", 5432),
-            user=os.getenv("POSTGRES_USER", "postgres"),
-            password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-            database=os.getenv("POSTGRES_DB", "postgres"),
-        )
+
+        try:
+            self.connection = psycopg2.connect(
+                host=os.getenv("POSTGRES_HOST", "localhost"),
+                port=os.getenv("POSTGRES_PORT", 5432),
+                user=os.getenv("POSTGRES_USER", "postgres"),
+                password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+                database=os.getenv("POSTGRES_DB", "postgres"),
+            )
+        except psycopg2.OperationalError as e:
+            raise DatabaseNotConfiguredException(f"Ensure database is up and running: {e}")
+        
         self.connection.autocommit = False
 
     def execute(self, query, params=None, fetch=False) -> list:
