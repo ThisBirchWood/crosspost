@@ -174,11 +174,11 @@ return (
         </button>
       </div>
 
-          <div style={{ fontSize: 13, color: "#6b7280" }}>Analytics Dashboard</div>
-          <div style={{ fontSize: 13, color: "#6b7280" }}>Dataset #{datasetId ?? "-"}</div>
+          <div style={styles.dashboardMeta}>Analytics Dashboard</div>
+          <div style={styles.dashboardMeta}>Dataset #{datasetId ?? "-"}</div>
         </div>
 
-    <div style={{ ...styles.container, display: "flex", gap: 8, marginTop: 12 }}>
+    <div style={{ ...styles.container, ...styles.tabsRow }}>
       <button
         onClick={() => setActiveView("summary")}
         style={activeView === "summary" ? styles.buttonPrimary : styles.buttonSecondary}

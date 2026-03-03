@@ -78,9 +78,9 @@ const DatasetStatusPage = () => {
 
   return (
     <div style={styles.page}>
-      <div style={{ ...styles.container, maxWidth: 720 }}>
+      <div style={styles.containerNarrow}>
         <div style={{ ...styles.card, marginTop: 28 }}>
-          <h1 style={{ margin: 0, fontSize: 28, color: "#111827" }}>
+          <h1 style={styles.sectionHeaderTitle}>
             {isProcessing ? "Processing dataset..." : isError ? "Dataset processing failed" : "Dataset ready"}
           </h1>
 
@@ -94,11 +94,10 @@ const DatasetStatusPage = () => {
           <div
             style={{
               ...styles.card,
-              marginTop: 12,
+              ...styles.statusMessageCard,
               borderColor: isError ? "rgba(185, 28, 28, 0.28)" : "rgba(0,0,0,0.06)",
               background: isError ? "#fff5f5" : "#ffffff",
               color: isError ? "#991b1b" : "#374151",
-              boxShadow: "none",
             }}
           >
             {statusMessage || (isProcessing ? "Waiting for updates from the worker queue..." : "No details provided.")}

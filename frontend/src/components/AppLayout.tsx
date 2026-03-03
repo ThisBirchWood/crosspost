@@ -91,36 +91,24 @@ const AppLayout = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f6f7fb",
-        fontFamily: styles.page.fontFamily,
-        color: "#111827",
-      }}
-    >
-      <div style={{ ...styles.container, padding: "16px 24px 0" }}>
+    <div style={styles.appShell}>
+      <div style={{ ...styles.container, ...styles.appHeaderWrap }}>
         <div style={{ ...styles.card, ...styles.headerBar }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ margin: 0, color: "#111827", fontSize: 18, fontWeight: 700 }}>
+          <div style={styles.appHeaderBrandRow}>
+            <span style={styles.appTitle}>
               Ethnograph View
             </span>
             <span
               style={{
-                padding: "4px 10px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 700,
-                fontFamily: styles.page.fontFamily,
-                background: isSignedIn ? "#dcfce7" : "#fee2e2",
-                color: isSignedIn ? "#166534" : "#991b1b",
+                ...styles.authStatusBadge,
+                ...(isSignedIn ? styles.authStatusSignedIn : styles.authStatusSignedOut),
               }}
             >
               {isSignedIn ? `Signed in: ${getUserLabel(currentUser)}` : "Not signed in"}
             </span>
           </div>
 
-          <div style={{ ...styles.controls, flexWrap: "wrap" }}>
+          <div style={styles.controlsWrapped}>
             <button
               type="button"
               style={location.pathname === "/upload" ? styles.buttonPrimary : styles.buttonSecondary}

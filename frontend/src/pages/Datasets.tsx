@@ -55,11 +55,11 @@ const DatasetsPage = () => {
 
   return (
     <div style={styles.page}>
-      <div style={{ ...styles.container, maxWidth: 1100 }}>
+      <div style={styles.containerWide}>
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div>
-            <h1 style={{ margin: 0, color: "#111827", fontSize: 28 }}>My Datasets</h1>
-            <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
+            <h1 style={styles.sectionHeaderTitle}>My Datasets</h1>
+            <p style={styles.sectionHeaderSubtitle}>
               View and reopen datasets you previously uploaded.
             </p>
           </div>
@@ -91,7 +91,7 @@ const DatasetsPage = () => {
 
         {!error && datasets.length > 0 && (
           <div style={{ ...styles.card, marginTop: 14, padding: 0, overflow: "hidden" }}>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            <ul style={styles.listNoBullets}>
               {datasets.map((dataset) => {
                 const isComplete = dataset.status === "complete";
                 const targetPath = isComplete
@@ -101,24 +101,17 @@ const DatasetsPage = () => {
                 return (
                   <li
                     key={dataset.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(0,0,0,0.06)",
-                    }}
+                    style={styles.datasetListItem}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, color: "#111827" }}>
+                      <div style={styles.datasetName}>
                         {dataset.name || `Dataset #${dataset.id}`}
                       </div>
-                      <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
+                      <div style={styles.datasetMeta}>
                         ID #{dataset.id} • Status: {dataset.status || "unknown"}
                       </div>
                       {dataset.status_message && (
-                        <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>
+                        <div style={styles.datasetMetaSecondary}>
                           {dataset.status_message}
                         </div>
                       )}

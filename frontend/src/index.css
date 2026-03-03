@@ -1,4 +1,8 @@
 :root {
+  --bg-default: #f6f8fa;
+  --text-default: #24292f;
+  --border-default: #d0d7de;
+  --focus-ring: rgba(9, 105, 218, 0.22);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,4 +18,27 @@ body,
 
 body {
   margin: 0;
+  background: var(--bg-default);
+  color: var(--text-default);
+  font-family: "IBM Plex Sans", "Noto Sans", "Liberation Sans", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input:focus,
+button:focus-visible,
+select:focus,
+textarea:focus {
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
 }

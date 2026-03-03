@@ -13,26 +13,11 @@ type Props = {
 
 export default function UserModal({ open, onClose, userData, username }: Props) {
   return (
-    <Dialog open={open} onClose={onClose} style={{ position: "relative", zIndex: 50 }}>
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.45)",
-        }}
-      />
+    <Dialog open={open} onClose={onClose} style={styles.modalRoot}>
+      <div style={styles.modalBackdrop} />
 
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 16,
-        }}
-      >
-        <DialogPanel style={{ ...styles.card, width: "min(520px, 95vw)" }}>
+      <div style={styles.modalContainer}>
+        <DialogPanel style={{ ...styles.card, ...styles.modalPanel }}>
           <div style={styles.headerBar}>
             <div>
               <DialogTitle style={styles.sectionTitle}>{username}</DialogTitle>

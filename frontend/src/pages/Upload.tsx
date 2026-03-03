@@ -70,11 +70,11 @@ const UploadPage = () => {
 
   return (
     <div style={styles.page}>
-      <div style={{ ...styles.container, maxWidth: 1100 }}>
+      <div style={styles.containerWide}>
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div>
-            <h1 style={{ margin: 0, color: "#111827", fontSize: 28 }}>Upload Dataset</h1>
-            <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
+            <h1 style={styles.sectionHeaderTitle}>Upload Dataset</h1>
+            <p style={styles.sectionHeaderSubtitle}>
               Name your dataset, then upload posts and topic map files to generate analytics.
             </p>
           </div>
@@ -96,10 +96,10 @@ const UploadPage = () => {
           }}
         >
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Dataset Name</h2>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Dataset Name</h2>
             <p style={styles.sectionSubtitle}>Use a clear label so you can identify this upload later.</p>
             <input
-              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+              style={{ ...styles.input, ...styles.inputFullWidth }}
               type="text"
               placeholder="Example: Cork Discussions - Jan 2026"
               value={datasetName}
@@ -108,29 +108,29 @@ const UploadPage = () => {
           </div>
 
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Posts File (.jsonl)</h2>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Posts File (.jsonl)</h2>
             <p style={styles.sectionSubtitle}>Upload the raw post records export.</p>
             <input
-              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+              style={{ ...styles.input, ...styles.inputFullWidth }}
               type="file"
               accept=".jsonl"
               onChange={(event) => setPostFile(event.target.files?.[0] ?? null)}
             />
-            <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>
+            <p style={styles.subtleBodyText}>
               {postFile ? `Selected: ${postFile.name}` : "No file selected"}
             </p>
           </div>
 
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Topics File (.json)</h2>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Topics File (.json)</h2>
             <p style={styles.sectionSubtitle}>Upload your topic bucket mapping file.</p>
             <input
-              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+              style={{ ...styles.input, ...styles.inputFullWidth }}
               type="file"
               accept=".json"
               onChange={(event) => setTopicBucketFile(event.target.files?.[0] ?? null)}
             />
-            <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>
+            <p style={styles.subtleBodyText}>
               {topicBucketFile ? `Selected: ${topicBucketFile.name}` : "No file selected"}
             </p>
           </div>
@@ -140,10 +140,7 @@ const UploadPage = () => {
           style={{
             ...styles.card,
             marginTop: 14,
-            borderColor: hasError ? "rgba(185, 28, 28, 0.28)" : "rgba(0,0,0,0.06)",
-            background: hasError ? "#fff5f5" : "#ffffff",
-            color: hasError ? "#991b1b" : "#374151",
-            fontSize: 14,
+            ...(hasError ? styles.alertCardError : styles.alertCardInfo),
           }}
         >
           {returnMessage || "After upload, your dataset is queued for processing and you'll land on stats."}

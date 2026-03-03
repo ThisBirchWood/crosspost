@@ -66,11 +66,11 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
       <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
         <h2 style={styles.sectionTitle}>Average Emotion by Topic</h2>
         <p style={styles.sectionSubtitle}>Read confidence together with sample size. Topics with fewer than {lowSampleThreshold} events are usually noisy and less reliable.</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 13, color: "#4b5563", marginTop: 6 }}>
-          <span><strong style={{ color: "#111827" }}>Topics:</strong> {strongestPerTopic.length}</span>
-          <span><strong style={{ color: "#111827" }}>Median Sample:</strong> {medianSampleSize} events</span>
-          <span><strong style={{ color: "#111827" }}>Low Sample (&lt;{lowSampleThreshold}):</strong> {lowSampleTopics}</span>
-          <span><strong style={{ color: "#111827" }}>Stable Sample ({stableSampleThreshold}+):</strong> {stableSampleTopics}</span>
+        <div style={styles.emotionalSummaryRow}>
+          <span><strong style={{ color: "#24292f" }}>Topics:</strong> {strongestPerTopic.length}</span>
+          <span><strong style={{ color: "#24292f" }}>Median Sample:</strong> {medianSampleSize} events</span>
+          <span><strong style={{ color: "#24292f" }}>Low Sample (&lt;{lowSampleThreshold}):</strong> {lowSampleTopics}</span>
+          <span><strong style={{ color: "#24292f" }}>Stable Sample ({stableSampleThreshold}+):</strong> {stableSampleTopics}</span>
         </div>
         <p style={{ ...styles.sectionSubtitle, marginTop: 10, marginBottom: 0 }}>
           Confidence reflects how strongly one emotion leads within a topic, not model accuracy. Use larger samples for stronger conclusions.
@@ -81,19 +81,19 @@ const EmotionalStats = ({contentData}: EmotionalStatsProps) => {
         {strongestPerTopic.map((topic) => (
           <div key={topic.topic} style={{ ...styles.card, gridColumn: "span 4" }}>
             <h3 style={{ ...styles.sectionTitle, marginBottom: 6 }}>{topic.topic}</h3>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", letterSpacing: "0.02em", textTransform: "uppercase" }}>
+            <div style={styles.emotionalTopicLabel}>
               Top Emotion
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4, lineHeight: 1.2 }}>
+            <div style={styles.emotionalTopicValue}>
               {formatEmotion(topic.emotion)}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, fontSize: 13, color: "#6b7280" }}>
+            <div style={styles.emotionalMetricRow}>
               <span>Confidence</span>
-              <span style={{ fontWeight: 700, color: "#111827" }}>{topic.value.toFixed(3)}</span>
+              <span style={styles.emotionalMetricValue}>{topic.value.toFixed(3)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4, fontSize: 13, color: "#6b7280" }}>
+            <div style={styles.emotionalMetricRowCompact}>
               <span>Sample Size</span>
-              <span style={{ fontWeight: 700, color: "#111827" }}>{topic.count} events</span>
+              <span style={styles.emotionalMetricValue}>{topic.count} events</span>
             </div>
           </div>
         ))}

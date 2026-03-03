@@ -6,11 +6,6 @@ import StatsStyling from "../styles/stats_styling";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
 
 const styles = StatsStyling;
-const controlStyle = {
-  width: "100%",
-  maxWidth: "100%",
-  boxSizing: "border-box" as const,
-};
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -77,54 +72,44 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ ...styles.container, maxWidth: 560, padding: "48px 24px" }}>
-        <div
-          style={{
-            ...styles.card,
-            padding: 28,
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)",
-          }}
-        >
-          <div style={{ marginBottom: 22, textAlign: "center" }}>
-            <h1 style={{ margin: 0, color: "#111827", fontSize: 30, lineHeight: 1.1 }}>
+    <div style={styles.containerAuth}>
+        <div style={{ ...styles.card, ...styles.authCard }}>
+          <div style={styles.headingBlock}>
+            <h1 style={styles.headingXl}>
               {isRegisterMode ? "Create your account" : "Welcome back"}
             </h1>
-            <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
+            <p style={styles.mutedText}>
               {isRegisterMode
                 ? "Register to start uploading and exploring your dataset insights."
                 : "Sign in to continue to your analytics workspace."}
             </p>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "grid", gap: 12, maxWidth: 380, margin: "0 auto" }}
-          >
+          <form onSubmit={handleSubmit} style={styles.authForm}>
             <input
               type="text"
               placeholder="Username"
-              style={{ ...styles.input, ...controlStyle }}
+              style={{ ...styles.input, ...styles.authControl }}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               required
             />
 
             {isRegisterMode && (
-              <input
-                type="email"
-                placeholder="Email"
-                style={{ ...styles.input, ...controlStyle }}
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
+                <input
+                  type="email"
+                  placeholder="Email"
+                  style={{ ...styles.input, ...styles.authControl }}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
               />
             )}
 
             <input
               type="password"
               placeholder="Password"
-              style={{ ...styles.input, ...controlStyle }}
+              style={{ ...styles.input, ...styles.authControl }}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -132,7 +117,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              style={{ ...styles.buttonPrimary, ...controlStyle, marginTop: 2 }}
+              style={{ ...styles.buttonPrimary, ...styles.authControl, marginTop: 2 }}
               disabled={loading}
             >
               {loading
@@ -144,57 +129,24 @@ const LoginPage = () => {
           </form>
 
           {error && (
-            <p
-              style={{
-                color: "#b91c1c",
-                margin: "12px auto 0",
-                fontSize: 14,
-                maxWidth: 380,
-                textAlign: "center",
-              }}
-            >
+            <p style={styles.authErrorText}>
               {error}
             </p>
           )}
 
           {info && (
-            <p
-              style={{
-                color: "#166534",
-                margin: "12px auto 0",
-                fontSize: 14,
-                maxWidth: 380,
-                textAlign: "center",
-              }}
-            >
+            <p style={styles.authInfoText}>
               {info}
             </p>
           )}
 
-          <div
-            style={{
-              marginTop: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            <span style={{ color: "#6b7280", fontSize: 14 }}>
+          <div style={styles.authSwitchRow}>
+            <span style={styles.authSwitchLabel}>
               {isRegisterMode ? "Already have an account?" : "New here?"}
             </span>
             <button
               type="button"
-              style={{
-                border: "none",
-                background: "transparent",
-                color: "#2563eb",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-                padding: 0,
-              }}
+                style={styles.authSwitchButton}
               onClick={() => {
                 setError("");
                 setInfo("");
