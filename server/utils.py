@@ -1,10 +1,5 @@
 import datetime
-import pandas as pd
-
 from flask import request
-from flask_jwt_extended import get_jwt_identity
-from db.database import PostgresConnector
-from server.exceptions import NotAuthorisedException
 
 def parse_datetime_filter(value):
     if not value:
@@ -53,12 +48,3 @@ def get_request_filters() -> dict:
         filters["data_sources"] = data_sources
 
     return filters
-
-def get_dataset_and_validate(dataset_id: int, db: PostgresConnector) -> pd.DataFrame:
-    current_user = get_jwt_identity()
-    dataset = db.get_dataset_info(dataset_id)
-
-    if dataset.get("user_id") != int(current_user):
-        raise NotAuthorisedException("This user is not authorised to access this dataset")
-    
-    return db.get_dataset_content(dataset_id)

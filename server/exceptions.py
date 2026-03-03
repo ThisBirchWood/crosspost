@@ -3,3 +3,6 @@ class NotAuthorisedException(Exception):
 
 class NotExistentDatasetException(Exception):
     pass
+
+class DatabaseNotConfiguredException(Exception):
+    pass
