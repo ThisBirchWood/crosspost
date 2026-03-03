@@ -7,6 +7,7 @@ const styles = StatsStyling;
 const API_BASE_URL = "http://localhost:5000";
 
 const UploadPage = () => {
+  const [datasetName, setDatasetName] = useState("");
   const [postFile, setPostFile] = useState<File | null>(null);
   const [topicBucketFile, setTopicBucketFile] = useState<File | null>(null);
   const [returnMessage, setReturnMessage] = useState("");
@@ -15,6 +16,14 @@ const UploadPage = () => {
   const navigate = useNavigate();
 
   const uploadFiles = async () => {
+    const normalizedDatasetName = datasetName.trim();
+
+    if (!normalizedDatasetName) {
+      setHasError(true);
+      setReturnMessage("Please add a dataset name before continuing.");
+      return;
+    }
+
     if (!postFile || !topicBucketFile) {
       setHasError(true);
       setReturnMessage("Please upload both files before continuing.");
@@ -22,6 +31,7 @@ const UploadPage = () => {
     }
 
     const formData = new FormData();
+    formData.append("name", normalizedDatasetName);
     formData.append("posts", postFile);
     formData.append("topics", topicBucketFile);
 
@@ -63,7 +73,7 @@ const UploadPage = () => {
           <div>
             <h1 style={{ margin: 0, color: "#111827", fontSize: 28 }}>Upload Dataset</h1>
             <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
-              Add your posts and topic map files to generate fresh analytics.
+              Name your dataset, then upload posts and topic map files to generate analytics.
             </p>
           </div>
           <button
@@ -84,10 +94,22 @@ const UploadPage = () => {
           }}
         >
           <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Dataset Name</h2>
+            <p style={styles.sectionSubtitle}>Use a clear label so you can identify this upload later.</p>
+            <input
+              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+              type="text"
+              placeholder="Example: Cork Discussions - Jan 2026"
+              value={datasetName}
+              onChange={(event) => setDatasetName(event.target.value)}
+            />
+          </div>
+
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
             <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Posts File (.jsonl)</h2>
             <p style={styles.sectionSubtitle}>Upload the raw post records export.</p>
             <input
-              style={{ ...styles.input, width: "80%", maxWidth: "100%" }}
+              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
               type="file"
               accept=".jsonl"
               onChange={(event) => setPostFile(event.target.files?.[0] ?? null)}
@@ -101,7 +123,7 @@ const UploadPage = () => {
             <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Topics File (.json)</h2>
             <p style={styles.sectionSubtitle}>Upload your topic bucket mapping file.</p>
             <input
-              style={{ ...styles.input, width: "80%", maxWidth: "100%" }}
+              style={{ ...styles.input, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
               type="file"
               accept=".json"
               onChange={(event) => setTopicBucketFile(event.target.files?.[0] ?? null)}

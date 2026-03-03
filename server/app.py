@@ -45,6 +45,7 @@ auth_manager = AuthManager(db, bcrypt)
 dataset_manager = DatasetManager(db)
 stat_gen = StatGen()
 
+
 @app.route("/register", methods=["POST"])
 def register_user():
     data = request.get_json()
@@ -113,12 +114,15 @@ def get_user_datasets():
 @app.route("/upload", methods=["POST"])
 @jwt_required()
 def upload_data():
-    if "posts" not in request.files or "topics" not in request.files or "name" not in request.form:
+    if "posts" not in request.files or "topics" not in request.files:
         return jsonify({"error": "Missing required files or form data"}), 400
 
     post_file = request.files["posts"]
     topic_file = request.files["topics"]
-    dataset_name = request.form["name"]
+    dataset_name = (request.form.get("name") or "").strip()
+
+    if not dataset_name:
+        return jsonify({"error": "Missing required dataset name"}), 400
 
     if post_file.filename == "" or topic_file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
@@ -137,17 +141,13 @@ def upload_data():
         topics = json.load(topic_file)
         dataset_id = dataset_manager.save_dataset_info(current_user, dataset_name, topics)
 
-        process_dataset.delay(
-            dataset_id,
-            posts_df.to_dict(orient="records"),
-            topics
-        )
+        process_dataset.delay(dataset_id, posts_df.to_dict(orient="records"), topics)
 
         return jsonify(
             {
                 "message": "Dataset queued for processing",
                 "dataset_id": dataset_id,
-                "status": "processing"
+                "status": "processing",
             }
         ), 202
     except ValueError as e:
@@ -160,7 +160,7 @@ def upload_data():
 def get_dataset(dataset_id):
     try:
         user_id = int(get_jwt_identity())
-        
+
         if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
             raise NotAuthorisedException("This user is not authorised to access this dataset")
 
@@ -181,7 +181,7 @@ def get_dataset(dataset_id):
 def get_dataset_status(dataset_id):
     try:
         user_id = int(get_jwt_identity())
-        
+
         if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
             raise NotAuthorisedException("This user is not authorised to access this dataset")
 
