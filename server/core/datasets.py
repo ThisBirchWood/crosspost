@@ -1,19 +1,22 @@
 import pandas as pd
 from server.db.database import PostgresConnector
 from psycopg2.extras import Json
-from server.exceptions import NotAuthorisedException
+from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 
 class DatasetManager:
     def __init__(self, db: PostgresConnector):
         self.db = db
 
-    def get_dataset_and_validate(self, dataset_id: int, user_id: int) -> pd.DataFrame:
+    def authorize_user_dataset(self, dataset_id: int, user_id: int) -> bool:
         dataset_info = self.get_dataset_info(dataset_id)
 
+        if dataset_info.get("user_id", None) == None:
+            return False
+
         if dataset_info.get("user_id") != user_id:
-            raise NotAuthorisedException("This user is not authorised to access this dataset")
+            return False
         
-        return self.get_dataset_content(dataset_id)
+        return True
 
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
@@ -23,21 +26,20 @@ class DatasetManager:
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
         result = self.db.execute(query, (dataset_id,), fetch=True)
-        return result[0] if result else None
+
+        if not result:
+            raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
+
+        return result[0]
     
     def save_dataset_info(self, user_id: int, dataset_name: str, topics: dict) -> int:
-            query = """
-                INSERT INTO datasets (user_id, name, topics)
-                VALUES (%s, %s, %s)
-                RETURNING id
-            """
-            result = self.db.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
-            return result[0]["id"] if result else None
-
-    def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
-        query = "SELECT * FROM events WHERE dataset_id = %s"
-        result = self.db.execute(query, (dataset_id,), fetch=True)
-        return pd.DataFrame(result)
+        query = """
+            INSERT INTO datasets (user_id, name, topics)
+            VALUES (%s, %s, %s)
+            RETURNING id
+        """
+        result = self.db.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
+        return result[0]["id"] if result else None
 
     def save_dataset_content(self, dataset_id: int, event_data: pd.DataFrame):
         if event_data.empty:
@@ -49,6 +51,7 @@ class DatasetManager:
                 type,
                 parent_id,
                 author,
+                title,
                 content,
                 timestamp,
                 date,
@@ -70,7 +73,8 @@ class DatasetManager:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s,
+                %s
             )
         """
 
@@ -80,6 +84,7 @@ class DatasetManager:
                 row["type"],
                 row["parent_id"],
                 row["author"],
+                row.get("title"),
                 row["content"],
                 row["timestamp"],
                 row["date"],
@@ -101,3 +106,35 @@ class DatasetManager:
         ]
 
         self.db.execute_batch(query, values)
+
+    def set_dataset_status(self, dataset_id: int, status: str, status_message: str | None = None):
+        if status not in ["processing", "complete", "error"]:
+            raise ValueError("Invalid status")
+
+        query = """
+            UPDATE datasets
+            SET status = %s,
+                status_message = %s,
+                completed_at = CASE
+                    WHEN %s = 'complete' THEN NOW()
+                    ELSE NULL
+                END
+            WHERE id = %s
+        """
+
+        self.db.execute(query, (status, status_message, status, dataset_id))
+
+    def get_dataset_status(self, dataset_id: int):
+        query = """
+            SELECT status, status_message, completed_at
+            FROM datasets
+            WHERE id = %s
+        """
+
+        result = self.db.execute(query, (dataset_id, ), fetch=True)
+        
+        if not result:
+            print(result)
+            raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
+        
+        return result[0]

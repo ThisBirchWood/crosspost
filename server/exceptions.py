@@ -1,7 +1,7 @@
 class NotAuthorisedException(Exception):
     pass
 
-class NotExistentDatasetException(Exception):
+class NonExistentDatasetException(Exception):
     pass
 
 class DatabaseNotConfiguredException(Exception):

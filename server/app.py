@@ -16,11 +16,12 @@ from flask_jwt_extended import (
 
 from server.analysis.stat_gen import StatGen
 from server.analysis.enrichment import DatasetEnrichment
-from server.exceptions import NotAuthorisedException, NotExistentDatasetException
+from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
 from server.utils import get_request_filters
+from server.queue.tasks import process_dataset
 
 app = Flask(__name__)
 
@@ -125,53 +126,79 @@ def upload_data():
         ), 400
 
     try:
-        current_user = get_jwt_identity()
+        current_user = int(get_jwt_identity())
 
         posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
         topics = json.load(topic_file)
-
-        processor = DatasetEnrichment(posts_df, topics)
-        enriched_df = processor.enrich()
         dataset_id = dataset_manager.save_dataset_info(current_user, f"dataset_{current_user}", topics)
-        dataset_manager.save_dataset_content(dataset_id, enriched_df)
+
+        process_dataset.delay(
+            dataset_id,
+            posts_df.to_dict(orient="records"),
+            topics
+        )
 
         return jsonify(
             {
-                "message": "File uploaded successfully",
-                "event_count": len(enriched_df),
+                "message": "Dataset queued for processing",
                 "dataset_id": dataset_id,
+                "status": "processing"
             }
-        ), 200
+        ), 202
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-
 @app.route("/dataset/<int:dataset_id>", methods=["GET"])
 @jwt_required()
 def get_dataset(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         filtered_dataset = stat_gen.filter_dataset(dataset_content, filters)
         return jsonify(filtered_dataset), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
-    except NotExistentDatasetException:
+    except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error": "An unexpected error occured"}), 500
 
+@app.route("/dataset/<int:dataset_id>/status", methods=["GET"])
+@jwt_required()
+def get_dataset_status(dataset_id):
+    try:
+        user_id = int(get_jwt_identity())
+        
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_status = dataset_manager.get_dataset_status(dataset_id)
+        return jsonify(dataset_status), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "An unexpected error occured"}), 500
 
 @app.route("/dataset/<int:dataset_id>/content", methods=["GET"])
 @jwt_required()
 def content_endpoint(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -187,8 +214,11 @@ def content_endpoint(dataset_id):
 @jwt_required()
 def get_summary(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.summary(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -204,8 +234,11 @@ def get_summary(dataset_id):
 @jwt_required()
 def get_time_analysis(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -221,8 +254,11 @@ def get_time_analysis(dataset_id):
 @jwt_required()
 def get_user_analysis(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -238,8 +274,11 @@ def get_user_analysis(dataset_id):
 @jwt_required()
 def get_cultural_analysis(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
@@ -255,8 +294,11 @@ def get_cultural_analysis(dataset_id):
 @jwt_required()
 def get_interaction_analysis(dataset_id):
     try:
-        user_id = get_jwt_identity()
-        dataset_content = dataset_manager.get_dataset_and_validate(dataset_id, int(user_id))
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
         return jsonify(stat_gen.get_interactional_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:

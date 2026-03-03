@@ -27,19 +27,21 @@ class PostgresConnector:
         self.connection.autocommit = False
 
     def execute(self, query, params=None, fetch=False) -> list:
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, params)
-            if fetch:
-                return cursor.fetchall()
+        try:
+            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query, params)
+                result = cursor.fetchall() if fetch else None
             self.connection.commit()
+            return result
+        except Exception:
+            self.connection.rollback()
+            raise
 
     def execute_batch(self, query, values):
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             execute_batch(cursor, query, values)
             self.connection.commit()
 
-
-    ## User Management Methods
     def close(self):
         if self.connection:
             self.connection.close()
