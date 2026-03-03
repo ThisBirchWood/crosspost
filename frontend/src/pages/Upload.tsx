@@ -46,12 +46,14 @@ const UploadPage = () => {
         },
       });
 
+      const datasetId = Number(response.data.dataset_id);
+
       setReturnMessage(
-        `Upload queued successfully (dataset #${response.data.dataset_id}). Redirecting to insights...`
+        `Upload queued successfully (dataset #${datasetId}). Redirecting to processing status...`
       );
 
       setTimeout(() => {
-        navigate("/stats");
+        navigate(`/dataset/${datasetId}/status`);
       }, 400);
     } catch (error: unknown) {
       setHasError(true);
