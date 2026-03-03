@@ -34,9 +34,6 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<Record<string, unknown> | null>(null);
-  const [lastDatasetId, setLastDatasetId] = useState<string | null>(
-    localStorage.getItem("last_dataset_id")
-  );
 
   const syncAuthState = useCallback(async () => {
     const token = localStorage.getItem("access_token");
@@ -65,17 +62,6 @@ const AppLayout = () => {
   useEffect(() => {
     void syncAuthState();
   }, [location.pathname, syncAuthState]);
-
-  useEffect(() => {
-    const datasetMatch = location.pathname.match(/^\/dataset\/(\d+)\/(status|stats)$/);
-    if (!datasetMatch) {
-      return;
-    }
-
-    const datasetId = datasetMatch[1];
-    localStorage.setItem("last_dataset_id", datasetId);
-    setLastDatasetId(datasetId);
-  }, [location.pathname]);
 
   const onAuthButtonClick = () => {
     if (isSignedIn) {
@@ -111,27 +97,10 @@ const AppLayout = () => {
           <div style={styles.controlsWrapped}>
             <button
               type="button"
-              style={location.pathname === "/upload" ? styles.buttonPrimary : styles.buttonSecondary}
-              onClick={() => navigate("/upload")}
-            >
-              Upload
-            </button>
-
-            <button
-              type="button"
               style={location.pathname === "/datasets" ? styles.buttonPrimary : styles.buttonSecondary}
               onClick={() => navigate("/datasets")}
             >
               My datasets
-            </button>
-
-            <button
-              type="button"
-              style={location.pathname.endsWith("/stats") ? styles.buttonPrimary : styles.buttonSecondary}
-              onClick={() => lastDatasetId && navigate(`/dataset/${lastDatasetId}/stats`)}
-              disabled={!lastDatasetId}
-            >
-              {lastDatasetId ? "Last stats" : "Last stats (none)"}
             </button>
 
             <button
