@@ -21,6 +21,7 @@ from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
 from server.utils import get_request_filters
+from server.queue.tasks import process_dataset
 
 app = Flask(__name__)
 
@@ -129,19 +130,21 @@ def upload_data():
 
         posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
         topics = json.load(topic_file)
-
-        processor = DatasetEnrichment(posts_df, topics)
-        enriched_df = processor.enrich()
         dataset_id = dataset_manager.save_dataset_info(current_user, f"dataset_{current_user}", topics)
-        dataset_manager.save_dataset_content(dataset_id, enriched_df)
+
+        process_dataset.delay(
+            dataset_id,
+            posts_df.to_dict(orient="records"),
+            topics
+        )
 
         return jsonify(
             {
-                "message": "File uploaded successfully",
-                "event_count": len(enriched_df),
+                "message": "Dataset queued for processing",
                 "dataset_id": dataset_id,
+                "status": "processing"
             }
-        ), 200
+        ), 202
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
     except Exception as e:
