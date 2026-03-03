@@ -1,4 +1,7 @@
 import os
+import pandas as pd
+import traceback
+import json
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -18,10 +21,6 @@ from server.db.database import PostgresConnector
 from server.auth import AuthManager
 from server.datasets import DatasetManager
 from server.utils import get_request_filters
-
-import pandas as pd
-import traceback
-import json
 
 app = Flask(__name__)
 

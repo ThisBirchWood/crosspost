@@ -2,7 +2,6 @@ import pandas as pd
 from server.db.database import PostgresConnector
 from psycopg2.extras import Json
 from server.exceptions import NotAuthorisedException
-from flask_jwt_extended import get_jwt_identity
 
 class DatasetManager:
     def __init__(self, db: PostgresConnector):
