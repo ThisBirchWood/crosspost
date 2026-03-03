@@ -1,10 +1,23 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import LoginPage from "./pages/Login";
 import UploadPage from "./pages/Upload";
 import StatPage from "./pages/Stats";
 
 function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const routeTitles: Record<string, string> = {
+      "/login": "Sign In",
+      "/upload": "Upload Dataset",
+      "/stats": "Stats",
+    };
+
+    document.title = routeTitles[location.pathname];
+  }, [location.pathname]);
+
   return (
     <Routes>
       <Route element={<AppLayout />}>
