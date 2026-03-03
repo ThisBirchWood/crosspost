@@ -1,7 +1,7 @@
 import pandas as pd
 from server.db.database import PostgresConnector
 from psycopg2.extras import Json
-from server.exceptions import NotAuthorisedException
+from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 
 class DatasetManager:
     def __init__(self, db: PostgresConnector):
@@ -23,21 +23,20 @@ class DatasetManager:
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
         result = self.db.execute(query, (dataset_id,), fetch=True)
-        return result[0] if result else None
+
+        if not result:
+            raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
+
+        return result[0]
     
     def save_dataset_info(self, user_id: int, dataset_name: str, topics: dict) -> int:
-            query = """
-                INSERT INTO datasets (user_id, name, topics)
-                VALUES (%s, %s, %s)
-                RETURNING id
-            """
-            result = self.db.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
-            return result[0]["id"] if result else None
-
-    def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
-        query = "SELECT * FROM events WHERE dataset_id = %s"
-        result = self.db.execute(query, (dataset_id,), fetch=True)
-        return pd.DataFrame(result)
+        query = """
+            INSERT INTO datasets (user_id, name, topics)
+            VALUES (%s, %s, %s)
+            RETURNING id
+        """
+        result = self.db.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
+        return result[0]["id"] if result else None
 
     def save_dataset_content(self, dataset_id: int, event_data: pd.DataFrame):
         if event_data.empty:
