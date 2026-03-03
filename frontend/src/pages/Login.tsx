@@ -5,6 +5,11 @@ import StatsStyling from "../styles/stats_styling";
 
 const styles = StatsStyling;
 const API_BASE_URL = "http://localhost:5000";
+const controlStyle = {
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box" as const,
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -71,18 +76,17 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={styles.page}>
-      <div style={{ ...styles.container, maxWidth: 520, marginTop: 64 }}>
+    <div style={{ ...styles.container, maxWidth: 560, padding: "48px 24px" }}>
         <div
           style={{
             ...styles.card,
-            padding: 24,
+            padding: 28,
             background:
               "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)",
           }}
         >
-          <div style={{ marginBottom: 20 }}>
-            <h1 style={{ margin: 0, color: "#111827", fontSize: 28 }}>
+          <div style={{ marginBottom: 22, textAlign: "center" }}>
+            <h1 style={{ margin: 0, color: "#111827", fontSize: 30, lineHeight: 1.1 }}>
               {isRegisterMode ? "Create your account" : "Welcome back"}
             </h1>
             <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
@@ -92,11 +96,14 @@ const LoginPage = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "grid", gap: 12, maxWidth: 380, margin: "0 auto" }}
+          >
             <input
               type="text"
               placeholder="Username"
-              style={{ ...styles.input, width: "100%", maxWidth: "100%" }}
+              style={{ ...styles.input, ...controlStyle }}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               required
@@ -106,7 +113,7 @@ const LoginPage = () => {
               <input
                 type="email"
                 placeholder="Email"
-                style={{ ...styles.input, width: "100%", maxWidth: "100%" }}
+                style={{ ...styles.input, ...controlStyle }}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
@@ -116,13 +123,17 @@ const LoginPage = () => {
             <input
               type="password"
               placeholder="Password"
-              style={{ ...styles.input, width: "100%", maxWidth: "100%" }}
+              style={{ ...styles.input, ...controlStyle }}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
             />
 
-            <button type="submit" style={styles.buttonPrimary} disabled={loading}>
+            <button
+              type="submit"
+              style={{ ...styles.buttonPrimary, ...controlStyle, marginTop: 2 }}
+              disabled={loading}
+            >
               {loading
                 ? "Please wait..."
                 : isRegisterMode
@@ -132,24 +143,57 @@ const LoginPage = () => {
           </form>
 
           {error && (
-            <p style={{ color: "#b91c1c", marginTop: 12, marginBottom: 0, fontSize: 14 }}>
+            <p
+              style={{
+                color: "#b91c1c",
+                margin: "12px auto 0",
+                fontSize: 14,
+                maxWidth: 380,
+                textAlign: "center",
+              }}
+            >
               {error}
             </p>
           )}
 
           {info && (
-            <p style={{ color: "#166534", marginTop: 12, marginBottom: 0, fontSize: 14 }}>
+            <p
+              style={{
+                color: "#166534",
+                margin: "12px auto 0",
+                fontSize: 14,
+                maxWidth: 380,
+                textAlign: "center",
+              }}
+            >
               {info}
             </p>
           )}
 
-          <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              marginTop: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
             <span style={{ color: "#6b7280", fontSize: 14 }}>
               {isRegisterMode ? "Already have an account?" : "New here?"}
             </span>
             <button
               type="button"
-              style={styles.buttonSecondary}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "#2563eb",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: 0,
+              }}
               onClick={() => {
                 setError("");
                 setInfo("");
@@ -160,7 +204,6 @@ const LoginPage = () => {
             </button>
           </div>
         </div>
-      </div>
     </div>
   );
 };
