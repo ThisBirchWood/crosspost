@@ -48,6 +48,13 @@ services:
     depends_on:
       - postgres
       - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   model_cache:
