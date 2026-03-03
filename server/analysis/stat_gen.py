@@ -108,9 +108,7 @@ class StatGen:
         return {
             "top_users": self.interaction_analysis.top_users(filtered_df),
             "users": self.interaction_analysis.per_user_analysis(filtered_df),
-            "interaction_graph": self.interaction_analysis.interaction_graph(
-                filtered_df
-            ),
+            "interaction_graph": self.interaction_analysis.interaction_graph(filtered_df)
         }
 
     def get_interactional_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:

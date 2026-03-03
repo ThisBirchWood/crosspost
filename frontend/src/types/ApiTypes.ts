@@ -10,12 +10,6 @@ type FrequencyWord = {
     count: number;
 }
 
-type AverageEmotionByTopic = {
-    topic: string;
-    n: number;
-    [emotion: string]: string | number;
-}
-
 type Vocab = {
   author: string;
   events: number;
@@ -58,13 +52,25 @@ type HeatmapCell = {
 type TimeAnalysisResponse = {
     events_per_day: EventsPerDay[];
     weekday_hour_heatmap: HeatmapCell[];
-    burstiness: number;
 }
 
 // Content Analysis
+type NGram = {
+    count: number;
+    ngram: string;
+}
+
+type AverageEmotionByTopic = {
+    topic: string;
+    n: number;
+    [emotion: string]: string | number;
+}
+
 type ContentAnalysisResponse = {
     word_frequencies: FrequencyWord[];
     average_emotion_by_topic: AverageEmotionByTopic[];
+    common_three_phrases: NGram[];
+    common_two_phrases: NGram[];
 }
 
 // Summary
