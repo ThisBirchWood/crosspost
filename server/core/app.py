@@ -14,12 +14,12 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 
-from server.stat_gen import StatGen
-from server.enrichment import DatasetEnrichment
+from server.analysis.stat_gen import StatGen
+from server.analysis.enrichment import DatasetEnrichment
 from server.exceptions import NotAuthorisedException, NotExistentDatasetException
 from server.db.database import PostgresConnector
-from server.auth import AuthManager
-from server.datasets import DatasetManager
+from server.core.auth import AuthManager
+from server.core.datasets import DatasetManager
 from server.utils import get_request_filters
 
 app = Flask(__name__)
