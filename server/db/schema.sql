@@ -11,9 +11,19 @@ CREATE TABLE datasets (
     user_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+
+    -- Job state machine
+    status TEXT NOT NULL DEFAULT 'processing',
+    status_message TEXT,
+    completed_at TIMESTAMP,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     topics JSONB,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Enforce valid states
+    CONSTRAINT datasets_status_check
+    CHECK (status IN ('processing', 'complete', 'error'))
 );
 
 CREATE TABLE events (
