@@ -23,6 +23,7 @@ services:
     container_name: crosspost_flask
     volumes:
       - .:/app
+      - model_cache:/models
     env_file:
       - .env
     ports:
@@ -36,6 +37,7 @@ services:
     build: .
     volumes:
       - .:/app
+      - model_cache:/models
     container_name: crosspost_worker
     env_file:
       - .env
@@ -46,3 +48,6 @@ services:
     depends_on:
       - postgres
       - redis
+
+volumes:
+  model_cache:
