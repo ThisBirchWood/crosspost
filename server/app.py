@@ -15,7 +15,6 @@ from flask_jwt_extended import (
 )
 
 from server.analysis.stat_gen import StatGen
-from server.analysis.enrichment import DatasetEnrichment
 from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
