@@ -16,7 +16,7 @@ from flask_jwt_extended import (
 
 from server.analysis.stat_gen import StatGen
 from server.analysis.enrichment import DatasetEnrichment
-from server.exceptions import NotAuthorisedException, NotExistentDatasetException
+from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
@@ -162,7 +162,7 @@ def get_dataset(dataset_id):
         return jsonify(filtered_dataset), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
-    except NotExistentDatasetException:
+    except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except Exception:
         print(traceback.format_exc())
