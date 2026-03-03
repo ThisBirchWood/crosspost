@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
+import DatasetsPage from "./pages/Datasets";
 import DatasetStatusPage from "./pages/DatasetStatus";
 import LoginPage from "./pages/Login";
 import UploadPage from "./pages/Upload";
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/datasets" element={<DatasetsPage />} />
         <Route path="/dataset/:datasetId/status" element={<DatasetStatusPage />} />
         <Route path="/dataset/:datasetId/stats" element={<StatPage />} />
       </Route>

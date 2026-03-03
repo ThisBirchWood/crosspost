@@ -3,7 +3,7 @@ const DEFAULT_TITLE = "Ethnograph View";
 const STATIC_TITLES: Record<string, string> = {
   "/login": "Sign In",
   "/upload": "Upload Dataset",
-  "/stats": "Stats",
+  "/datasets": "My Datasets",
 };
 
 export const getDocumentTitle = (pathname: string) => {
