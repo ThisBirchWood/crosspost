@@ -95,13 +95,13 @@ const AppLayout = () => {
           </div>
 
           <div style={styles.controlsWrapped}>
-            <button
+            {isSignedIn && <button
               type="button"
               style={location.pathname === "/datasets" ? styles.buttonPrimary : styles.buttonSecondary}
               onClick={() => navigate("/datasets")}
             >
               My datasets
-            </button>
+            </button>}
 
             <button
               type="button"
