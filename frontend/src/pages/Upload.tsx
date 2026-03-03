@@ -1,56 +1,132 @@
-import axios from 'axios'
-import './../App.css'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import axios from "axios";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
 const styles = StatsStyling;
+const API_BASE_URL = "http://localhost:5000";
 
 const UploadPage = () => {
-  let postFile: File | undefined;
-  let topicBucketFile: File | undefined;
-  const [returnMessage, setReturnMessage] = useState('')
-  const navigate = useNavigate()
+  const [postFile, setPostFile] = useState<File | null>(null);
+  const [topicBucketFile, setTopicBucketFile] = useState<File | null>(null);
+  const [returnMessage, setReturnMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const navigate = useNavigate();
 
   const uploadFiles = async () => {
     if (!postFile || !topicBucketFile) {
-      alert('Please upload all files before uploading.')
-      return
+      setHasError(true);
+      setReturnMessage("Please upload both files before continuing.");
+      return;
     }
 
-    const formData = new FormData()
-    formData.append('posts', postFile)
-    formData.append('topics', topicBucketFile)
+    const formData = new FormData();
+    formData.append("posts", postFile);
+    formData.append("topics", topicBucketFile);
 
     try {
-      const response = await axios.post('http://localhost:5000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      console.log('Files uploaded successfully:', response.data)
-      setReturnMessage(`Upload successful! Posts: ${response.data.posts_count}, Comments: ${response.data.comments_count}`)
-      navigate('/stats')
-    } catch (error) {
-      console.error('Error uploading files:', error)
-      setReturnMessage('Error uploading files. Error details: ' + error)
-    }
-  }
-  return (
-    <div style={{...styles.container, ...styles.grid, margin: "0"}}>
-      <div style={{ ...styles.card }}>
-        <h2 style={{color: "black" }}>Posts File</h2>
-        <input style={{color: "black" }} type="file" onChange={(e) => postFile = e.target.files?.[0]}></input>
-      </div>
-      <div style={{ ...styles.card }}>
-        <h2 style={{color: "black" }}>Topic Buckets File</h2>
-        <input style={{color: "black" }} type="file" onChange={(e) => topicBucketFile = e.target.files?.[0]}></input>
-      </div>
-      <button onClick={uploadFiles}>Upload</button>
+      setIsSubmitting(true);
+      setHasError(false);
+      setReturnMessage("");
 
-      <p>{returnMessage}</p>
+      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setReturnMessage(
+        `Upload queued successfully (dataset #${response.data.dataset_id}). Redirecting to insights...`
+      );
+
+      setTimeout(() => {
+        navigate("/stats");
+      }, 400);
+    } catch (error: unknown) {
+      setHasError(true);
+      if (axios.isAxiosError(error)) {
+        const message = String(error.response?.data?.error || error.message || "Upload failed.");
+        setReturnMessage(`Upload failed: ${message}`);
+      } else {
+        setReturnMessage("Upload failed due to an unexpected error.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={{ ...styles.container, maxWidth: 1100 }}>
+        <div style={{ ...styles.card, ...styles.headerBar }}>
+          <div>
+            <h1 style={{ margin: 0, color: "#111827", fontSize: 28 }}>Upload Dataset</h1>
+            <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: 14 }}>
+              Add your posts and topic map files to generate fresh analytics.
+            </p>
+          </div>
+          <button
+            type="button"
+            style={{ ...styles.buttonPrimary, opacity: isSubmitting ? 0.75 : 1 }}
+            onClick={uploadFiles}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Uploading..." : "Upload and Analyze"}
+          </button>
+        </div>
+
+        <div
+          style={{
+            ...styles.grid,
+            marginTop: 14,
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
+        >
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Posts File (.jsonl)</h2>
+            <p style={styles.sectionSubtitle}>Upload the raw post records export.</p>
+            <input
+              style={{ ...styles.input, width: "80%", maxWidth: "100%" }}
+              type="file"
+              accept=".jsonl"
+              onChange={(event) => setPostFile(event.target.files?.[0] ?? null)}
+            />
+            <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>
+              {postFile ? `Selected: ${postFile.name}` : "No file selected"}
+            </p>
+          </div>
+
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#111827" }}>Topics File (.json)</h2>
+            <p style={styles.sectionSubtitle}>Upload your topic bucket mapping file.</p>
+            <input
+              style={{ ...styles.input, width: "80%", maxWidth: "100%" }}
+              type="file"
+              accept=".json"
+              onChange={(event) => setTopicBucketFile(event.target.files?.[0] ?? null)}
+            />
+            <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>
+              {topicBucketFile ? `Selected: ${topicBucketFile.name}` : "No file selected"}
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...styles.card,
+            marginTop: 14,
+            borderColor: hasError ? "rgba(185, 28, 28, 0.28)" : "rgba(0,0,0,0.06)",
+            background: hasError ? "#fff5f5" : "#ffffff",
+            color: hasError ? "#991b1b" : "#374151",
+            fontSize: 14,
+          }}
+        >
+          {returnMessage || "After upload, your dataset is queued for processing and you'll land on stats."}
+        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
 export default UploadPage;
