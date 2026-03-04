@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 import SummaryStats from "../components/SummaryStats";
 import EmotionalStats from "../components/EmotionalStats";
-import InteractionStats from "../components/UserStats";
+import UserStats from "../components/UserStats";
 
 import { 
   type SummaryResponse, 
@@ -20,7 +20,7 @@ const StatPage = () => {
   const { datasetId: routeDatasetId } = useParams<{ datasetId: string }>();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"summary" | "emotional" | "interaction">("summary");
+  const [activeView, setActiveView] = useState<"summary" | "emotional" | "user">("summary");
 
   const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
@@ -139,7 +139,7 @@ const StatPage = () => {
   if (loading) {
     return (
       <div style={styles.loadingPage}>
-        <div style={styles.loadingCard}>
+        <div style={{ ...styles.loadingCard, transform: "translateY(-100px)" }}>
           <div style={styles.loadingHeader}>
             <div style={styles.loadingSpinner} />
             <div>
@@ -213,10 +213,10 @@ return (
       </button>
 
       <button
-        onClick={() => setActiveView("interaction")}
-        style={activeView === "interaction" ? styles.buttonPrimary : styles.buttonSecondary}
+        onClick={() => setActiveView("user")}
+        style={activeView === "user" ? styles.buttonPrimary : styles.buttonSecondary}
       >
-        Interaction
+        Users
       </button>
     </div>
 
@@ -239,8 +239,8 @@ return (
       </div>
     )}
 
-    {activeView === "interaction" && userData && (
-      <InteractionStats data={userData} />
+    {activeView === "user" && userData && (
+      <UserStats data={userData} />
     )}
 
   </div>
