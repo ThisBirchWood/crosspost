@@ -54,5 +54,16 @@ services:
               count: 1
               capabilities: [gpu]
 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: crosspost_frontend
+    volumes:
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
 volumes:
   model_cache:
