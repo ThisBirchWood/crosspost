@@ -23,6 +23,12 @@ const DatasetEditPage = () => {
 
   const [datasetName, setDatasetName] = useState("");
 
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    setHasError(true);
+    setStatusMessage("You must be signed in to save changes.");
+  }
+
   useEffect(() => {
     if (!Number.isInteger(parsedDatasetId) || parsedDatasetId <= 0) {
       setHasError(true);
@@ -58,6 +64,7 @@ const DatasetEditPage = () => {
         setLoading(false);
       });
   }, [parsedDatasetId]);
+
 
   const saveDatasetName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -100,6 +107,23 @@ const DatasetEditPage = () => {
     }
   };
 
+  const deleteDataset = async () => {
+    try{
+      await axios.delete(
+        `${API_BASE_URL}/dataset/${parsedDatasetId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      navigate("/datasets", { replace: true });
+    } catch (error: unknown) {
+      setHasError(true);
+      if (axios.isAxiosError(error)) {
+        setStatusMessage(String(error.response?.data?.error || error.message || "Save failed."));
+      } else {
+        setStatusMessage("Save failed due to an unexpected error.");
+      }
+    }
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.containerNarrow}>
@@ -132,6 +156,15 @@ const DatasetEditPage = () => {
           />
 
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              style={styles.buttonDanger}
+              onClick={deleteDataset}
+              disabled={isSaving}
+              >
+                Delete Dataset
+            </button>
+
             <button
               type="button"
               style={styles.buttonSecondary}
