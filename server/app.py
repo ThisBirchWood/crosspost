@@ -164,10 +164,10 @@ def get_dataset(dataset_id):
         if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
             raise NotAuthorisedException("This user is not authorised to access this dataset")
 
-        dataset_content = dataset_manager.get_dataset_content(dataset_id)
-        filters = get_request_filters()
-        filtered_dataset = stat_gen.filter_dataset(dataset_content, filters)
-        return jsonify(filtered_dataset), 200
+        dataset_info = dataset_manager.get_dataset_info(dataset_id)
+        included_cols = {"id", "name", "created_at"}
+
+        return jsonify({k: dataset_info[k] for k in included_cols}), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -253,6 +253,8 @@ def content_endpoint(dataset_id):
         return jsonify(stat_gen.get_content_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -273,6 +275,8 @@ def get_summary(dataset_id):
         return jsonify(stat_gen.summary(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -293,6 +297,8 @@ def get_time_analysis(dataset_id):
         return jsonify(stat_gen.get_time_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -313,6 +319,8 @@ def get_user_analysis(dataset_id):
         return jsonify(stat_gen.get_user_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -333,6 +341,8 @@ def get_cultural_analysis(dataset_id):
         return jsonify(stat_gen.get_cultural_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:
@@ -353,6 +363,8 @@ def get_interaction_analysis(dataset_id):
         return jsonify(stat_gen.get_interactional_analysis(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
         return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
     except Exception as e:

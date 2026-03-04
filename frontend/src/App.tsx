@@ -7,6 +7,7 @@ import LoginPage from "./pages/Login";
 import UploadPage from "./pages/Upload";
 import StatPage from "./pages/Stats";
 import { getDocumentTitle } from "./utils/documentTitle";
+import DatasetEditPage from "./pages/DatasetEdit";
 
 function App() {
   const location = useLocation();
@@ -24,6 +25,7 @@ function App() {
         <Route path="/datasets" element={<DatasetsPage />} />
         <Route path="/dataset/:datasetId/status" element={<DatasetStatusPage />} />
         <Route path="/dataset/:datasetId/stats" element={<StatPage />} />
+        <Route path="/dataset/:datasetId/edit" element={<DatasetEditPage />} />
       </Route>
     </Routes>
   );
