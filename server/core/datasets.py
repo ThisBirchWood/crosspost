@@ -17,6 +17,10 @@ class DatasetManager:
             return False
         
         return True
+    
+    def get_user_datasets(self, user_id: int) -> list[dict]:
+        query = "SELECT * FROM datasets WHERE user_id = %s"
+        return self.db.execute(query, (user_id, ), fetch=True)
 
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
@@ -48,6 +52,7 @@ class DatasetManager:
         query = """
             INSERT INTO events (
                 dataset_id,
+                post_id,
                 type,
                 parent_id,
                 author,
@@ -74,13 +79,14 @@ class DatasetManager:
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s
+                %s, %s
             )
         """
 
         values = [
             (
                 dataset_id,
+                row["id"],
                 row["type"],
                 row["parent_id"],
                 row["author"],

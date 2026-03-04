@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 import SummaryStats from "../components/SummaryStats";
 import EmotionalStats from "../components/EmotionalStats";
-import InteractionStats from "../components/UserStats";
+import UserStats from "../components/UserStats";
 
 import { 
   type SummaryResponse, 
@@ -12,12 +13,14 @@ import {
   type ContentAnalysisResponse
 } from '../types/ApiTypes'
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
 const styles = StatsStyling;
 
 const StatPage = () => {
+  const { datasetId: routeDatasetId } = useParams<{ datasetId: string }>();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"summary" | "emotional" | "interaction">("summary");
+  const [activeView, setActiveView] = useState<"summary" | "emotional" | "user">("summary");
 
   const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
@@ -29,15 +32,73 @@ const StatPage = () => {
   const beforeDateRef = useRef<HTMLInputElement>(null);
   const afterDateRef = useRef<HTMLInputElement>(null);
 
-  const getStats = () => {
+  const parsedDatasetId = Number(routeDatasetId ?? "");
+  const datasetId = Number.isInteger(parsedDatasetId) && parsedDatasetId > 0 ? parsedDatasetId : null;
+
+  const getFilterParams = () => {
+    const params: Record<string, string> = {};
+    const query = (searchInputRef.current?.value ?? "").trim();
+    const start = (afterDateRef.current?.value ?? "").trim();
+    const end = (beforeDateRef.current?.value ?? "").trim();
+
+    if (query) {
+      params.search_query = query;
+    }
+
+    if (start) {
+      params.start_date = start;
+    }
+
+    if (end) {
+      params.end_date = end;
+    }
+
+    return params;
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return null;
+    }
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  const getStats = (params: Record<string, string> = {}) => {
+    if (!datasetId) {
+      setError("Missing dataset id. Open /dataset/<id>/stats.");
+      return;
+    }
+
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) {
+      setError("You must be signed in to load stats.");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     Promise.all([
-      axios.get<TimeAnalysisResponse>("http://localhost:5000/stats/time"),
-      axios.get<UserAnalysisResponse>("http://localhost:5000/stats/user"),
-      axios.get<ContentAnalysisResponse>("http://localhost:5000/stats/content"),
-      axios.get<SummaryResponse>(`http://localhost:5000/stats/summary`),
+      axios.get<TimeAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/time`, {
+        params,
+        headers: authHeaders,
+      }),
+      axios.get<UserAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/user`, {
+        params,
+        headers: authHeaders,
+      }),
+      axios.get<ContentAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/content`, {
+        params,
+        headers: authHeaders,
+      }),
+      axios.get<SummaryResponse>(`${API_BASE_URL}/dataset/${datasetId}/summary`, {
+        params,
+        headers: authHeaders,
+      }),
     ]) 
       .then(([timeRes, userRes, contentRes, summaryRes]) => {
         setUserData(userRes.data || null);
@@ -50,37 +111,52 @@ const StatPage = () => {
   };
 
   const onSubmitFilters = () => {
-    const query = searchInputRef.current?.value ?? "";
-
-    Promise.all([
-      axios.post("http://localhost:5000/filter/search", {
-        query: query
-      }),
-    ]) 
-    .then(() => {
-      getStats();
-    })
-    .catch(e => {
-      setError("Failed to load filters: " + e.response);
-    })
+    getStats(getFilterParams());
   };
 
   const resetFilters = () => {
-    axios.get("http://localhost:5000/filter/reset")
-    .then(() => {
-      getStats();
-    })
-    .catch(e => {
-      setError(e);
-    })
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    if (beforeDateRef.current) {
+      beforeDateRef.current.value = "";
+    }
+    if (afterDateRef.current) {
+      afterDateRef.current.value = "";
+    }
+    getStats();
   };
 
   useEffect(() => {
     setError("");
+    if (!datasetId) {
+      setError("Missing dataset id. Open /dataset/<id>/stats.");
+      return;
+    }
     getStats();
-  }, [])
+  }, [datasetId])
 
-  if (loading) return <p style={{...styles.page, minWidth: "100vh", minHeight: "100vh"}}>Loading insights…</p>;
+  if (loading) {
+    return (
+      <div style={styles.loadingPage}>
+        <div style={{ ...styles.loadingCard, transform: "translateY(-100px)" }}>
+          <div style={styles.loadingHeader}>
+            <div style={styles.loadingSpinner} />
+            <div>
+              <h2 style={styles.loadingTitle}>Loading analytics</h2>
+              <p style={styles.loadingSubtitle}>Fetching summary, timeline, user, and content insights.</p>
+            </div>
+          </div>
+
+          <div style={styles.loadingSkeleton}>
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineLong }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineMed }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineShort }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (error) return <p style={{...styles.page}}>{error}</p>;
 
 return (
@@ -118,10 +194,11 @@ return (
         </button>
       </div>
 
-      <div style={{ fontSize: 13, color: "#6b7280" }}>Analytics Dashboard</div>
-    </div>
+          <div style={styles.dashboardMeta}>Analytics Dashboard</div>
+          <div style={styles.dashboardMeta}>Dataset #{datasetId ?? "-"}</div>
+        </div>
 
-    <div style={{ ...styles.container, display: "flex", gap: 8, marginTop: 12 }}>
+    <div style={{ ...styles.container, ...styles.tabsRow }}>
       <button
         onClick={() => setActiveView("summary")}
         style={activeView === "summary" ? styles.buttonPrimary : styles.buttonSecondary}
@@ -136,10 +213,10 @@ return (
       </button>
 
       <button
-        onClick={() => setActiveView("interaction")}
-        style={activeView === "interaction" ? styles.buttonPrimary : styles.buttonSecondary}
+        onClick={() => setActiveView("user")}
+        style={activeView === "user" ? styles.buttonPrimary : styles.buttonSecondary}
       >
-        Interaction
+        Users
       </button>
     </div>
 
@@ -162,8 +239,8 @@ return (
       </div>
     )}
 
-    {activeView === "interaction" && userData && (
-      <InteractionStats data={userData} />
+    {activeView === "user" && userData && (
+      <UserStats data={userData} />
     )}
 
   </div>

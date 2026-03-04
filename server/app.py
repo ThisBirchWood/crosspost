@@ -15,7 +15,6 @@ from flask_jwt_extended import (
 )
 
 from server.analysis.stat_gen import StatGen
-from server.analysis.enrichment import DatasetEnrichment
 from server.exceptions import NotAuthorisedException, NonExistentDatasetException
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
@@ -45,6 +44,7 @@ db = PostgresConnector()
 auth_manager = AuthManager(db, bcrypt)
 dataset_manager = DatasetManager(db)
 stat_gen = StatGen()
+
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -105,6 +105,11 @@ def profile():
         message="Access granted", user=auth_manager.get_user_by_id(current_user)
     ), 200
 
+@app.route("/user/datasets")
+@jwt_required()
+def get_user_datasets():
+    current_user = int(get_jwt_identity())
+    return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
 @app.route("/upload", methods=["POST"])
 @jwt_required()
@@ -114,6 +119,10 @@ def upload_data():
 
     post_file = request.files["posts"]
     topic_file = request.files["topics"]
+    dataset_name = (request.form.get("name") or "").strip()
+
+    if not dataset_name:
+        return jsonify({"error": "Missing required dataset name"}), 400
 
     if post_file.filename == "" or topic_file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
@@ -130,19 +139,15 @@ def upload_data():
 
         posts_df = pd.read_json(post_file, lines=True, convert_dates=False)
         topics = json.load(topic_file)
-        dataset_id = dataset_manager.save_dataset_info(current_user, f"dataset_{current_user}", topics)
+        dataset_id = dataset_manager.save_dataset_info(current_user, dataset_name, topics)
 
-        process_dataset.delay(
-            dataset_id,
-            posts_df.to_dict(orient="records"),
-            topics
-        )
+        process_dataset.delay(dataset_id, posts_df.to_dict(orient="records"), topics)
 
         return jsonify(
             {
                 "message": "Dataset queued for processing",
                 "dataset_id": dataset_id,
-                "status": "processing"
+                "status": "processing",
             }
         ), 202
     except ValueError as e:
@@ -155,7 +160,7 @@ def upload_data():
 def get_dataset(dataset_id):
     try:
         user_id = int(get_jwt_identity())
-        
+
         if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
             raise NotAuthorisedException("This user is not authorised to access this dataset")
 
@@ -176,7 +181,7 @@ def get_dataset(dataset_id):
 def get_dataset_status(dataset_id):
     try:
         user_id = int(get_jwt_identity())
-        
+
         if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
             raise NotAuthorisedException("This user is not authorised to access this dataset")
 

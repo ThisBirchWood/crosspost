@@ -96,10 +96,7 @@ class StatGen:
             "common_three_phrases": self.linguistic_analysis.ngrams(filtered_df, n=3),
             "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(
                 filtered_df
-            ),
-            "reply_time_by_emotion": self.temporal_analysis.avg_reply_time_per_emotion(
-                filtered_df
-            ),
+            )
         }
 
     def get_user_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
@@ -108,9 +105,7 @@ class StatGen:
         return {
             "top_users": self.interaction_analysis.top_users(filtered_df),
             "users": self.interaction_analysis.per_user_analysis(filtered_df),
-            "interaction_graph": self.interaction_analysis.interaction_graph(
-                filtered_df
-            ),
+            "interaction_graph": self.interaction_analysis.interaction_graph(filtered_df)
         }
 
     def get_interactional_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:

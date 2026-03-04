@@ -1,0 +1,164 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import StatsStyling from "../styles/stats_styling";
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+
+const styles = StatsStyling;
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return;
+    }
+
+    axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+    axios
+      .get(`${API_BASE_URL}/profile`)
+      .then(() => {
+        navigate("/upload", { replace: true });
+      })
+      .catch(() => {
+        localStorage.removeItem("access_token");
+        delete axios.defaults.headers.common.Authorization;
+      });
+  }, [navigate]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setInfo("");
+    setLoading(true);
+
+    try {
+      if (isRegisterMode) {
+        await axios.post(`${API_BASE_URL}/register`, { username, email, password });
+        setInfo("Account created. You can now sign in.");
+        setIsRegisterMode(false);
+      } else {
+        const response = await axios.post<{ access_token: string }>(
+          `${API_BASE_URL}/login`,
+          { username, password }
+        );
+
+        const token = response.data.access_token;
+        localStorage.setItem("access_token", token);
+        axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+        navigate("/upload");
+      }
+    } catch (requestError: unknown) {
+      if (axios.isAxiosError(requestError)) {
+        setError(
+          String(requestError.response?.data?.error || requestError.message || "Request failed")
+        );
+      } else {
+        setError("Unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={styles.containerAuth}>
+        <div style={{ ...styles.card, ...styles.authCard }}>
+          <div style={styles.headingBlock}>
+            <h1 style={styles.headingXl}>
+              {isRegisterMode ? "Create your account" : "Welcome back"}
+            </h1>
+            <p style={styles.mutedText}>
+              {isRegisterMode
+                ? "Register to start uploading and exploring your dataset insights."
+                : "Sign in to continue to your analytics workspace."}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={styles.authForm}>
+            <input
+              type="text"
+              placeholder="Username"
+              style={{ ...styles.input, ...styles.authControl }}
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              required
+            />
+
+            {isRegisterMode && (
+                <input
+                  type="email"
+                  placeholder="Email"
+                  style={{ ...styles.input, ...styles.authControl }}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+              />
+            )}
+
+            <input
+              type="password"
+              placeholder="Password"
+              style={{ ...styles.input, ...styles.authControl }}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+
+            <button
+              type="submit"
+              style={{ ...styles.buttonPrimary, ...styles.authControl, marginTop: 2 }}
+              disabled={loading}
+            >
+              {loading
+                ? "Please wait..."
+                : isRegisterMode
+                  ? "Create account"
+                  : "Sign in"}
+            </button>
+          </form>
+
+          {error && (
+            <p style={styles.authErrorText}>
+              {error}
+            </p>
+          )}
+
+          {info && (
+            <p style={styles.authInfoText}>
+              {info}
+            </p>
+          )}
+
+          <div style={styles.authSwitchRow}>
+            <span style={styles.authSwitchLabel}>
+              {isRegisterMode ? "Already have an account?" : "New here?"}
+            </span>
+            <button
+              type="button"
+                style={styles.authSwitchButton}
+              onClick={() => {
+                setError("");
+                setInfo("");
+                setIsRegisterMode((value) => !value);
+              }}
+            >
+              {isRegisterMode ? "Switch to sign in" : "Create account"}
+            </button>
+          </div>
+        </div>
+    </div>
+  );
+};
+
+export default LoginPage;
