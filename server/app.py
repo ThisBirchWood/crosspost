@@ -176,6 +176,31 @@ def get_dataset(dataset_id):
         print(traceback.format_exc())
         return jsonify({"error": "An unexpected error occured"}), 500
     
+@app.route("/dataset/<int:dataset_id>", methods=["PATCH"])
+@jwt_required()
+def update_dataset(dataset_id):
+    try:
+        user_id = int(get_jwt_identity())
+
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException("This user is not authorised to access this dataset")
+
+        body = request.get_json()
+        new_name = body.get("name")
+
+        if not new_name or not new_name.strip():
+            return jsonify({"error": "A valid name must be provided"}), 400
+
+        dataset_manager.update_dataset_name(dataset_id, new_name.strip())
+        return jsonify({"message": f"Dataset {dataset_id} renamed to '{new_name.strip()}'"}), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "An unexpected error occurred"}), 500
+    
 @app.route("/dataset/<int:dataset_id>", methods=["DELETE"])
 @jwt_required()
 def delete_dataset(dataset_id):

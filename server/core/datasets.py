@@ -145,6 +145,10 @@ class DatasetManager:
         
         return result[0]
     
+    def update_dataset_name(self, dataset_id: int, new_name: str):
+        query = "UPDATE datasets SET name = %s WHERE id = %s"
+        self.db.execute(query, (new_name, dataset_id))
+    
     def delete_dataset_info(self, dataset_id: int):
         query = "DELETE FROM datasets WHERE id = %s"
 
