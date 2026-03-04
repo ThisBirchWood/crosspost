@@ -146,17 +146,11 @@ class DatasetManager:
         return result[0]
     
     def delete_dataset_info(self, dataset_id: int):
-        query = """
-            DELETE FROM datasets
-            WHERE id = %s
-        """
+        query = "DELETE FROM datasets WHERE id = %s"
 
         self.db.execute(query, (dataset_id, ))
 
     def delete_dataset_content(self, dataset_id: int):
-        query = """
-            DELETE FROM events
-            WHERE id = %s
-        """
+        query = "DELETE FROM events WHERE dataset_id = %s"
 
         self.db.execute(query, (dataset_id, ))
