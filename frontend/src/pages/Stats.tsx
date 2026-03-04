@@ -139,7 +139,7 @@ const StatPage = () => {
   if (loading) {
     return (
       <div style={styles.loadingPage}>
-        <div style={styles.loadingCard}>
+        <div style={{ ...styles.loadingCard, transform: "translateY(-100px)" }}>
           <div style={styles.loadingHeader}>
             <div style={styles.loadingSpinner} />
             <div>
