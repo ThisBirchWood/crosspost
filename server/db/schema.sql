@@ -30,6 +30,8 @@ CREATE TABLE events (
     /* Required Fields */
     id SERIAL PRIMARY KEY,
     dataset_id INTEGER NOT NULL,
+
+    post_id VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
 
     author VARCHAR(255) NOT NULL,

@@ -127,8 +127,8 @@ class InteractionAnalysis:
     def interaction_graph(self, df: pd.DataFrame):
         interactions = {a: {} for a in df["author"].dropna().unique()}
 
-        # reply_to refers to the comment id, this allows us to map comment ids to usernames
-        id_to_author = df.set_index("id")["author"].to_dict()
+        # reply_to refers to the comment id, this allows us to map comment/post ids to usernames
+        id_to_author = df.set_index("post_id")["author"].to_dict()
 
         for _, row in df.iterrows():
             a = row["author"]
