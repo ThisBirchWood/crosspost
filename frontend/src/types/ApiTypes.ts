@@ -55,16 +55,24 @@ type TimeAnalysisResponse = {
 }
 
 // Content Analysis
+type Emotion = {
+  emotion_anger: number;
+  emotion_disgust: number;
+  emotion_fear: number;
+  emotion_joy: number;
+  emotion_sadness: number;
+};
+
 type NGram = {
     count: number;
     ngram: string;
 }
 
-type AverageEmotionByTopic = {
-    topic: string;
-    n: number;
-    [emotion: string]: string | number;
-}
+type AverageEmotionByTopic = Emotion & {
+  n: number;
+  topic: string;
+};
+
 
 type ContentAnalysisResponse = {
     word_frequencies: FrequencyWord[];

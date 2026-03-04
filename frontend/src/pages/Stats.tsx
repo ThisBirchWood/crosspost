@@ -136,7 +136,27 @@ const StatPage = () => {
     getStats();
   }, [datasetId])
 
-  if (loading) return <p style={{...styles.page, minWidth: "100vh", minHeight: "100vh"}}>Loading insights…</p>;
+  if (loading) {
+    return (
+      <div style={styles.loadingPage}>
+        <div style={styles.loadingCard}>
+          <div style={styles.loadingHeader}>
+            <div style={styles.loadingSpinner} />
+            <div>
+              <h2 style={styles.loadingTitle}>Loading analytics</h2>
+              <p style={styles.loadingSubtitle}>Fetching summary, timeline, user, and content insights.</p>
+            </div>
+          </div>
+
+          <div style={styles.loadingSkeleton}>
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineLong }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineMed }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineShort }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (error) return <p style={{...styles.page}}>{error}</p>;
 
 return (

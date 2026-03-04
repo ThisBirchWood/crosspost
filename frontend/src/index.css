@@ -42,3 +42,24 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--focus-ring);
   outline: none;
 }
+
+@keyframes stats-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes stats-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
