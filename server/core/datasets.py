@@ -144,3 +144,19 @@ class DatasetManager:
             raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
         
         return result[0]
+    
+    def delete_dataset_info(self, dataset_id: int):
+        query = """
+            DELETE FROM datasets
+            WHERE id = %s
+        """
+
+        self.db.execute(query, (dataset_id, ))
+
+    def delete_dataset_content(self, dataset_id: int):
+        query = """
+            DELETE FROM events
+            WHERE id = %s
+        """
+
+        self.db.execute(query, (dataset_id, ))
