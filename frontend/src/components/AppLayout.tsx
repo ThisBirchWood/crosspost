@@ -82,7 +82,7 @@ const AppLayout = () => {
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div style={styles.appHeaderBrandRow}>
             <span style={styles.appTitle}>
-              Ethnograph View
+              CrossPost Analysis Engine
             </span>
             <span
               style={{
