@@ -38,9 +38,13 @@ class PostgresConnector:
             raise
 
     def execute_batch(self, query, values):
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            execute_batch(cursor, query, values)
+        try:
+            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                execute_batch(cursor, query, values)
             self.connection.commit()
+        except Exception:
+            self.connection.rollback()
+            raise
 
     def close(self):
         if self.connection:
