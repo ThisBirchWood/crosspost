@@ -97,6 +97,16 @@ export const foundationStyles: StyleMap = {
     cursor: "pointer",
   },
 
+  buttonDanger: {
+    padding: "8px 12px",
+    borderRadius: 6,
+    border: `1px solid ${palette.borderDefault}`,
+    background: palette.dangerText,
+    color: palette.textPrimary,
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+
   grid: {
     marginTop: 12,
     display: "grid",

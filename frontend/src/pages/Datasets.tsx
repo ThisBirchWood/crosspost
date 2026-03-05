@@ -94,6 +94,7 @@ const DatasetsPage = () => {
             <ul style={styles.listNoBullets}>
               {datasets.map((dataset) => {
                 const isComplete = dataset.status === "complete";
+                const editPath = `/dataset/${dataset.id}/edit`;
                 const targetPath = isComplete
                   ? `/dataset/${dataset.id}/stats`
                   : `/dataset/${dataset.id}/status`;
@@ -117,13 +118,25 @@ const DatasetsPage = () => {
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      style={isComplete ? styles.buttonPrimary : styles.buttonSecondary}
-                      onClick={() => navigate(targetPath)}
-                    >
-                      {isComplete ? "Open stats" : "View status"}
-                    </button>
+                    <div>
+                      { isComplete &&
+                        <button
+                          type="button"
+                          style={{...styles.buttonSecondary, "margin": "5px"}}
+                          onClick={() => navigate(editPath)}
+                        >
+                          Edit Dataset
+                        </button>
+                      }
+
+                      <button
+                        type="button"
+                        style={isComplete ? styles.buttonPrimary : styles.buttonSecondary}
+                        onClick={() => navigate(targetPath)}
+                      >
+                        {isComplete ? "Open stats" : "View status"}
+                      </button>
+                    </div>
                   </li>
                 );
               })}
