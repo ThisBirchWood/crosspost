@@ -2,6 +2,7 @@ import StatsStyling from "../styles/stats_styling";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import axios from "axios";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const styles = StatsStyling;
@@ -19,16 +20,11 @@ const DatasetEditPage = () => {
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const [datasetName, setDatasetName] = useState("");
-
-  const token = localStorage.getItem("access_token");
-  if (!token) {
-    setHasError(true);
-    setStatusMessage("You must be signed in to save changes.");
-  }
-
   useEffect(() => {
     if (!Number.isInteger(parsedDatasetId) || parsedDatasetId <= 0) {
       setHasError(true);
@@ -108,21 +104,37 @@ const DatasetEditPage = () => {
   };
 
   const deleteDataset = async () => {
-    try{
+    const deleteToken = localStorage.getItem("access_token");
+    if (!deleteToken) {
+      setHasError(true);
+      setStatusMessage("You must be signed in to delete datasets.");
+      setIsDeleteModalOpen(false);
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setHasError(false);
+      setStatusMessage("");
+
       await axios.delete(
         `${API_BASE_URL}/dataset/${parsedDatasetId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${deleteToken}` } }
       );
+
+      setIsDeleteModalOpen(false);
       navigate("/datasets", { replace: true });
     } catch (error: unknown) {
       setHasError(true);
       if (axios.isAxiosError(error)) {
-        setStatusMessage(String(error.response?.data?.error || error.message || "Save failed."));
+        setStatusMessage(String(error.response?.data?.error || error.message || "Delete failed."));
       } else {
-        setStatusMessage("Save failed due to an unexpected error.");
+        setStatusMessage("Delete failed due to an unexpected error.");
       }
+    } finally {
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div style={styles.page}>
@@ -159,8 +171,8 @@ const DatasetEditPage = () => {
             <button
               type="button"
               style={styles.buttonDanger}
-              onClick={deleteDataset}
-              disabled={isSaving}
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={isSaving || isDeleting}
               >
                 Delete Dataset
             </button>
@@ -169,14 +181,14 @@ const DatasetEditPage = () => {
               type="button"
               style={styles.buttonSecondary}
               onClick={() => navigate("/datasets")}
-              disabled={isSaving}
+              disabled={isSaving || isDeleting}
             >
               Cancel
             </button>
             <button
               type="submit"
               style={{ ...styles.buttonPrimary, opacity: loading || isSaving ? 0.75 : 1 }}
-              disabled={loading || isSaving}
+              disabled={loading || isSaving || isDeleting}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -186,6 +198,17 @@ const DatasetEditPage = () => {
             : statusMessage}
           </div>
         </form>
+
+        <ConfirmationModal
+          open={isDeleteModalOpen}
+          title="Delete Dataset"
+          message={`Are you sure you want to delete "${datasetName || "this dataset"}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Keep Dataset"
+          loading={isDeleting}
+          onCancel={() => setIsDeleteModalOpen(false)}
+          onConfirm={deleteDataset}
+        />
       </div>
     </div>
   );
