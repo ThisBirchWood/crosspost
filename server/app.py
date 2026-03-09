@@ -111,7 +111,7 @@ def get_user_datasets():
     current_user = int(get_jwt_identity())
     return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
-@app.route("/upload", methods=["POST"])
+@app.route("/datasets/upload", methods=["POST"])
 @jwt_required()
 def upload_data():
     if "posts" not in request.files or "topics" not in request.files:

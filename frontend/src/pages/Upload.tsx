@@ -40,7 +40,7 @@ const UploadPage = () => {
       setHasError(false);
       setReturnMessage("");
 
-      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/datasets/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
