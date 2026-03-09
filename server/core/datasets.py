@@ -1,7 +1,7 @@
 import pandas as pd
 from server.db.database import PostgresConnector
 from psycopg2.extras import Json
-from server.exceptions import NotAuthorisedException, NonExistentDatasetException
+from server.exceptions import NonExistentDatasetException
 
 class DatasetManager:
     def __init__(self, db: PostgresConnector):

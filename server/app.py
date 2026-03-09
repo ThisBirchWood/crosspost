@@ -111,6 +111,20 @@ def get_user_datasets():
     current_user = int(get_jwt_identity())
     return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
+@app.route("/datasets/sources", methods=["GET"])
+@jwt_required()
+def get_dataset_sources():
+    return jsonify({""})
+
+@app.route("/datasets/scrape", methods=["POST"])
+@jwt_required()
+def scrape_data():
+    if "sources" not in request.form:
+        return jsonify({"error": "Data source names are required."}), 400
+    
+    sources = request.form.get("sources")
+
+
 @app.route("/datasets/upload", methods=["POST"])
 @jwt_required()
 def upload_data():

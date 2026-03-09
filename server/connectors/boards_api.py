@@ -7,6 +7,7 @@ from dto.post import Post
 from dto.comment import Comment
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
@@ -14,12 +15,18 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; ForumScraper/1.0)"
 }
 
-class BoardsAPI:
+class BoardsAPI(BaseConnector):
     def __init__(self):
         self.url = "https://www.boards.ie"
-        self.source_name = "Boards.ie"
+        self.source_name = "boards.ie"
+        self.display_name = "Boards.ie"
 
-    def get_new_category_posts(self, category: str, post_limit: int, comment_limit: int)  -> list[Post]:
+    def get_new_posts_by_search(self, 
+                                search: str,
+                                category: str, 
+                                post_limit: int, 
+                                comment_limit: int
+                                )  -> list[Post]:
         urls = []
         current_page = 1
 
