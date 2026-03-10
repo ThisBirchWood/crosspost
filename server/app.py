@@ -37,15 +37,20 @@ CORS(app, resources={r"/*": {"origins": frontend_url}})
 app.config["JWT_SECRET_KEY"] = jwt_secret_key
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_access_token_expires
 
+# Security
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
+# Helper Objects
 db = PostgresConnector()
 auth_manager = AuthManager(db, bcrypt)
 dataset_manager = DatasetManager(db)
 stat_gen = StatGen()
 connectors = get_available_connectors()
-default_topic_list = json.load(open("server/topics.json"))
+
+# Default Files
+with open("server/topics.json") as f:
+    default_topic_list = json.load(f)
 
 @app.route("/register", methods=["POST"])
 def register_user():
