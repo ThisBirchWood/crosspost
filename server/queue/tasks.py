@@ -1,11 +1,13 @@
 import pandas as pd
-import json
+import logging
 
 from server.queue.celery_app import celery
 from server.analysis.enrichment import DatasetEnrichment
 from server.db.database import PostgresConnector
 from server.core.datasets import DatasetManager
 from server.connectors.registry import get_available_connectors
+
+logger = logging.getLogger(__name__)
 
 @celery.task(bind=True, max_retries=3)
 def process_dataset(self, dataset_id: int, posts: list, topics: dict):
@@ -26,9 +28,7 @@ def process_dataset(self, dataset_id: int, posts: list, topics: dict):
 @celery.task(bind=True, max_retries=3)
 def fetch_and_process_dataset(self, 
                               dataset_id: int, 
-                              per_source: dict[str, int], 
-                              search: str, 
-                              category: str, 
+                              source_info: list[dict],
                               topics: dict):
     connectors = get_available_connectors()
     db = PostgresConnector()
@@ -36,13 +36,18 @@ def fetch_and_process_dataset(self,
     posts = []
 
     try:
-        for source_name, source_limit in per_source.items():
-            connector = connectors[source_name]()
+        for metadata in source_info:
+            name = metadata["name"]
+            search = metadata.get("search")
+            category = metadata.get("category")
+            limit = metadata.get("limit", 100)
+
+            connector = connectors[name]()
             raw_posts = connector.get_new_posts_by_search(
                 search=search,
                 category=category,
-                post_limit=source_limit,
-                comment_limit=source_limit
+                post_limit=limit,
+                comment_limit=limit
             )
             posts.extend(post.to_dict() for post in raw_posts)
 

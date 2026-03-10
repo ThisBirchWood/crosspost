@@ -124,31 +124,33 @@ def get_dataset_sources():
 @app.route("/datasets/scrape", methods=["POST"])
 @jwt_required()
 def scrape_data():
-    if "sources" not in request.form:
-        return jsonify({"error": "Data source names are required."}), 400
+    data = request.get_json()
+
+    if not data or "sources" not in data:
+            return jsonify({"error": "Sources must be provided"}), 400
     
     user_id = int(get_jwt_identity())
-    sources = request.form.getlist("sources")
-    limit = int(request.form.get("limit", max_fetch_limit))
+    dataset_name = data["name"].strip()
+    source_configs = data["sources"]
 
-    dataset_name = request.form.get("name", "").strip()
-    search = request.form.get("search")
-    category = request.form.get("category")
+    if not isinstance(source_configs, list) or len(source_configs) == 0:
+        return jsonify({"error": "Sources must be a non-empty list"}), 400
 
-    if limit > max_fetch_limit:
-        return jsonify({"error": f"Due to API limitations, we cannot receive more than ${max_fetch_limit} posts"}), 400
-    
-    for source in sources:
-        if source not in connectors.keys():
-            return jsonify({"error": "Source must exist"}), 400
-        
-    limits = split_limit(limit, len(sources))
-    per_source = dict(zip(sources, limits))
+    # Light Validation
+    for source in source_configs:
+        if "name" not in source:
+            return jsonify({"error": "Each source must contain a name"}), 400
+        if "limit" in source:
+            source["limit"] = int(source["limit"])
+  
     dataset_id = dataset_manager.save_dataset_info(user_id, dataset_name, default_topic_list)
-    dataset_manager.set_dataset_status(dataset_id, "fetching", f"Data is being fetched from {str(sources)}")
+    dataset_manager.set_dataset_status(dataset_id, 
+                                       "fetching", 
+                                       f"Data is being fetched from {str(source["name"] + "," for source in source_configs)}"
+                                       )
 
     try:
-        fetch_and_process_dataset.delay(dataset_id, per_source, search, category, default_topic_list)
+        fetch_and_process_dataset.delay(dataset_id, source_configs, default_topic_list)
 
         return jsonify(
             {
