@@ -15,11 +15,11 @@ def _discover_connectors() -> list[type[BaseConnector]]:
         if cls.source_name  # guard against abstract intermediaries
     ]
 
-def get_available_connectors() -> list[type[BaseConnector]]:
-    return [c for c in _discover_connectors() if c.is_available()]
+def get_available_connectors() -> dict[str, type[BaseConnector]]:
+    return {c.source_name: c for c in _discover_connectors() if c.is_available()}
 
 def get_connector_metadata() -> list[dict]:
     return [
-        {"id": c.source_name, "label": c.display_name}
-        for c in get_available_connectors()
+        {"id": id, "label": obj.display_name}
+        for id, obj in get_available_connectors().items()
     ]
