@@ -114,7 +114,7 @@ class DatasetManager:
         self.db.execute_batch(query, values)
 
     def set_dataset_status(self, dataset_id: int, status: str, status_message: str | None = None):
-        if status not in ["processing", "complete", "error"]:
+        if status not in ["fetching", "processing", "complete", "error"]:
             raise ValueError("Invalid status")
 
         query = """
