@@ -15,7 +15,15 @@ class RedditAPI(BaseConnector):
         self.source_name = "Reddit"
 
     # Public Methods #
-    def search_new_subreddit_posts(self, search: str, subreddit: str, limit: int) -> list[Post]:
+    def get_new_posts_by_search(self, 
+                                search: str, 
+                                subreddit: str, 
+                                limit: int
+                                ) -> list[Post]:
+        
+        if not search:
+            return self._get_new_subreddit_posts(subreddit, limit=limit)
+
         params = {
             'q': search,
             'limit': limit,
@@ -43,7 +51,7 @@ class RedditAPI(BaseConnector):
 
         return posts
     
-    def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
+    def _get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
         posts = []
         after = None
         url = f"r/{subreddit}/new.json"

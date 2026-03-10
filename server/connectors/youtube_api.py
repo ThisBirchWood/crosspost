@@ -16,6 +16,54 @@ class YouTubeAPI(BaseConnector):
     def __init__(self):
         self.youtube = build('youtube', 'v3', developerKey=API_KEY)
 
+    def get_new_posts_by_search(self, 
+                                search: str,
+                                category: str, 
+                                post_limit: int, 
+                                comment_limit: int
+                                )  -> list[Post]:
+            videos = self.search_videos(search, post_limit)
+            posts = []
+
+            for video in videos:
+                video_id = video['id']['videoId']
+                snippet = video['snippet']
+                title = snippet['title']
+                description = snippet['description']
+                published_at = datetime.datetime.strptime(snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp()
+                channel_title = snippet['channelTitle']
+
+                comments = []
+                comments_data = self.get_video_comments(video_id, comment_limit)
+                for comment_thread in comments_data:
+                    comment_snippet = comment_thread['snippet']['topLevelComment']['snippet']
+                    comment = Comment(
+                        id=comment_thread['id'],
+                        post_id=video_id,
+                        content=comment_snippet['textDisplay'],
+                        author=comment_snippet['authorDisplayName'],
+                        timestamp=datetime.datetime.strptime(comment_snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp(),
+                        reply_to=None,
+                        source="YouTube"
+                    )
+
+                    comments.append(comment)
+
+                post = Post(
+                    id=video_id,
+                    content=f"{title}\n\n{description}",
+                    author=channel_title,
+                    timestamp=published_at,
+                    url=f"https://www.youtube.com/watch?v={video_id}",
+                    title=title,
+                    source="YouTube",
+                    comments=comments
+                )
+
+                posts.append(post)
+
+            return posts
+
     def search_videos(self, query, limit):
         request = self.youtube.search().list(
             q=query,
@@ -40,46 +88,3 @@ class YouTubeAPI(BaseConnector):
             print(f"Error fetching comments for video {video_id}: {e}")
             return []
         return response.get('items', [])
-    
-    def fetch_videos(self, query, video_limit, comment_limit) -> list[Post]:
-        videos = self.search_videos(query, video_limit)
-        posts = []
-
-        for video in videos:
-            video_id = video['id']['videoId']
-            snippet = video['snippet']
-            title = snippet['title']
-            description = snippet['description']
-            published_at = datetime.datetime.strptime(snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp()
-            channel_title = snippet['channelTitle']
-
-            comments = []
-            comments_data = self.get_video_comments(video_id, comment_limit)
-            for comment_thread in comments_data:
-                comment_snippet = comment_thread['snippet']['topLevelComment']['snippet']
-                comment = Comment(
-                    id=comment_thread['id'],
-                    post_id=video_id,
-                    content=comment_snippet['textDisplay'],
-                    author=comment_snippet['authorDisplayName'],
-                    timestamp=datetime.datetime.strptime(comment_snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp(),
-                    reply_to=None,
-                    source="YouTube"
-                )
-
-                comments.append(comment)
-
-            post = Post(
-                id=video_id,
-                content=f"{title}\n\n{description}",
-                author=channel_title,
-                timestamp=published_at,
-                url=f"https://www.youtube.com/watch?v={video_id}",
-                title=title,
-                source="YouTube",
-                comments=comments
-            )
-
-            posts.append(post)
-
-        return posts
