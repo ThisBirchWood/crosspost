@@ -59,7 +59,7 @@ class YouTubeAPI(BaseConnector):
                     timestamp=published_at,
                     url=f"https://www.youtube.com/watch?v={video_id}",
                     title=title,
-                    source="YouTube",
+                    source=self.source_name,
                     comments=comments
                 )
 
