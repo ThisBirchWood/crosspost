@@ -1,4 +1,5 @@
 import datetime
+import os
 from flask import request
 
 def parse_datetime_filter(value):
@@ -52,3 +53,9 @@ def get_request_filters() -> dict:
 def split_limit(limit: int, n: int) -> list[int]:
     base, remainder = divmod(limit, n)
     return [base + (1 if i < remainder else 0) for i in range(n)]
+
+def get_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
