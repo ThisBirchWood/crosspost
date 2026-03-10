@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 type DatasetItem = {
   id: number;
   name?: string;
-  status?: "processing" | "complete" | "error" | string;
+  status?: "processing" | "complete" | "error" | "fetching" | string;
   status_message?: string | null;
   completed_at?: string | null;
   created_at?: string | null;
@@ -93,7 +93,7 @@ const DatasetsPage = () => {
           <div style={{ ...styles.card, marginTop: 14, padding: 0, overflow: "hidden" }}>
             <ul style={styles.listNoBullets}>
               {datasets.map((dataset) => {
-                const isComplete = dataset.status === "complete";
+                const isComplete = dataset.status === "complete" || dataset.status === "error";
                 const editPath = `/dataset/${dataset.id}/edit`;
                 const targetPath = isComplete
                   ? `/dataset/${dataset.id}/stats`
