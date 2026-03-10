@@ -144,11 +144,12 @@ def scrape_data():
             source["limit"] = int(source["limit"])
   
     dataset_id = dataset_manager.save_dataset_info(user_id, dataset_name, default_topic_list)
-    dataset_manager.set_dataset_status(dataset_id, 
-                                       "fetching", 
-                                       f"Data is being fetched from {str(source["name"] + "," for source in source_configs)}"
-                                       )
-
+    dataset_manager.set_dataset_status(
+        dataset_id,
+        "fetching",
+        f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}"
+    )
+    
     try:
         fetch_and_process_dataset.delay(dataset_id, source_configs, default_topic_list)
 
