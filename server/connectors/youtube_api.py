@@ -6,12 +6,13 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from dto.post import Post
 from dto.comment import Comment
+from server.connectors.base import BaseConnector
 
 load_dotenv()
 
 API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-class YouTubeAPI:
+class YouTubeAPI(BaseConnector):
     def __init__(self):
         self.youtube = build('youtube', 'v3', developerKey=API_KEY)
 

@@ -5,10 +5,11 @@ import time
 from dto.post import Post
 from dto.user import User
 from dto.comment import Comment
+from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
-class RedditAPI:
+class RedditAPI(BaseConnector):
     def __init__(self):
         self.url = "https://www.reddit.com/"
         self.source_name = "Reddit"
