@@ -43,7 +43,7 @@ services:
       - .env
     command: >
       celery -A server.queue.celery_app.celery worker
-      --loglevel=info
+      --loglevel=debug
       --pool=solo
     depends_on:
       - postgres
