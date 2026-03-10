@@ -16,10 +16,11 @@ HEADERS = {
 }
 
 class BoardsAPI(BaseConnector):
+    source_name: str = "boards.ie"
+    display_name: str = "Boards.ie"
+
     def __init__(self):
         self.url = "https://www.boards.ie"
-        self.source_name = "boards.ie"
-        self.display_name = "Boards.ie"
 
     def get_new_posts_by_search(self, 
                                 search: str,

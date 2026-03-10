@@ -1,14 +1,14 @@
 import pkgutil
 import importlib
-import connectors
-from connectors.base import BaseConnector
+import server.connectors
+from server.connectors.base import BaseConnector
 
 def _discover_connectors() -> list[type[BaseConnector]]:
     """Walk the connectors package and collect all BaseConnector subclasses."""
-    for _, module_name, _ in pkgutil.iter_modules(connectors.__path__):
+    for _, module_name, _ in pkgutil.iter_modules(server.connectors.__path__):
         if module_name in ("base", "registry"):
             continue
-        importlib.import_module(f"connectors.{module_name}")
+        importlib.import_module(f"server.connectors.{module_name}")
 
     return [
         cls for cls in BaseConnector.__subclasses__()

@@ -21,6 +21,7 @@ from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
 from server.utils import get_request_filters
 from server.queue.tasks import process_dataset
+from server.connectors.registry import get_connector_metadata
 
 app = Flask(__name__)
 
@@ -112,9 +113,8 @@ def get_user_datasets():
     return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
 @app.route("/datasets/sources", methods=["GET"])
-@jwt_required()
 def get_dataset_sources():
-    return jsonify({""})
+    return jsonify(get_connector_metadata())
 
 @app.route("/datasets/scrape", methods=["POST"])
 @jwt_required()

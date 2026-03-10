@@ -13,6 +13,9 @@ load_dotenv()
 API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 class YouTubeAPI(BaseConnector):
+    source_name = "youtube"
+    display_name = "YouTube"
+
     def __init__(self):
         self.youtube = build('youtube', 'v3', developerKey=API_KEY)
 
@@ -44,7 +47,7 @@ class YouTubeAPI(BaseConnector):
                         author=comment_snippet['authorDisplayName'],
                         timestamp=datetime.datetime.strptime(comment_snippet['publishedAt'], "%Y-%m-%dT%H:%M:%SZ").timestamp(),
                         reply_to=None,
-                        source="YouTube"
+                        source=self.source_name
                     )
 
                     comments.append(comment)

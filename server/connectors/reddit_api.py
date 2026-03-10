@@ -10,9 +10,11 @@ from server.connectors.base import BaseConnector
 logger = logging.getLogger(__name__)
 
 class RedditAPI(BaseConnector):
+    source_name = "reddit"
+    display_name = "Reddit"
+
     def __init__(self):
         self.url = "https://www.reddit.com/"
-        self.source_name = "Reddit"
 
     # Public Methods #
     def get_new_posts_by_search(self, 
