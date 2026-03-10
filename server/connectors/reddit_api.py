@@ -19,32 +19,33 @@ class RedditAPI(BaseConnector):
     # Public Methods #
     def get_new_posts_by_search(self, 
                                 search: str, 
-                                subreddit: str, 
-                                limit: int
+                                category: str, 
+                                post_limit: int,
+                                comment_limit: int
                                 ) -> list[Post]:
         
         if not search:
-            return self._get_new_subreddit_posts(subreddit, limit=limit)
+            return self._get_new_subreddit_posts(category, limit=post_limit)
 
         params = {
             'q': search,
-            'limit': limit,
+            'limit': post_limit,
             'restrict_sr': 'on',
             'sort': 'new'
         }
 
-        logger.info(f"Searching subreddit '{subreddit}' for '{search}' with limit {limit}")
-        url = f"r/{subreddit}/search.json"
+        logger.info(f"Searching subreddit '{category}' for '{search}' with limit {post_limit}")
+        url = f"r/{category}/search.json"
         posts = []
         
-        while len(posts) < limit:
-            batch_limit = min(100, limit - len(posts))
+        while len(posts) < post_limit:
+            batch_limit = min(100, post_limit - len(posts))
             params['limit'] = batch_limit
 
             data = self._fetch_post_overviews(url, params)
             batch_posts = self._parse_posts(data)
 
-            logger.debug(f"Fetched {len(batch_posts)} posts from search in subreddit {subreddit}")
+            logger.debug(f"Fetched {len(batch_posts)} posts from search in subreddit {category}")
 
             if not batch_posts:
                 break
