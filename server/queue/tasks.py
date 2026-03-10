@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 
 from server.queue.celery_app import celery
 from server.analysis.enrichment import DatasetEnrichment
@@ -37,13 +38,20 @@ def fetch_and_process_dataset(self,
     try:
         for source_name, source_limit in per_source.items():
             connector = connectors[source_name]()
-            posts.extend(connector.get_new_posts_by_search(
+            raw_posts = connector.get_new_posts_by_search(
                 search=search,
                 category=category,
                 post_limit=source_limit,
                 comment_limit=source_limit
-            ))
+            )
+            posts.extend(post.to_dict() for post in raw_posts)
 
-        process_dataset.delay(dataset_id, [p.to_dict() for p in posts], topics)
+        df = pd.DataFrame(posts)
+
+        processor = DatasetEnrichment(df, topics)
+        enriched_df = processor.enrich()
+
+        dataset_manager.save_dataset_content(dataset_id, enriched_df)
+        dataset_manager.set_dataset_status(dataset_id, "complete", "NLP Processing Completed Successfully")
     except Exception as e:
         dataset_manager.set_dataset_status(dataset_id, "error", f"An error occurred: {e}")
