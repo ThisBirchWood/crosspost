@@ -19,7 +19,7 @@ from server.exceptions import NotAuthorisedException, NonExistentDatasetExceptio
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
-from server.utils import get_request_filters, split_limit, get_env
+from server.utils import get_request_filters, get_env
 from server.queue.tasks import process_dataset, fetch_and_process_dataset
 from server.connectors.registry import get_available_connectors, get_connector_metadata
 
