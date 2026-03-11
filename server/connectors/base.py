@@ -17,7 +17,6 @@ class BaseConnector(ABC):
     def get_new_posts_by_search(self, 
                                 search: str = None, 
                                 category: str = None, 
-                                post_limit: int = 10, 
-                                comment_limit: int = 10
+                                post_limit: int = 10
                                 ) -> list[Post]:
         ...

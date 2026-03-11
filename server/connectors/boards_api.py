@@ -25,22 +25,29 @@ class BoardsAPI(BaseConnector):
     def get_new_posts_by_search(self, 
                                 search: str,
                                 category: str, 
-                                post_limit: int, 
-                                comment_limit: int
+                                post_limit: int
                                 )  -> list[Post]:
+        if search:
+            raise NotImplementedError("Search not compatible with boards.ie")
+        
+        if category:
+            return self._get_posts(f"{self.url}/categories/{category}", post_limit)
+        else:
+            return self._get_posts(f"{self.url}/discussions", post_limit)
+    
+    ## Private
+    def _get_posts(self, url, limit) -> list[Post]:
         urls = []
         current_page = 1
 
-        logger.info(f"Fetching posts from category: {category}")
-
-        while len(urls) < post_limit:
-            url = f"{self.url}/categories/{category}/p{current_page}"
+        while len(urls) < limit:
+            url = f"{self.url}/p{current_page}"
             html = self._fetch_page(url)
             soup = BeautifulSoup(html, "html.parser")
 
-            logger.debug(f"Processing page {current_page} for category {category}")
+            logger.debug(f"Processing page {current_page} for link: {url}")
             for a in soup.select("a.threadbit-threadlink"):
-                if len(urls) >= post_limit:
+                if len(urls) >= limit:
                     break
 
                 href = a.get("href")
@@ -49,14 +56,14 @@ class BoardsAPI(BaseConnector):
             
             current_page += 1
 
-        logger.debug(f"Fetched {len(urls)} post URLs from category {category}")
+        logger.debug(f"Fetched {len(urls)} post URLs")
 
         # Fetch post details for each URL and create Post objects
         posts = []
 
         def fetch_and_parse(post_url):
             html = self._fetch_page(post_url)
-            post = self._parse_thread(html, post_url, comment_limit)
+            post = self._parse_thread(html, post_url)
             return post
 
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -79,7 +86,7 @@ class BoardsAPI(BaseConnector):
         response.raise_for_status()
         return response.text
 
-    def _parse_thread(self, html: str, post_url: str, comment_limit: int) -> Post:
+    def _parse_thread(self, html: str, post_url: str) -> Post:
         soup = BeautifulSoup(html, "html.parser")
         
         # Author
@@ -108,7 +115,7 @@ class BoardsAPI(BaseConnector):
         title = title_tag.text.strip() if title_tag else None
 
         # Comments
-        comments = self._parse_comments(post_url, post_num, comment_limit)
+        comments = self._parse_comments(post_url, post_num)
 
         post = Post(
             id=post_num,
@@ -123,11 +130,11 @@ class BoardsAPI(BaseConnector):
 
         return post
 
-    def _parse_comments(self, url: str, post_id: str, comment_limit: int) -> list[Comment]:
+    def _parse_comments(self, url: str, post_id: str) -> list[Comment]:
         comments = []
         current_url = url
 
-        while current_url and len(comments) < comment_limit:
+        while current_url:
             html = self._fetch_page(current_url)
             page_comments = self._parse_page_comments(html, post_id)
             comments.extend(page_comments)

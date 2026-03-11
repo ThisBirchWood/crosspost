@@ -20,39 +20,44 @@ class RedditAPI(BaseConnector):
     def get_new_posts_by_search(self, 
                                 search: str, 
                                 category: str, 
-                                post_limit: int,
-                                comment_limit: int
+                                post_limit: int
                                 ) -> list[Post]:
         
-        if not search:
-            return self._get_new_subreddit_posts(category, limit=post_limit)
+        prefix = f"r/{category}/" if category else ""
+        params = {'limit': post_limit}
 
-        params = {
-            'q': search,
-            'limit': post_limit,
-            'restrict_sr': 'on',
-            'sort': 'new'
-        }
+        if search:
+            endpoint = f"{prefix}search.json"
+            params.update({
+                'q': search,
+                'sort': 'new',
+                'restrict_sr': 'on' if category else 'off' 
+            })
+        else:
+            endpoint = f"{prefix}new.json"
 
-        logger.info(f"Searching subreddit '{category}' for '{search}' with limit {post_limit}")
-        url = f"r/{category}/search.json"
         posts = []
-        
+        after = None
+
         while len(posts) < post_limit:
             batch_limit = min(100, post_limit - len(posts))
             params['limit'] = batch_limit
+            if after:
+                params['after'] = after
 
-            data = self._fetch_post_overviews(url, params)
-            batch_posts = self._parse_posts(data)
-
-            logger.debug(f"Fetched {len(batch_posts)} posts from search in subreddit {category}")
-
-            if not batch_posts:
+            data = self._fetch_post_overviews(endpoint, params)
+            
+            if not data or 'data' not in data or not data['data'].get('children'):
                 break
 
+            batch_posts = self._parse_posts(data)
             posts.extend(batch_posts)
 
-        return posts
+            after = data['data'].get('after')
+            if not after:
+                break
+
+        return posts[:post_limit]
     
     def _get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
         posts = []

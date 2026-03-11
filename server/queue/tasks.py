@@ -46,8 +46,7 @@ def fetch_and_process_dataset(self,
             raw_posts = connector.get_new_posts_by_search(
                 search=search,
                 category=category,
-                post_limit=limit,
-                comment_limit=limit
+                post_limit=limit
             )
             posts.extend(post.to_dict() for post in raw_posts)
 
