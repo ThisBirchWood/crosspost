@@ -3,6 +3,7 @@ const DEFAULT_TITLE = "Ethnograph View";
 const STATIC_TITLES: Record<string, string> = {
   "/login": "Sign In",
   "/upload": "Upload Dataset",
+  "/auto-scrape": "Auto Scrape Dataset",
   "/datasets": "My Datasets",
 };
 

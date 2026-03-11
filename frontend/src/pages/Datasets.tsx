@@ -63,9 +63,18 @@ const DatasetsPage = () => {
               View and reopen datasets you previously uploaded.
             </p>
           </div>
-          <button type="button" style={styles.buttonPrimary} onClick={() => navigate("/upload")}>
-            Upload New Dataset
-          </button>
+          <div style={styles.controlsWrapped}>
+            <button type="button" style={styles.buttonPrimary} onClick={() => navigate("/upload")}>
+              Upload New Dataset
+            </button>
+            <button
+              type="button"
+              style={styles.buttonSecondary}
+              onClick={() => navigate("/auto-scrape")}
+            >
+              Auto Scrape Dataset
+            </button>
+          </div>
         </div>
 
         {error && (

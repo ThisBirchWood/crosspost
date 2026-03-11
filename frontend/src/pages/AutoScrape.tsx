@@ -1,0 +1,299 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import StatsStyling from "../styles/stats_styling";
+
+const styles = StatsStyling;
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+type SourceOption = {
+  id: string;
+  label: string;
+};
+
+type SourceConfig = {
+  sourceName: string;
+  limit: string;
+  search: string;
+  category: string;
+};
+
+const buildEmptySourceConfig = (sourceName = ""): SourceConfig => ({
+  sourceName,
+  limit: "100",
+  search: "",
+  category: "",
+});
+
+const AutoScrapePage = () => {
+  const navigate = useNavigate();
+  const [datasetName, setDatasetName] = useState("");
+  const [sourceOptions, setSourceOptions] = useState<SourceOption[]>([]);
+  const [sourceConfigs, setSourceConfigs] = useState<SourceConfig[]>([]);
+  const [returnMessage, setReturnMessage] = useState("");
+  const [isLoadingSources, setIsLoadingSources] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    axios
+      .get<SourceOption[]>(`${API_BASE_URL}/datasets/sources`)
+      .then((response) => {
+        const options = response.data || [];
+        setSourceOptions(options);
+        setSourceConfigs([buildEmptySourceConfig(options[0]?.id || "")]);
+      })
+      .catch((requestError: unknown) => {
+        setHasError(true);
+        if (axios.isAxiosError(requestError)) {
+          setReturnMessage(
+            `Failed to load available sources: ${String(
+              requestError.response?.data?.error || requestError.message
+            )}`
+          );
+        } else {
+          setReturnMessage("Failed to load available sources.");
+        }
+      })
+      .finally(() => {
+        setIsLoadingSources(false);
+      });
+  }, []);
+
+  const updateSourceConfig = (index: number, field: keyof SourceConfig, value: string) => {
+    setSourceConfigs((previous) =>
+      previous.map((config, configIndex) =>
+        configIndex === index ? { ...config, [field]: value } : config
+      )
+    );
+  };
+
+  const addSourceConfig = () => {
+    setSourceConfigs((previous) => [
+      ...previous,
+      buildEmptySourceConfig(sourceOptions[0]?.id || ""),
+    ]);
+  };
+
+  const removeSourceConfig = (index: number) => {
+    setSourceConfigs((previous) => previous.filter((_, configIndex) => configIndex !== index));
+  };
+
+  const autoScrape = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setHasError(true);
+      setReturnMessage("You must be signed in to auto scrape a dataset.");
+      return;
+    }
+
+    const normalizedDatasetName = datasetName.trim();
+    if (!normalizedDatasetName) {
+      setHasError(true);
+      setReturnMessage("Please add a dataset name before continuing.");
+      return;
+    }
+
+    if (sourceConfigs.length === 0) {
+      setHasError(true);
+      setReturnMessage("Please add at least one source.");
+      return;
+    }
+
+    const normalizedSources = sourceConfigs.map((source) => ({
+      name: source.sourceName,
+      limit: Number(source.limit || 100),
+      search: source.search.trim() || undefined,
+      category: source.category.trim() || undefined,
+    }));
+
+    const invalidSource = normalizedSources.find(
+      (source) => !source.name || !Number.isFinite(source.limit) || source.limit <= 0
+    );
+
+    if (invalidSource) {
+      setHasError(true);
+      setReturnMessage("Every source needs a name and a limit greater than zero.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setHasError(false);
+      setReturnMessage("");
+
+      const response = await axios.post(
+        `${API_BASE_URL}/datasets/scrape`,
+        {
+          name: normalizedDatasetName,
+          sources: normalizedSources,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const datasetId = Number(response.data.dataset_id);
+
+      setReturnMessage(
+        `Auto scrape queued successfully (dataset #${datasetId}). Redirecting to processing status...`
+      );
+
+      setTimeout(() => {
+        navigate(`/dataset/${datasetId}/status`);
+      }, 400);
+    } catch (requestError: unknown) {
+      setHasError(true);
+      if (axios.isAxiosError(requestError)) {
+        const message = String(
+          requestError.response?.data?.error || requestError.message || "Auto scrape failed."
+        );
+        setReturnMessage(`Auto scrape failed: ${message}`);
+      } else {
+        setReturnMessage("Auto scrape failed due to an unexpected error.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.containerWide}>
+        <div style={{ ...styles.card, ...styles.headerBar }}>
+          <div>
+            <h1 style={styles.sectionHeaderTitle}>Auto Scrape Dataset</h1>
+            <p style={styles.sectionHeaderSubtitle}>
+              Select sources and scrape settings, then queue processing automatically.
+            </p>
+          </div>
+          <button
+            type="button"
+            style={{ ...styles.buttonPrimary, opacity: isSubmitting || isLoadingSources ? 0.75 : 1 }}
+            onClick={autoScrape}
+            disabled={isSubmitting || isLoadingSources}
+          >
+            {isSubmitting ? "Queueing..." : "Auto Scrape and Analyze"}
+          </button>
+        </div>
+
+        <div
+          style={{
+            ...styles.grid,
+            marginTop: 14,
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
+        >
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Dataset Name</h2>
+            <p style={styles.sectionSubtitle}>Use a clear label so you can identify this run later.</p>
+            <input
+              style={{ ...styles.input, ...styles.inputFullWidth }}
+              type="text"
+              placeholder="Example: r/cork subreddit - Jan 2026"
+              value={datasetName}
+              onChange={(event) => setDatasetName(event.target.value)}
+            />
+          </div>
+
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Sources</h2>
+            <p style={styles.sectionSubtitle}>
+              Configure source, limit, optional search, and optional category.
+            </p>
+
+            {isLoadingSources && <p style={styles.subtleBodyText}>Loading sources...</p>}
+
+            {!isLoadingSources && sourceOptions.length === 0 && (
+              <p style={styles.subtleBodyText}>No source connectors are currently available.</p>
+            )}
+
+            {!isLoadingSources && sourceOptions.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {sourceConfigs.map((source, index) => (
+                  <div
+                    key={`source-${index}`}
+                    style={{
+                      border: "1px solid #d0d7de",
+                      borderRadius: 8,
+                      padding: 12,
+                      background: "#f6f8fa",
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <select
+                      value={source.sourceName}
+                      style={{ ...styles.input, ...styles.inputFullWidth }}
+                      onChange={(event) => updateSourceConfig(index, "sourceName", event.target.value)}
+                    >
+                      {sourceOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="number"
+                      min={1}
+                      value={source.limit}
+                      placeholder="Limit"
+                      style={{ ...styles.input, ...styles.inputFullWidth }}
+                      onChange={(event) => updateSourceConfig(index, "limit", event.target.value)}
+                    />
+
+                    <input
+                      type="text"
+                      value={source.search}
+                      placeholder="Search term (optional)"
+                      style={{ ...styles.input, ...styles.inputFullWidth }}
+                      onChange={(event) => updateSourceConfig(index, "search", event.target.value)}
+                    />
+
+                    <input
+                      type="text"
+                      value={source.category}
+                      placeholder="Category (optional)"
+                      style={{ ...styles.input, ...styles.inputFullWidth }}
+                      onChange={(event) => updateSourceConfig(index, "category", event.target.value)}
+                    />
+
+                    {sourceConfigs.length > 1 && (
+                      <button
+                        type="button"
+                        style={styles.buttonSecondary}
+                        onClick={() => removeSourceConfig(index)}
+                      >
+                        Remove source
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                <button type="button" style={styles.buttonSecondary} onClick={addSourceConfig}>
+                  Add another source
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...styles.card,
+            marginTop: 14,
+            ...(hasError ? styles.alertCardError : styles.alertCardInfo),
+          }}
+        >
+          {returnMessage ||
+            "After queueing, your dataset is fetched and processed in the background automatically."}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AutoScrapePage;
