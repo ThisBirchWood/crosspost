@@ -9,6 +9,10 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 type SourceOption = {
   id: string;
   label: string;
+  search_enabled?: boolean;
+  categories_enabled?: boolean;
+  searchEnabled?: boolean;
+  categoriesEnabled?: boolean;
 };
 
 type SourceConfig = {
@@ -24,6 +28,12 @@ const buildEmptySourceConfig = (sourceName = ""): SourceConfig => ({
   search: "",
   category: "",
 });
+
+const supportsSearch = (source?: SourceOption): boolean =>
+  Boolean(source?.search_enabled ?? source?.searchEnabled);
+
+const supportsCategories = (source?: SourceOption): boolean =>
+  Boolean(source?.categories_enabled ?? source?.categoriesEnabled);
 
 const AutoScrapePage = () => {
   const navigate = useNavigate();
@@ -63,10 +73,17 @@ const AutoScrapePage = () => {
   const updateSourceConfig = (index: number, field: keyof SourceConfig, value: string) => {
     setSourceConfigs((previous) =>
       previous.map((config, configIndex) =>
-        configIndex === index ? { ...config, [field]: value } : config
+        configIndex === index
+          ? field === "sourceName"
+            ? { ...config, sourceName: value, search: "", category: "" }
+            : { ...config, [field]: value }
+          : config
       )
     );
   };
+
+  const getSourceOption = (sourceName: string) =>
+    sourceOptions.find((option) => option.id === sourceName);
 
   const addSourceConfig = () => {
     setSourceConfigs((previous) => [
@@ -100,12 +117,18 @@ const AutoScrapePage = () => {
       return;
     }
 
-    const normalizedSources = sourceConfigs.map((source) => ({
-      name: source.sourceName,
-      limit: Number(source.limit || 100),
-      search: source.search.trim() || undefined,
-      category: source.category.trim() || undefined,
-    }));
+    const normalizedSources = sourceConfigs.map((source) => {
+      const sourceOption = getSourceOption(source.sourceName);
+
+      return {
+        name: source.sourceName,
+        limit: Number(source.limit || 100),
+        search: supportsSearch(sourceOption) ? source.search.trim() || undefined : undefined,
+        category: supportsCategories(sourceOption)
+          ? source.category.trim() || undefined
+          : undefined,
+      };
+    });
 
     const invalidSource = normalizedSources.find(
       (source) => !source.name || !Number.isFinite(source.limit) || source.limit <= 0
@@ -212,7 +235,12 @@ const AutoScrapePage = () => {
 
             {!isLoadingSources && sourceOptions.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {sourceConfigs.map((source, index) => (
+                {sourceConfigs.map((source, index) => {
+                  const sourceOption = getSourceOption(source.sourceName);
+                  const searchEnabled = supportsSearch(sourceOption);
+                  const categoriesEnabled = supportsCategories(sourceOption);
+
+                  return (
                   <div
                     key={`source-${index}`}
                     style={{
@@ -248,16 +276,26 @@ const AutoScrapePage = () => {
                     <input
                       type="text"
                       value={source.search}
-                      placeholder="Search term (optional)"
+                      placeholder={
+                        searchEnabled
+                          ? "Search term (optional)"
+                          : "Search not supported for this source"
+                      }
                       style={{ ...styles.input, ...styles.inputFullWidth }}
+                      disabled={!searchEnabled}
                       onChange={(event) => updateSourceConfig(index, "search", event.target.value)}
                     />
 
                     <input
                       type="text"
                       value={source.category}
-                      placeholder="Category (optional)"
+                      placeholder={
+                        categoriesEnabled
+                          ? "Category (optional)"
+                          : "Categories not supported for this source"
+                      }
                       style={{ ...styles.input, ...styles.inputFullWidth }}
+                      disabled={!categoriesEnabled}
                       onChange={(event) => updateSourceConfig(index, "category", event.target.value)}
                     />
 
@@ -271,7 +309,8 @@ const AutoScrapePage = () => {
                       </button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 <button type="button" style={styles.buttonSecondary} onClick={addSourceConfig}>
                   Add another source
