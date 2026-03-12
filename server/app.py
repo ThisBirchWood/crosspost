@@ -119,50 +119,82 @@ def get_user_datasets():
 
 @app.route("/datasets/sources", methods=["GET"])
 def get_dataset_sources():
-    return jsonify(get_connector_metadata())
+    list_metadata = list(get_connector_metadata().values())
+    return jsonify(list_metadata)
 
 @app.route("/datasets/scrape", methods=["POST"])
 @jwt_required()
 def scrape_data():
     data = request.get_json()
+    connector_metadata = get_connector_metadata()
 
+    # Strong validation needed, otherwise data goes to Celery and crashes silently
     if not data or "sources" not in data:
-            return jsonify({"error": "Sources must be provided"}), 400
-    
-    user_id = int(get_jwt_identity())
+        return jsonify({"error": "Sources must be provided"}), 400
+
+    if "name" not in data or not str(data["name"]).strip():
+        return jsonify({"error": "Dataset name is required"}), 400
+
     dataset_name = data["name"].strip()
+    user_id = int(get_jwt_identity())
+
     source_configs = data["sources"]
 
     if not isinstance(source_configs, list) or len(source_configs) == 0:
         return jsonify({"error": "Sources must be a non-empty list"}), 400
 
-    # Light Validation
     for source in source_configs:
+        if not isinstance(source, dict):
+            return jsonify({"error": "Each source must be an object"}), 400
+
         if "name" not in source:
             return jsonify({"error": "Each source must contain a name"}), 400
-        if "limit" in source:
-            source["limit"] = int(source["limit"])
-  
-    dataset_id = dataset_manager.save_dataset_info(user_id, dataset_name, default_topic_list)
-    dataset_manager.set_dataset_status(
-        dataset_id,
-        "fetching",
-        f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}"
-    )
-    
-    try:
-        fetch_and_process_dataset.delay(dataset_id, source_configs, default_topic_list)
 
-        return jsonify(
-            {
-                "message": "Dataset queued for processing",
-                "dataset_id": dataset_id,
-                "status": "processing",
-            }
-        ), 202
+        if "limit" in source:
+            try:
+                source["limit"] = int(source["limit"])
+            except (ValueError, TypeError):
+                return jsonify({"error": "Limit must be an integer"}), 400
+
+        name = source["name"]
+
+        if name not in connector_metadata:
+            return jsonify({"error": "Source not supported"}), 400
+
+        if "search" in source and not connector_metadata[name]["search_enabled"]:
+            return jsonify({"error": f"Source {name} does not support search"}), 400
+
+        if "category" in source and not connector_metadata[name]["categories_enabled"]:
+            return jsonify({"error": f"Source {name} does not support categories"}), 400
+
+    try:
+        dataset_id = dataset_manager.save_dataset_info(
+            user_id,
+            dataset_name,
+            default_topic_list
+        )
+
+        dataset_manager.set_dataset_status(
+            dataset_id,
+            "fetching",
+            f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}"
+        )
+
+        fetch_and_process_dataset.delay(
+            dataset_id,
+            source_configs,
+            default_topic_list
+        )
     except Exception:
         print(traceback.format_exc())
-        return jsonify({"error": "An unexpected error occurred"}), 500
+        return jsonify({"error": "Failed to queue dataset processing"}), 500
+
+
+    return jsonify({
+        "message": "Dataset queued for processing",
+        "dataset_id": dataset_id,
+        "status": "processing"
+    }), 202
 
 @app.route("/datasets/upload", methods=["POST"])
 @jwt_required()
