@@ -13,8 +13,10 @@ load_dotenv()
 API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 class YouTubeAPI(BaseConnector):
-    source_name = "youtube"
-    display_name = "YouTube"
+    source_name: str = "youtube"
+    display_name: str = "YouTube"
+    search_enabled: bool = True
+    categories_enabled: bool = False
 
     def __init__(self):
         self.youtube = build('youtube', 'v3', developerKey=API_KEY)

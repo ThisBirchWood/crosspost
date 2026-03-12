@@ -10,8 +10,10 @@ from server.connectors.base import BaseConnector
 logger = logging.getLogger(__name__)
 
 class RedditAPI(BaseConnector):
-    source_name = "reddit"
-    display_name = "Reddit"
+    source_name: str = "reddit"
+    display_name: str = "Reddit"
+    search_enabled: bool = True
+    categories_enabled: bool = True
 
     def __init__(self):
         self.url = "https://www.reddit.com/"

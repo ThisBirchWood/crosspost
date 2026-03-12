@@ -19,6 +19,9 @@ class BoardsAPI(BaseConnector):
     source_name: str = "boards.ie"
     display_name: str = "Boards.ie"
 
+    categories_enabled: bool = True
+    search_enabled: bool = False
+
     def __init__(self):
         self.url = "https://www.boards.ie"
 

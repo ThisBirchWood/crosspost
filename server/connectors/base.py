@@ -7,6 +7,9 @@ class BaseConnector(ABC):
     display_name: str      # human-readable: "Reddit", "YouTube"
     required_env: list[str] = []  # env vars needed to activate
 
+    search_enabled: bool
+    categories_enabled: bool
+
     @classmethod
     def is_available(cls) -> bool:
         """Returns True if all required env vars are set."""
