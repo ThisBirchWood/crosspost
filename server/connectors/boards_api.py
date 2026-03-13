@@ -23,7 +23,7 @@ class BoardsAPI(BaseConnector):
     search_enabled: bool = False
 
     def __init__(self):
-        self.url = "https://www.boards.ie"
+        self.base_url = "https://www.boards.ie"
 
     def get_new_posts_by_search(self, 
                                 search: str,
@@ -34,9 +34,9 @@ class BoardsAPI(BaseConnector):
             raise NotImplementedError("Search not compatible with boards.ie")
         
         if category:
-            return self._get_posts(f"{self.url}/categories/{category}", post_limit)
+            return self._get_posts(f"{self.base_url}/categories/{category}", post_limit)
         else:
-            return self._get_posts(f"{self.url}/discussions", post_limit)
+            return self._get_posts(f"{self.base_url}/discussions", post_limit)
     
     ## Private
     def _get_posts(self, url, limit) -> list[Post]:
@@ -44,7 +44,7 @@ class BoardsAPI(BaseConnector):
         current_page = 1
 
         while len(urls) < limit:
-            url = f"{self.url}/p{current_page}"
+            url = f"{url}/p{current_page}"
             html = self._fetch_page(url)
             soup = BeautifulSoup(html, "html.parser")
 
@@ -148,7 +148,7 @@ class BoardsAPI(BaseConnector):
 
             if next_link and next_link.get('href'):
                 href = next_link.get('href')
-                current_url = href if href.startswith('http') else self.url + href
+                current_url = href if href.startswith('http') else url + href
             else:
                 current_url = None
 
