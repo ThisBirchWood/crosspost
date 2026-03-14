@@ -50,7 +50,24 @@ const DatasetsPage = () => {
   }, []);
 
   if (loading) {
-    return <p style={{ ...styles.page, minHeight: "100vh" }}>Loading datasets...</p>;
+    return (
+      <div style={styles.loadingPage}>
+        <div style={{ ...styles.loadingCard, transform: "translateY(-100px)" }}>
+          <div style={styles.loadingHeader}>
+            <div style={styles.loadingSpinner} />
+            <div>
+              <h2 style={styles.loadingTitle}>Loading datasets</h2>
+            </div>
+          </div>
+
+          <div style={styles.loadingSkeleton}>
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineLong }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineMed }} />
+            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineShort }} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
