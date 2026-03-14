@@ -38,9 +38,28 @@ class BoardsAPI(BaseConnector):
         else:
             return self._get_posts(f"{self.base_url}/discussions", post_limit)
         
-    def category_exists(self, category):
-        return True
-    
+    def category_exists(self, category: str) -> bool:
+        if not category:
+            return False
+
+        url = f"{self.base_url}/categories/{category}"
+
+        try:
+            response = requests.head(url, headers=HEADERS, allow_redirects=True)
+
+            if response.status_code == 200:
+                return True
+            if response.status_code == 404:
+                return False
+
+            # fallback if HEAD not supported
+            response = requests.get(url, headers=HEADERS)
+            return response.status_code == 200
+
+        except requests.RequestException as e:
+            logger.error(f"Error checking category '{category}': {e}")
+            return False
+        
     ## Private
     def _get_posts(self, url, limit) -> list[Post]:
         urls = []
