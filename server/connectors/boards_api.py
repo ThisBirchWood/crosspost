@@ -37,6 +37,9 @@ class BoardsAPI(BaseConnector):
             return self._get_posts(f"{self.base_url}/categories/{category}", post_limit)
         else:
             return self._get_posts(f"{self.base_url}/discussions", post_limit)
+        
+    def category_exists(self, category):
+        return True
     
     ## Private
     def _get_posts(self, url, limit) -> list[Post]:

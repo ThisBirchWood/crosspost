@@ -23,3 +23,7 @@ class BaseConnector(ABC):
                                 post_limit: int = 10
                                 ) -> list[Post]:
         ...
+
+    @abstractmethod
+    def category_exists(self, category: str) -> bool:
+        ...

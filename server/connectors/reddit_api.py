@@ -94,6 +94,17 @@ class RedditAPI(BaseConnector):
         data = self._fetch_post_overviews(f"user/{username}/about.json", {})
         return self._parse_user(data)
     
+    def category_exists(self, category: str) -> bool:
+        try:
+            data = self._fetch_post_overviews(f"r/{category}/about.json", {})
+            return (
+                data is not None
+                and 'data' in data
+                and data['data'].get('id') is not None
+            )
+        except Exception:
+            return False
+
     ## Private Methods ##
     def _parse_posts(self, data) -> list[Post]:
         posts = []

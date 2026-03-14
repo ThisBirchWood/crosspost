@@ -157,15 +157,20 @@ def scrape_data():
                 return jsonify({"error": "Limit must be an integer"}), 400
 
         name = source["name"]
+        category = source.get("category")
+        search = source.get("search")
 
         if name not in connector_metadata:
             return jsonify({"error": "Source not supported"}), 400
 
-        if "search" in source and not connector_metadata[name]["search_enabled"]:
+        if category and not connector_metadata[name]["search_enabled"]:
             return jsonify({"error": f"Source {name} does not support search"}), 400
 
-        if "category" in source and not connector_metadata[name]["categories_enabled"]:
+        if category and not connector_metadata[name]["categories_enabled"]:
             return jsonify({"error": f"Source {name} does not support categories"}), 400
+        
+        if category and not connectors[name]().category_exists(category):
+            return jsonify({"error": f"Category does not exist for {name}"}), 400
 
     try:
         dataset_id = dataset_manager.save_dataset_info(

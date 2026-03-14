@@ -68,6 +68,9 @@ class YouTubeAPI(BaseConnector):
                 posts.append(post)
 
             return posts
+    
+    def category_exists(self, category):
+        return True
 
     def search_videos(self, query, limit):
         request = self.youtube.search().list(
