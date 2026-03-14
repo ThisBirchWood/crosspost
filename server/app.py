@@ -163,7 +163,7 @@ def scrape_data():
         if name not in connector_metadata:
             return jsonify({"error": "Source not supported"}), 400
 
-        if category and not connector_metadata[name]["search_enabled"]:
+        if search and not connector_metadata[name]["search_enabled"]:
             return jsonify({"error": f"Source {name} does not support search"}), 400
 
         if category and not connector_metadata[name]["categories_enabled"]:
