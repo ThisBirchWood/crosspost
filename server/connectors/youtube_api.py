@@ -24,10 +24,9 @@ class YouTubeAPI(BaseConnector):
     def get_new_posts_by_search(self, 
                                 search: str,
                                 category: str, 
-                                post_limit: int, 
-                                comment_limit: int
+                                post_limit: int
                                 )  -> list[Post]:
-            videos = self.search_videos(search, post_limit)
+            videos = self._search_videos(search, post_limit)
             posts = []
 
             for video in videos:
@@ -39,7 +38,7 @@ class YouTubeAPI(BaseConnector):
                 channel_title = snippet['channelTitle']
 
                 comments = []
-                comments_data = self.get_video_comments(video_id, comment_limit)
+                comments_data = self._get_video_comments(video_id)
                 for comment_thread in comments_data:
                     comment_snippet = comment_thread['snippet']['topLevelComment']['snippet']
                     comment = Comment(
@@ -72,7 +71,7 @@ class YouTubeAPI(BaseConnector):
     def category_exists(self, category):
         return True
 
-    def search_videos(self, query, limit):
+    def _search_videos(self, query, limit):
         request = self.youtube.search().list(
             q=query,
             part='snippet',
@@ -82,11 +81,10 @@ class YouTubeAPI(BaseConnector):
         response = request.execute()
         return response.get('items', [])
     
-    def get_video_comments(self, video_id, limit):
+    def _get_video_comments(self, video_id):
         request = self.youtube.commentThreads().list(
             part='snippet',
             videoId=video_id,
-            maxResults=limit,
             textFormat='plainText'
         )
 
