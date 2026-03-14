@@ -150,15 +150,19 @@ def scrape_data():
         if "name" not in source:
             return jsonify({"error": "Each source must contain a name"}), 400
 
-        if "limit" in source:
-            try:
-                source["limit"] = int(source["limit"])
-            except (ValueError, TypeError):
-                return jsonify({"error": "Limit must be an integer"}), 400
-
         name = source["name"]
+        limit = source.get("limit", 1000)
         category = source.get("category")
         search = source.get("search")
+
+        if limit:
+            try:
+                limit = int(limit)
+            except (ValueError, TypeError):
+                return jsonify({"error": "Limit must be an integer"}), 400
+            
+            if limit > 1000:
+                limit = 1000
 
         if name not in connector_metadata:
             return jsonify({"error": "Source not supported"}), 400
