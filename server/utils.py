@@ -1,4 +1,5 @@
 import datetime
+import os
 from flask import request
 
 def parse_datetime_filter(value):
@@ -48,3 +49,9 @@ def get_request_filters() -> dict:
         filters["data_sources"] = data_sources
 
     return filters
+
+def get_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value

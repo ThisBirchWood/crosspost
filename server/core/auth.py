@@ -1,5 +1,9 @@
+import re
+
 from server.db.database import PostgresConnector
 from flask_bcrypt import Bcrypt
+
+EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
 class AuthManager:
     def __init__(self, db: PostgresConnector, bcrypt: Bcrypt):
@@ -17,6 +21,12 @@ class AuthManager:
     # public
     def register_user(self, username, email, password):
         hashed_password = self.bcrypt.generate_password_hash(password).decode("utf-8")
+
+        if len(username) < 3:
+            raise ValueError("Username must be longer than 3 characters")
+        
+        if not EMAIL_REGEX.match(email):
+            raise ValueError("Please enter a valid email address")
 
         if self.get_user_by_email(email):
             raise ValueError("Email already registered")

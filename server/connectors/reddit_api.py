@@ -5,44 +5,63 @@ import time
 from dto.post import Post
 from dto.user import User
 from dto.comment import Comment
+from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
-class RedditAPI:
+class RedditAPI(BaseConnector):
+    source_name: str = "reddit"
+    display_name: str = "Reddit"
+    search_enabled: bool = True
+    categories_enabled: bool = True
+
     def __init__(self):
         self.url = "https://www.reddit.com/"
-        self.source_name = "Reddit"
 
     # Public Methods #
-    def search_new_subreddit_posts(self, search: str, subreddit: str, limit: int) -> list[Post]:
-        params = {
-            'q': search,
-            'limit': limit,
-            'restrict_sr': 'on',
-            'sort': 'new'
-        }
-
-        logger.info(f"Searching subreddit '{subreddit}' for '{search}' with limit {limit}")
-        url = f"r/{subreddit}/search.json"
-        posts = []
+    def get_new_posts_by_search(self, 
+                                search: str, 
+                                category: str, 
+                                post_limit: int
+                                ) -> list[Post]:
         
-        while len(posts) < limit:
-            batch_limit = min(100, limit - len(posts))
+        prefix = f"r/{category}/" if category else ""
+        params = {'limit': post_limit}
+
+        if search:
+            endpoint = f"{prefix}search.json"
+            params.update({
+                'q': search,
+                'sort': 'new',
+                'restrict_sr': 'on' if category else 'off' 
+            })
+        else:
+            endpoint = f"{prefix}new.json"
+
+        posts = []
+        after = None
+
+        while len(posts) < post_limit:
+            batch_limit = min(100, post_limit - len(posts))
             params['limit'] = batch_limit
+            if after:
+                params['after'] = after
 
-            data = self._fetch_post_overviews(url, params)
-            batch_posts = self._parse_posts(data)
-
-            logger.debug(f"Fetched {len(batch_posts)} posts from search in subreddit {subreddit}")
-
-            if not batch_posts:
+            data = self._fetch_post_overviews(endpoint, params)
+            
+            if not data or 'data' not in data or not data['data'].get('children'):
                 break
 
+            batch_posts = self._parse_posts(data)
             posts.extend(batch_posts)
 
-        return posts
+            after = data['data'].get('after')
+            if not after:
+                break
+
+        return posts[:post_limit]
     
-    def get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
+    def _get_new_subreddit_posts(self, subreddit: str, limit: int = 10) -> list[Post]:
         posts = []
         after = None
         url = f"r/{subreddit}/new.json"
@@ -75,6 +94,17 @@ class RedditAPI:
         data = self._fetch_post_overviews(f"user/{username}/about.json", {})
         return self._parse_user(data)
     
+    def category_exists(self, category: str) -> bool:
+        try:
+            data = self._fetch_post_overviews(f"r/{category}/about.json", {})
+            return (
+                data is not None
+                and 'data' in data
+                and data['data'].get('id') is not None
+            )
+        except Exception:
+            return False
+
     ## Private Methods ##
     def _parse_posts(self, data) -> list[Post]:
         posts = []

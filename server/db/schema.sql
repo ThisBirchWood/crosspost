@@ -23,7 +23,7 @@ CREATE TABLE datasets (
 
     -- Enforce valid states
     CONSTRAINT datasets_status_check
-    CHECK (status IN ('processing', 'complete', 'error'))
+    CHECK (status IN ('fetching', 'processing', 'complete', 'error'))
 );
 
 CREATE TABLE events (

@@ -19,32 +19,38 @@ from server.exceptions import NotAuthorisedException, NonExistentDatasetExceptio
 from server.db.database import PostgresConnector
 from server.core.auth import AuthManager
 from server.core.datasets import DatasetManager
-from server.utils import get_request_filters
-from server.queue.tasks import process_dataset
+from server.utils import get_request_filters, get_env
+from server.queue.tasks import process_dataset, fetch_and_process_dataset
+from server.connectors.registry import get_available_connectors, get_connector_metadata
 
 app = Flask(__name__)
 
 # Env Variables
 load_dotenv()
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-jwt_secret_key = os.getenv("JWT_SECRET_KEY", "super-secret-change-this")
-jwt_access_token_expires = int(
-    os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 1200)
-)  # Default to 20 minutes
+max_fetch_limit = int(get_env("MAX_FETCH_LIMIT"))
+frontend_url = get_env("FRONTEND_URL")
+jwt_secret_key = get_env("JWT_SECRET_KEY")
+jwt_access_token_expires = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 1200))  # Default to 20 minutes
 
 # Flask Configuration
 CORS(app, resources={r"/*": {"origins": frontend_url}})
 app.config["JWT_SECRET_KEY"] = jwt_secret_key
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_access_token_expires
 
+# Security
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
+# Helper Objects
 db = PostgresConnector()
 auth_manager = AuthManager(db, bcrypt)
 dataset_manager = DatasetManager(db)
 stat_gen = StatGen()
+connectors = get_available_connectors()
 
+# Default Files
+with open("server/topics.json") as f:
+    default_topic_list = json.load(f)
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -68,7 +74,7 @@ def register_user():
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
     print(f"Registered new user: {username}")
     return jsonify({"message": f"User '{username}' registered successfully"}), 200
@@ -93,7 +99,7 @@ def login_user():
             return jsonify({"error": "Invalid username or password"}), 401
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/profile", methods=["GET"])
@@ -111,7 +117,95 @@ def get_user_datasets():
     current_user = int(get_jwt_identity())
     return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
-@app.route("/upload", methods=["POST"])
+@app.route("/datasets/sources", methods=["GET"])
+def get_dataset_sources():
+    list_metadata = list(get_connector_metadata().values())
+    return jsonify(list_metadata)
+
+@app.route("/datasets/scrape", methods=["POST"])
+@jwt_required()
+def scrape_data():
+    data = request.get_json()
+    connector_metadata = get_connector_metadata()
+
+    # Strong validation needed, otherwise data goes to Celery and crashes silently
+    if not data or "sources" not in data:
+        return jsonify({"error": "Sources must be provided"}), 400
+
+    if "name" not in data or not str(data["name"]).strip():
+        return jsonify({"error": "Dataset name is required"}), 400
+
+    dataset_name = data["name"].strip()
+    user_id = int(get_jwt_identity())
+
+    source_configs = data["sources"]
+
+    if not isinstance(source_configs, list) or len(source_configs) == 0:
+        return jsonify({"error": "Sources must be a non-empty list"}), 400
+
+    for source in source_configs:
+        if not isinstance(source, dict):
+            return jsonify({"error": "Each source must be an object"}), 400
+
+        if "name" not in source:
+            return jsonify({"error": "Each source must contain a name"}), 400
+
+        name = source["name"]
+        limit = source.get("limit", 1000)
+        category = source.get("category")
+        search = source.get("search")
+
+        if limit:
+            try:
+                limit = int(limit)
+            except (ValueError, TypeError):
+                return jsonify({"error": "Limit must be an integer"}), 400
+            
+            if limit > 1000:
+                limit = 1000
+
+        if name not in connector_metadata:
+            return jsonify({"error": "Source not supported"}), 400
+
+        if search and not connector_metadata[name]["search_enabled"]:
+            return jsonify({"error": f"Source {name} does not support search"}), 400
+
+        if category and not connector_metadata[name]["categories_enabled"]:
+            return jsonify({"error": f"Source {name} does not support categories"}), 400
+        
+        if category and not connectors[name]().category_exists(category):
+            return jsonify({"error": f"Category does not exist for {name}"}), 400
+
+    try:
+        dataset_id = dataset_manager.save_dataset_info(
+            user_id,
+            dataset_name,
+            default_topic_list
+        )
+
+        dataset_manager.set_dataset_status(
+            dataset_id,
+            "fetching",
+            f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}"
+        )
+
+        fetch_and_process_dataset.delay(
+            dataset_id,
+            source_configs,
+            default_topic_list
+        )
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "Failed to queue dataset processing"}), 500
+
+
+    return jsonify({
+        "message": "Dataset queued for processing",
+        "dataset_id": dataset_id,
+        "status": "processing"
+    }), 202
+
+@app.route("/datasets/upload", methods=["POST"])
 @jwt_required()
 def upload_data():
     if "posts" not in request.files or "topics" not in request.files:
@@ -151,9 +245,9 @@ def upload_data():
             }
         ), 202
     except ValueError as e:
-        return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
+        return jsonify({"error": f"Failed to read JSONL file"}), 400
     except Exception as e:
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 @app.route("/dataset/<int:dataset_id>", methods=["GET"])
 @jwt_required()
@@ -256,10 +350,10 @@ def content_endpoint(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/summary", methods=["GET"])
@@ -278,10 +372,10 @@ def get_summary(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/time", methods=["GET"])
@@ -300,10 +394,10 @@ def get_time_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/user", methods=["GET"])
@@ -322,10 +416,10 @@ def get_user_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/cultural", methods=["GET"])
@@ -344,10 +438,10 @@ def get_cultural_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/interaction", methods=["GET"])
@@ -366,10 +460,10 @@ def get_interaction_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 if __name__ == "__main__":
