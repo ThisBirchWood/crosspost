@@ -74,7 +74,7 @@ def register_user():
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
     print(f"Registered new user: {username}")
     return jsonify({"message": f"User '{username}' registered successfully"}), 200
@@ -99,7 +99,7 @@ def login_user():
             return jsonify({"error": "Invalid username or password"}), 401
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/profile", methods=["GET"])
@@ -245,9 +245,9 @@ def upload_data():
             }
         ), 202
     except ValueError as e:
-        return jsonify({"error": f"Failed to read JSONL file: {str(e)}"}), 400
+        return jsonify({"error": f"Failed to read JSONL file"}), 400
     except Exception as e:
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 @app.route("/dataset/<int:dataset_id>", methods=["GET"])
 @jwt_required()
@@ -350,10 +350,10 @@ def content_endpoint(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/summary", methods=["GET"])
@@ -372,10 +372,10 @@ def get_summary(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/time", methods=["GET"])
@@ -394,10 +394,10 @@ def get_time_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/user", methods=["GET"])
@@ -416,10 +416,10 @@ def get_user_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/cultural", methods=["GET"])
@@ -438,10 +438,10 @@ def get_cultural_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 @app.route("/dataset/<int:dataset_id>/interaction", methods=["GET"])
@@ -460,10 +460,10 @@ def get_interaction_analysis(dataset_id):
     except NonExistentDatasetException:
         return jsonify({"error": "Dataset does not exist"}), 404
     except ValueError as e:
-        return jsonify({"error": f"Malformed or missing data: {str(e)}"}), 400
+        return jsonify({"error": f"Malformed or missing data"}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 
 if __name__ == "__main__":
