@@ -71,6 +71,25 @@ type NGram = {
 type AverageEmotionByTopic = Emotion & {
   n: number;
   topic: string;
+  [key: string]: string | number;
+};
+
+type OverallEmotionAverage = {
+  emotion: string;
+  score: number;
+};
+
+type DominantEmotionDistribution = {
+  emotion: string;
+  count: number;
+  ratio: number;
+};
+
+type EmotionBySource = {
+  source: string;
+  dominant_emotion: string;
+  dominant_score: number;
+  event_count: number;
 };
 
 
@@ -79,6 +98,9 @@ type ContentAnalysisResponse = {
     average_emotion_by_topic: AverageEmotionByTopic[];
     common_three_phrases: NGram[];
     common_two_phrases: NGram[];
+    overall_emotion_average?: OverallEmotionAverage[];
+    dominant_emotion_distribution?: DominantEmotionDistribution[];
+    emotion_by_source?: EmotionBySource[];
 }
 
 // Summary
@@ -110,6 +132,9 @@ export type {
     UserAnalysisResponse,
     FrequencyWord,
     AverageEmotionByTopic,
+    OverallEmotionAverage,
+    DominantEmotionDistribution,
+    EmotionBySource,
     SummaryResponse,
     TimeAnalysisResponse,
     ContentAnalysisResponse,
