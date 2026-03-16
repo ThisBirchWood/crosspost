@@ -6,7 +6,9 @@ from server.analysis.cultural import CulturalAnalysis
 from server.analysis.emotional import EmotionalAnalysis
 from server.analysis.interactional import InteractionAnalysis
 from server.analysis.linguistic import LinguisticAnalysis
+from server.analysis.summary import SummaryAnalysis
 from server.analysis.temporal import TemporalAnalysis
+from server.analysis.user import UserAnalysis
 
 DOMAIN_STOPWORDS = {
     "www",
@@ -36,12 +38,11 @@ class StatGen:
         self.interaction_analysis = InteractionAnalysis(EXCLUDE_WORDS)
         self.linguistic_analysis = LinguisticAnalysis(EXCLUDE_WORDS)
         self.cultural_analysis = CulturalAnalysis()
+        self.summary_analysis = SummaryAnalysis()
+        self.user_analysis = UserAnalysis(self.interaction_analysis)
 
     ## Private Methods
-    def _prepare_filtered_df(self, 
-                             df: pd.DataFrame, 
-                             filters: dict | None = None
-                             ) -> pd.DataFrame:
+    def _prepare_filtered_df(self, df: pd.DataFrame, filters: dict | None = None) -> pd.DataFrame:
         filters = filters or {}
         filtered_df = df.copy()
 
@@ -51,10 +52,9 @@ class StatGen:
         data_source_filter = filters.get("data_sources", None)
 
         if search_query:
-            mask = (
-                filtered_df["content"].str.contains(search_query, case=False, na=False)
-                | filtered_df["author"].str.contains(search_query, case=False, na=False)
-            )
+            mask = filtered_df["content"].str.contains(
+                search_query, case=False, na=False
+            ) | filtered_df["author"].str.contains(search_query, case=False, na=False)
 
             # Only include title if the column exists
             if "title" in filtered_df.columns:
@@ -76,10 +76,10 @@ class StatGen:
         return filtered_df
 
     ## Public Methods
-    def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> list[dict]:
         return self._prepare_filtered_df(df, filters).to_dict(orient="records")
 
-    def get_time_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def temporal(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -87,40 +87,43 @@ class StatGen:
             "weekday_hour_heatmap": self.temporal_analysis.heatmap(filtered_df),
         }
 
-    def get_content_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def linguistic(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
             "word_frequencies": self.linguistic_analysis.word_frequencies(filtered_df),
             "common_two_phrases": self.linguistic_analysis.ngrams(filtered_df),
             "common_three_phrases": self.linguistic_analysis.ngrams(filtered_df, n=3),
-            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(
-                filtered_df
-            )
         }
 
-    def get_user_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def emotional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
-            "top_users": self.interaction_analysis.top_users(filtered_df),
-            "users": self.interaction_analysis.per_user_analysis(filtered_df),
+            "average_emotion_by_topic": self.emotional_analysis.avg_emotion_by_topic(filtered_df),
+            "overall_emotion_average": self.emotional_analysis.overall_emotion_average(filtered_df),
+            "dominant_emotion_distribution": self.emotional_analysis.dominant_emotion_distribution(filtered_df),
+            "emotion_by_source": self.emotional_analysis.emotion_by_source(filtered_df)
+        }
+
+    def user(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
+        return {
+            "top_users": self.user_analysis.top_users(filtered_df),
+            "users": self.user_analysis.users(filtered_df)
+        }
+
+    def interactional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+        filtered_df = self._prepare_filtered_df(df, filters)
+
+        return {
+            "average_thread_depth": self.interaction_analysis.average_thread_depth(filtered_df),
+            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(filtered_df),
             "interaction_graph": self.interaction_analysis.interaction_graph(filtered_df)
         }
 
-    def get_interactional_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
-        filtered_df = self._prepare_filtered_df(df, filters)
-
-        return {
-            "average_thread_depth": self.interaction_analysis.average_thread_depth(
-                filtered_df
-            ),
-            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(
-                filtered_df
-            ),
-        }
-
-    def get_cultural_analysis(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def cultural(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -136,35 +139,4 @@ class StatGen:
     def summary(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
-        total_posts = (filtered_df["type"] == "post").sum()
-        total_comments = (filtered_df["type"] == "comment").sum()
-        events_per_user = filtered_df.groupby("author").size()
-
-        if filtered_df.empty:
-            return {
-                "total_events": 0,
-                "total_posts": 0,
-                "total_comments": 0,
-                "unique_users": 0,
-                "comments_per_post": 0,
-                "lurker_ratio": 0,
-                "time_range": {
-                    "start": None,
-                    "end": None,
-                },
-                "sources": [],
-            }
-
-        return {
-            "total_events": int(len(filtered_df)),
-            "total_posts": int(total_posts),
-            "total_comments": int(total_comments),
-            "unique_users": int(events_per_user.count()),
-            "comments_per_post": round(total_comments / max(total_posts, 1), 2),
-            "lurker_ratio": round((events_per_user == 1).mean(), 2),
-            "time_range": {
-                "start": int(filtered_df["dt"].min().timestamp()),
-                "end": int(filtered_df["dt"].max().timestamp()),
-            },
-            "sources": filtered_df["source"].dropna().unique().tolist(),
-        }
+        return self.summary_analysis.summary(filtered_df)
