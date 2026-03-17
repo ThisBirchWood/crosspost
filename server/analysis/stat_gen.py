@@ -94,6 +94,7 @@ class StatGen:
             "word_frequencies": self.linguistic_analysis.word_frequencies(filtered_df),
             "common_two_phrases": self.linguistic_analysis.ngrams(filtered_df),
             "common_three_phrases": self.linguistic_analysis.ngrams(filtered_df, n=3),
+            "lexical_diversity": self.linguistic_analysis.lexical_diversity(filtered_df)
         }
 
     def emotional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:

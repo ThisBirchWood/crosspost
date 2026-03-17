@@ -61,3 +61,19 @@ class LinguisticAnalysis:
             .head(limit)
             .to_dict(orient="records")
         )
+
+    def lexical_diversity(self, df: pd.DataFrame) -> dict:
+        tokens = (
+            df["content"].fillna("").astype(str).str.lower()
+            .str.findall(r"\b[a-z]{2,}\b")
+            .explode()
+        )
+        tokens = tokens[~tokens.isin(self.word_exclusions)]
+        total = max(len(tokens), 1)
+        unique = int(tokens.nunique())
+
+        return {
+            "total_tokens": total,
+            "unique_tokens": unique,
+            "ttr": round(unique / total, 4),
+        }
