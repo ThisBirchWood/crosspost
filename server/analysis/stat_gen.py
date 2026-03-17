@@ -120,7 +120,8 @@ class StatGen:
 
         return {
             "average_thread_depth": self.interaction_analysis.average_thread_depth(filtered_df),
-            "average_thread_length_by_emotion": self.interaction_analysis.average_thread_length_by_emotion(filtered_df),
+            "top_interaction_pairs": self.interaction_analysis.top_interaction_pairs(filtered_df, top_n=100),
+            "initiator_ratio": self.interaction_analysis.initiator_ratio(filtered_df),
             "interaction_graph": self.interaction_analysis.interaction_graph(filtered_df)
         }
 
