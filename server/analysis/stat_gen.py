@@ -127,13 +127,9 @@ class StatGen:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
-            "identity_markers": self.cultural_analysis.get_identity_markers(
-                filtered_df
-            ),
+            "identity_markers": self.cultural_analysis.get_identity_markers(filtered_df),
             "stance_markers": self.cultural_analysis.get_stance_markers(filtered_df),
-            "entity_salience": self.cultural_analysis.get_avg_emotions_per_entity(
-                filtered_df
-            ),
+            "avg_emotion_per_entity": self.cultural_analysis.get_avg_emotions_per_entity(filtered_df)
         }
 
     def summary(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
