@@ -39,7 +39,7 @@ class StatGen:
         self.linguistic_analysis = LinguisticAnalysis(EXCLUDE_WORDS)
         self.cultural_analysis = CulturalAnalysis()
         self.summary_analysis = SummaryAnalysis()
-        self.user_analysis = UserAnalysis()
+        self.user_analysis = UserAnalysis(EXCLUDE_WORDS)
 
     ## Private Methods
     def _prepare_filtered_df(self, df: pd.DataFrame, filters: dict | None = None) -> pd.DataFrame:

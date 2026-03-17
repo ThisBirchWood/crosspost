@@ -1,9 +1,6 @@
 import pandas as pd
 import re
 
-from collections import Counter
-
-
 class InteractionAnalysis:
     def __init__(self, word_exclusions: set[str]):
         self.word_exclusions = word_exclusions
@@ -11,51 +8,6 @@ class InteractionAnalysis:
     def _tokenize(self, text: str):
         tokens = re.findall(r"\b[a-z]{3,}\b", text)
         return [t for t in tokens if t not in self.word_exclusions]
-
-    def _vocab_richness_per_user(
-        self, df: pd.DataFrame, min_words: int = 20, top_most_used_words: int = 100
-    ) -> list:
-        df = df.copy()
-        df["content"] = df["content"].fillna("").astype(str).str.lower()
-        df["tokens"] = df["content"].apply(self._tokenize)
-
-        rows = []
-        for author, group in df.groupby("author"):
-            all_tokens = [t for tokens in group["tokens"] for t in tokens]
-
-            total_words = len(all_tokens)
-            unique_words = len(set(all_tokens))
-            events = len(group)
-
-            # Min amount of words for a user, any less than this might give weird results
-            if total_words < min_words:
-                continue
-
-            # 100% = they never reused a word (excluding stop words)
-            vocab_richness = unique_words / total_words
-            avg_words = total_words / max(events, 1)
-
-            counts = Counter(all_tokens)
-            top_words = [
-                {"word": w, "count": int(c)}
-                for w, c in counts.most_common(top_most_used_words)
-            ]
-
-            rows.append(
-                {
-                    "author": author,
-                    "events": int(events),
-                    "total_words": int(total_words),
-                    "unique_words": int(unique_words),
-                    "vocab_richness": round(vocab_richness, 3),
-                    "avg_words_per_event": round(avg_words, 2),
-                    "top_words": top_words,
-                }
-            )
-
-        rows = sorted(rows, key=lambda x: x["vocab_richness"], reverse=True)
-
-        return rows
 
     def interaction_graph(self, df: pd.DataFrame):
         interactions = {a: {} for a in df["author"].dropna().unique()}
