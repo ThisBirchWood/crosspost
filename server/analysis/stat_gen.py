@@ -39,7 +39,7 @@ class StatGen:
         self.linguistic_analysis = LinguisticAnalysis(EXCLUDE_WORDS)
         self.cultural_analysis = CulturalAnalysis()
         self.summary_analysis = SummaryAnalysis()
-        self.user_analysis = UserAnalysis(self.interaction_analysis)
+        self.user_analysis = UserAnalysis()
 
     ## Private Methods
     def _prepare_filtered_df(self, df: pd.DataFrame, filters: dict | None = None) -> pd.DataFrame:
@@ -111,7 +111,7 @@ class StatGen:
 
         return {
             "top_users": self.user_analysis.top_users(filtered_df),
-            "users": self.user_analysis.users(filtered_df)
+            "users": self.user_analysis.per_user_analysis(filtered_df)
         }
 
     def interactional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
