@@ -523,7 +523,28 @@ def get_interaction_analysis(dataset_id):
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred"}), 500
+    
+@app.route("/dataset/<int:dataset_id>/all", methods=["GET"])
+@jwt_required()
+def get_full_dataset(dataset_id: int):
+    try:
+        user_id = int(get_jwt_identity())
+        if not dataset_manager.authorize_user_dataset(dataset_id, user_id):
+            raise NotAuthorisedException(
+                "This user is not authorised to access this dataset"
+            )
 
+        dataset_content = dataset_manager.get_dataset_content(dataset_id)
+        return jsonify(dataset_content.to_dict(orient="records")), 200
+    except NotAuthorisedException:
+        return jsonify({"error": "User is not authorised to access this content"}), 403
+    except NonExistentDatasetException:
+        return jsonify({"error": "Dataset does not exist"}), 404
+    except ValueError as e:
+        return jsonify({"error": f"Malformed or missing data"}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": f"An unexpected error occurred"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
