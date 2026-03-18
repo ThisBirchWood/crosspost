@@ -23,6 +23,11 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
 const styles = StatsStyling;
+const DELETED_USERS = ["[deleted]"];
+
+const isDeletedUser = (value: string | null | undefined) => (
+  DELETED_USERS.includes((value ?? "").trim().toLowerCase())
+);
 
 const StatPage = () => {
   const { datasetId: routeDatasetId } = useParams<{ datasetId: string }>();
@@ -124,9 +129,56 @@ const StatPage = () => {
       }),
     ]) 
       .then(([timeRes, userRes, linguisticRes, emotionalRes, interactionRes, summaryRes, culturalRes]) => {
+        const usersList = userRes.data.users ?? [];
+        const topUsersList = userRes.data.top_users ?? [];
+        const interactionGraphRaw = interactionRes.data?.interaction_graph ?? {};
+        const topPairsRaw = interactionRes.data?.top_interaction_pairs ?? [];
+
+        const filteredUsers: typeof usersList = [];
+        for (const user of usersList) {
+          if (isDeletedUser(user.author)) continue;
+          filteredUsers.push(user);
+        }
+
+        const filteredTopUsers: typeof topUsersList = [];
+        for (const user of topUsersList) {
+          if (isDeletedUser(user.author)) continue;
+          filteredTopUsers.push(user);
+        }
+
+        const filteredInteractionGraph: Record<string, Record<string, number>> = {};
+        for (const [source, targets] of Object.entries(interactionGraphRaw)) {
+          if (isDeletedUser(source)) {
+            continue;
+          }
+
+          const nextTargets: Record<string, number> = {};
+          for (const [target, count] of Object.entries(targets)) {
+            if (isDeletedUser(target)) {
+              continue;
+            }
+            nextTargets[target] = count;
+          }
+
+          filteredInteractionGraph[source] = nextTargets;
+        }
+
+        const filteredTopInteractionPairs: typeof topPairsRaw = [];
+        for (const pairEntry of topPairsRaw) {
+          const pair = pairEntry[0];
+          const source = pair[0];
+          const target = pair[1];
+          if (isDeletedUser(source) || isDeletedUser(target)) {
+            continue;
+          }
+          filteredTopInteractionPairs.push(pairEntry);
+        }
+
         const combinedUserData: UserAnalysisResponse = {
           ...userRes.data,
-          interaction_graph: interactionRes.data?.interaction_graph ?? {},
+          users: filteredUsers,
+          top_users: filteredTopUsers,
+          interaction_graph: filteredInteractionGraph,
         };
 
         const combinedContentData: ContentAnalysisResponse = {
@@ -134,13 +186,24 @@ const StatPage = () => {
           ...emotionalRes.data,
         };
 
+        const filteredInteractionData: InteractionAnalysisResponse = {
+          ...interactionRes.data,
+          interaction_graph: filteredInteractionGraph,
+          top_interaction_pairs: filteredTopInteractionPairs,
+        };
+
+        const filteredSummary: SummaryResponse = {
+          ...summaryRes.data,
+          unique_users: filteredUsers.length,
+        };
+
         setUserData(combinedUserData);
         setTimeData(timeRes.data || null);
         setContentData(combinedContentData);
         setLinguisticData(linguisticRes.data || null);
-        setInteractionData(interactionRes.data || null);
+        setInteractionData(filteredInteractionData || null);
         setCulturalData(culturalRes.data || null);
-        setSummary(summaryRes.data || null);
+        setSummary(filteredSummary || null);
       })
       .catch((e) => setError("Failed to load statistics: " + String(e)))
       .finally(() => setLoading(false));
