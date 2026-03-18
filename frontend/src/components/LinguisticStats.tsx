@@ -21,28 +21,33 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
   return (
     <div style={styles.page}>
       <div style={{ ...styles.container, ...styles.grid }}>
+        <div style={{ ...styles.card, gridColumn: "span 12" }}>
+          <h2 style={styles.sectionTitle}>Language Overview</h2>
+          <p style={styles.sectionSubtitle}>Quick read on how broad and repetitive the wording is.</p>
+        </div>
+
         <Card
-          label="Total Tokens"
+          label="Total Words"
           value={lexical?.total_tokens?.toLocaleString() ?? "—"}
-          sublabel="After token filtering"
+          sublabel="Words after basic filtering"
           style={{ gridColumn: "span 4" }}
         />
         <Card
-          label="Unique Tokens"
+          label="Unique Words"
           value={lexical?.unique_tokens?.toLocaleString() ?? "—"}
-          sublabel="Distinct vocabulary items"
+          sublabel="Different words used"
           style={{ gridColumn: "span 4" }}
         />
         <Card
-          label="Type-Token Ratio"
+          label="Vocabulary Variety"
           value={typeof lexical?.ttr === "number" ? lexical.ttr.toFixed(4) : "—"}
-          sublabel="Vocabulary richness proxy"
+          sublabel="Higher means less repetition"
           style={{ gridColumn: "span 4" }}
         />
 
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Words</h2>
-          <p style={styles.sectionSubtitle}>Most frequent filtered terms.</p>
+          <p style={styles.sectionSubtitle}>Most used single words.</p>
           <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
             {topWords.map((item) => (
               <div key={item.word} style={styles.topUserItem}>
@@ -55,7 +60,7 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
 
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Bigrams</h2>
-          <p style={styles.sectionSubtitle}>Most frequent 2-word phrases.</p>
+          <p style={styles.sectionSubtitle}>Most used 2-word phrases.</p>
           <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
             {topBigrams.map((item) => (
               <div key={item.ngram} style={styles.topUserItem}>
@@ -68,7 +73,7 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
 
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Trigrams</h2>
-          <p style={styles.sectionSubtitle}>Most frequent 3-word phrases.</p>
+          <p style={styles.sectionSubtitle}>Most used 3-word phrases.</p>
           <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
             {topTrigrams.map((item) => (
               <div key={item.ngram} style={styles.topUserItem}>

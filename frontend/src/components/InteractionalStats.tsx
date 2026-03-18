@@ -40,6 +40,9 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
   const singleCommentAuthorRatio = typeof concentration?.single_comment_author_ratio === "number"
     ? concentration.single_comment_author_ratio
     : null;
+  const singleCommentAuthors = typeof concentration?.single_comment_authors === "number"
+    ? concentration.single_comment_authors
+    : null;
 
   const topPairs = (data.top_interaction_pairs ?? [])
     .filter((item): item is [[string, string], number] => {
@@ -84,48 +87,55 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
   return (
     <div style={styles.page}>
       <div style={{ ...styles.container, ...styles.grid }}>
+        <div style={{ ...styles.card, gridColumn: "span 12" }}>
+          <h2 style={styles.sectionTitle}>Conversation Overview</h2>
+          <p style={styles.sectionSubtitle}>Who talks to who, and how concentrated the replies are.</p>
+        </div>
+
         <Card
-          label="Avg Thread Depth"
+          label="Average Reply Depth"
           value={typeof data.average_thread_depth === "number" ? data.average_thread_depth.toFixed(2) : "—"}
-          sublabel="Depth from reply chains"
+          sublabel="How deep reply chains usually go"
           style={{ gridColumn: "span 3" }}
         />
         <Card
-          label="Network Users"
+          label="Users in Network"
           value={userCount.toLocaleString()}
-          sublabel="Authors in interaction graph"
+          sublabel="Users in the reply graph"
           style={{ gridColumn: "span 3" }}
         />
         <Card
-          label="Unique Links"
+          label="User-to-User Links"
           value={edgeCount.toLocaleString()}
-          sublabel="Directed source-target pairs"
+          sublabel="Unique reply directions"
           style={{ gridColumn: "span 3" }}
         />
         <Card
-          label="Interaction Volume"
+          label="Total Replies"
           value={interactionVolume.toLocaleString()}
-          sublabel="Sum of link weights"
+          sublabel="All reply links combined"
           style={{ gridColumn: "span 3" }}
         />
         <Card
-          label="Top 10% Comment Share"
+          label="Concentrated Replies"
           value={topTenSharePercent === null ? "-" : `${topTenSharePercent.toFixed(1)}%`}
           sublabel={topTenAuthorCount === null || totalCommentingAuthors === null
-            ? "Comment volume held by top commenters"
+            ? "Reply share from the top 10% commenters"
             : `${topTenAuthorCount.toLocaleString()} of ${totalCommentingAuthors.toLocaleString()} authors`}
           style={{ gridColumn: "span 6" }}
         />
         <Card
           label="Single-Comment Authors"
           value={singleCommentAuthorRatio === null ? "-" : `${(singleCommentAuthorRatio * 100).toFixed(1)}%`}
-          sublabel="Authors who commented exactly once"
+          sublabel={singleCommentAuthors === null
+            ? "Authors who commented exactly once"
+            : `${singleCommentAuthors.toLocaleString()} authors commented exactly once`}
           style={{ gridColumn: "span 6" }}
         />
 
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
-          <h2 style={styles.sectionTitle}>Interaction Visuals</h2>
-          <p style={styles.sectionSubtitle}>Quick charts for interaction direction and conversation concentration.</p>
+          <h2 style={styles.sectionTitle}>Conversation Visuals</h2>
+          <p style={styles.sectionSubtitle}>Main reply links and concentration split.</p>
 
           <div style={{ ...styles.grid, marginTop: 12 }}>
             <div style={{ ...styles.cardBase, gridColumn: "span 6" }}>
@@ -175,8 +185,8 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
         </div>
 
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
-          <h2 style={styles.sectionTitle}>Top Interaction Pairs</h2>
-          <p style={styles.sectionSubtitle}>Most frequent directed reply paths between users.</p>
+          <h2 style={styles.sectionTitle}>Frequent Reply Paths</h2>
+          <p style={styles.sectionSubtitle}>Most common user-to-user reply paths.</p>
           {!topPairs.length ? (
             <div style={styles.topUserMeta}>No interaction pair data available.</div>
           ) : (
