@@ -43,7 +43,7 @@ CREATE TABLE events (
     weekday VARCHAR(255) NOT NULL,
 
     /* Posts Only */
-    title VARCHAR(255),
+    title TEXT,
 
     /* Comments Only*/
     parent_id VARCHAR(255),

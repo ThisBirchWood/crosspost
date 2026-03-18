@@ -87,15 +87,15 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
             style={{ gridColumn: "span 3" }}
           />
           <Card
-            label="Interactions"
+            label="Replies"
             value={totalInteractions.toLocaleString()}
-            sublabel="Filtered links (2+ interactions)"
+            sublabel="Links with at least 2 replies"
             style={{ gridColumn: "span 3" }}
           />
           <Card
-            label="Average Intensity"
+            label="Replies per Connected User"
             value={avgInteractionsPerConnectedUser.toFixed(1)}
-            sublabel="Interactions per connected user"
+            sublabel="Average from visible graph links"
             style={{ gridColumn: "span 3" }}
           />
           <Card
@@ -106,13 +106,13 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
           />
 
           <Card
-            label="Strongest Connection"
+            label="Strongest User Link"
             value={strongestLink ? `${strongestLink.source} -> ${strongestLink.target}` : "—"}
-            sublabel={strongestLink ? `${strongestLink.value.toLocaleString()} interactions` : "No graph edges after filtering"}
+            sublabel={strongestLink ? `${strongestLink.value.toLocaleString()} replies` : "No graph links after filtering"}
             style={{ gridColumn: "span 6" }}
           />
           <Card
-            label="Most Reply-Driven User"
+            label="Most Comment-Heavy User"
             value={highlyInteractiveUser?.author ?? "—"}
             sublabel={
               highlyInteractiveUser
@@ -125,7 +125,7 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
           <div style={{ ...styles.card, gridColumn: "span 12" }}>
             <h2 style={styles.sectionTitle}>User Interaction Graph</h2>
             <p style={styles.sectionSubtitle}>
-              Nodes represent users and links represent conversation interactions.
+              Each node is a user, and each link shows replies between them.
             </p>
             <div ref={graphContainerRef} style={{ width: "100%", height: graphSize.height }}>
               <ForceGraph3D
