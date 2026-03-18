@@ -191,6 +191,9 @@ const AutoScrapePage = () => {
             <p style={styles.sectionHeaderSubtitle}>
               Select sources and scrape settings, then queue processing automatically.
             </p>
+            <p style={{ ...styles.subtleBodyText, marginTop: 6, color: "#9a6700" }}>
+              Warning: Scraping more than 250 posts from any single site can take hours.
+            </p>
           </div>
           <button
             type="button"
