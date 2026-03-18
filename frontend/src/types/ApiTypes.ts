@@ -1,14 +1,28 @@
-// User Responses
-type TopUser = { 
-    author: string; 
-    source: string; 
-    count: number 
+// Shared types
+type FrequencyWord = {
+  word: string;
+  count: number;
 };
 
-type FrequencyWord = {
-    word: string;
-    count: number;
-}
+type NGram = {
+  count: number;
+  ngram: string;
+};
+
+type Emotion = {
+  emotion_anger: number;
+  emotion_disgust: number;
+  emotion_fear: number;
+  emotion_joy: number;
+  emotion_sadness: number;
+};
+
+// User 
+type TopUser = {
+  author: string;
+  source: string;
+  count: number;
+};
 
 type Vocab = {
   author: string;
@@ -31,12 +45,9 @@ type User = {
 
 type InteractionGraph = Record<string, Record<string, number>>;
 
-type ConversationConcentration = {
-  total_commenting_authors: number;
-  top_10pct_author_count: number;
-  top_10pct_comment_share: number;
-  single_comment_authors: number;
-  single_comment_author_ratio: number;
+type UserEndpointResponse = {
+  top_users: TopUser[];
+  users: User[];
 };
 
 type UserAnalysisResponse = {
@@ -45,42 +56,24 @@ type UserAnalysisResponse = {
   interaction_graph: InteractionGraph;
 };
 
-type UserEndpointResponse = {
-  top_users: TopUser[];
-  users: User[];
-};
-
-// Time Analysis
+// Time 
 type EventsPerDay = {
-    date: Date;
-    count: number;
-}
+  date: Date;
+  count: number;
+};
 
 type HeatmapCell = {
-    date: Date;
-    hour: number;
-    count: number;
-}
-
-type TimeAnalysisResponse = {
-    events_per_day: EventsPerDay[];
-    weekday_hour_heatmap: HeatmapCell[];
-}
-
-// Content Analysis
-type Emotion = {
-  emotion_anger: number;
-  emotion_disgust: number;
-  emotion_fear: number;
-  emotion_joy: number;
-  emotion_sadness: number;
+  date: Date;
+  hour: number;
+  count: number;
 };
 
-type NGram = {
-    count: number;
-    ngram: string;
-}
+type TimeAnalysisResponse = {
+  events_per_day: EventsPerDay[];
+  weekday_hour_heatmap: HeatmapCell[];
+};
 
+// Content (combines emotional and linguistic)
 type AverageEmotionByTopic = Emotion & {
   n: number;
   topic: string;
@@ -105,17 +98,17 @@ type EmotionBySource = {
   event_count: number;
 };
 
-
 type ContentAnalysisResponse = {
-    word_frequencies: FrequencyWord[];
-    average_emotion_by_topic: AverageEmotionByTopic[];
-    common_three_phrases: NGram[];
-    common_two_phrases: NGram[];
-    overall_emotion_average?: OverallEmotionAverage[];
-    dominant_emotion_distribution?: DominantEmotionDistribution[];
-    emotion_by_source?: EmotionBySource[];
-}
+  word_frequencies: FrequencyWord[];
+  average_emotion_by_topic: AverageEmotionByTopic[];
+  common_three_phrases: NGram[];
+  common_two_phrases: NGram[];
+  overall_emotion_average?: OverallEmotionAverage[];
+  dominant_emotion_distribution?: DominantEmotionDistribution[];
+  emotion_by_source?: EmotionBySource[];
+};
 
+// Linguistic
 type LinguisticAnalysisResponse = {
   word_frequencies: FrequencyWord[];
   common_two_phrases: NGram[];
@@ -123,11 +116,21 @@ type LinguisticAnalysisResponse = {
   lexical_diversity?: Record<string, number>;
 };
 
+// Emotional
 type EmotionalAnalysisResponse = {
   average_emotion_by_topic: AverageEmotionByTopic[];
   overall_emotion_average?: OverallEmotionAverage[];
   dominant_emotion_distribution?: DominantEmotionDistribution[];
   emotion_by_source?: EmotionBySource[];
+};
+
+// Interactional 
+type ConversationConcentration = {
+  total_commenting_authors: number;
+  top_10pct_author_count: number;
+  top_10pct_comment_share: number;
+  single_comment_authors: number;
+  single_comment_author_ratio: number;
 };
 
 type InteractionAnalysisResponse = {
@@ -137,6 +140,7 @@ type InteractionAnalysisResponse = {
   interaction_graph: InteractionGraph;
 };
 
+// Cultural
 type IdentityMarkers = {
   in_group_usage: number;
   out_group_usage: number;
@@ -175,7 +179,7 @@ type CulturalAnalysisResponse = {
   avg_emotion_per_entity?: AverageEmotionPerEntity;
 };
 
-// Summary
+// Summary 
 type SummaryResponse = {
   total_events: number;
   total_posts: number;
@@ -190,35 +194,35 @@ type SummaryResponse = {
   sources: string[];
 };
 
-// Filtering Response
+// Filter 
 type FilterResponse = {
-    rows: number
-    data: any;
-}
+  rows: number;
+  data: any;
+};
 
 export type {
-    TopUser,
-    Vocab,
-    User,
-    InteractionGraph,
-    ConversationConcentration,
-    UserAnalysisResponse,
-    UserEndpointResponse,
-    FrequencyWord,
-    AverageEmotionByTopic,
-    OverallEmotionAverage,
-    DominantEmotionDistribution,
-    EmotionBySource,
-    SummaryResponse,
-    TimeAnalysisResponse,
-    ContentAnalysisResponse,
-    LinguisticAnalysisResponse,
-    EmotionalAnalysisResponse,
-    InteractionAnalysisResponse,
-    IdentityMarkers,
-    StanceMarkers,
-    EntityEmotionAggregate,
-    AverageEmotionPerEntity,
-    CulturalAnalysisResponse,
-    FilterResponse
-}
+  TopUser,
+  Vocab,
+  User,
+  InteractionGraph,
+  ConversationConcentration,
+  UserAnalysisResponse,
+  UserEndpointResponse,
+  FrequencyWord,
+  AverageEmotionByTopic,
+  OverallEmotionAverage,
+  DominantEmotionDistribution,
+  EmotionBySource,
+  SummaryResponse,
+  TimeAnalysisResponse,
+  ContentAnalysisResponse,
+  LinguisticAnalysisResponse,
+  EmotionalAnalysisResponse,
+  InteractionAnalysisResponse,
+  IdentityMarkers,
+  StanceMarkers,
+  EntityEmotionAggregate,
+  AverageEmotionPerEntity,
+  CulturalAnalysisResponse,
+  FilterResponse,
+};
