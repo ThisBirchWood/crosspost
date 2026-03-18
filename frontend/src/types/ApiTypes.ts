@@ -31,10 +31,23 @@ type User = {
 
 type InteractionGraph = Record<string, Record<string, number>>;
 
+type ConversationConcentration = {
+  total_commenting_authors: number;
+  top_10pct_author_count: number;
+  top_10pct_comment_share: number;
+  single_comment_authors: number;
+  single_comment_author_ratio: number;
+};
+
 type UserAnalysisResponse = {
   top_users: TopUser[];
   users: User[];
   interaction_graph: InteractionGraph;
+};
+
+type UserEndpointResponse = {
+  top_users: TopUser[];
+  users: User[];
 };
 
 // Time Analysis
@@ -103,6 +116,65 @@ type ContentAnalysisResponse = {
     emotion_by_source?: EmotionBySource[];
 }
 
+type LinguisticAnalysisResponse = {
+  word_frequencies: FrequencyWord[];
+  common_two_phrases: NGram[];
+  common_three_phrases: NGram[];
+  lexical_diversity?: Record<string, number>;
+};
+
+type EmotionalAnalysisResponse = {
+  average_emotion_by_topic: AverageEmotionByTopic[];
+  overall_emotion_average?: OverallEmotionAverage[];
+  dominant_emotion_distribution?: DominantEmotionDistribution[];
+  emotion_by_source?: EmotionBySource[];
+};
+
+type InteractionAnalysisResponse = {
+  average_thread_depth?: number;
+  top_interaction_pairs?: [[string, string], number][];
+  conversation_concentration?: ConversationConcentration;
+  interaction_graph: InteractionGraph;
+};
+
+type IdentityMarkers = {
+  in_group_usage: number;
+  out_group_usage: number;
+  in_group_ratio: number;
+  out_group_ratio: number;
+  in_group_posts: number;
+  out_group_posts: number;
+  tie_posts: number;
+  in_group_emotion_avg?: Record<string, number>;
+  out_group_emotion_avg?: Record<string, number>;
+};
+
+type StanceMarkers = {
+  hedge_total: number;
+  certainty_total: number;
+  deontic_total: number;
+  permission_total: number;
+  hedge_per_1k_tokens: number;
+  certainty_per_1k_tokens: number;
+  deontic_per_1k_tokens: number;
+  permission_per_1k_tokens: number;
+};
+
+type EntityEmotionAggregate = {
+  post_count: number;
+  emotion_avg: Record<string, number>;
+};
+
+type AverageEmotionPerEntity = {
+  entity_emotion_avg: Record<string, EntityEmotionAggregate>;
+};
+
+type CulturalAnalysisResponse = {
+  identity_markers?: IdentityMarkers;
+  stance_markers?: StanceMarkers;
+  avg_emotion_per_entity?: AverageEmotionPerEntity;
+};
+
 // Summary
 type SummaryResponse = {
   total_events: number;
@@ -129,7 +201,9 @@ export type {
     Vocab,
     User,
     InteractionGraph,
+    ConversationConcentration,
     UserAnalysisResponse,
+    UserEndpointResponse,
     FrequencyWord,
     AverageEmotionByTopic,
     OverallEmotionAverage,
@@ -138,5 +212,13 @@ export type {
     SummaryResponse,
     TimeAnalysisResponse,
     ContentAnalysisResponse,
+    LinguisticAnalysisResponse,
+    EmotionalAnalysisResponse,
+    InteractionAnalysisResponse,
+    IdentityMarkers,
+    StanceMarkers,
+    EntityEmotionAggregate,
+    AverageEmotionPerEntity,
+    CulturalAnalysisResponse,
     FilterResponse
 }
