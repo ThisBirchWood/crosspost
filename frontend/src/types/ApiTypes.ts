@@ -40,6 +40,7 @@ type User = {
   comment: number;
   comment_post_ratio: number;
   comment_share: number;
+  avg_emotions?: Record<string, number>;
   vocab?: Vocab | null;
 };
 
