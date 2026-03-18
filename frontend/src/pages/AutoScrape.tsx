@@ -192,7 +192,7 @@ const AutoScrapePage = () => {
               Select sources and scrape settings, then queue processing automatically.
             </p>
             <p style={{ ...styles.subtleBodyText, marginTop: 6, color: "#9a6700" }}>
-              Warning: Scraping more than 250 posts from any single site can take hours.
+              Warning: Scraping more than 250 posts from any single site can take hours due to rate limits.
             </p>
           </div>
           <button
