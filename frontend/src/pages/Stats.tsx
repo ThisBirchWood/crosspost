@@ -297,7 +297,7 @@ return (
           <div style={styles.dashboardMeta}>Dataset #{datasetId ?? "-"}</div>
         </div>
 
-    <div style={{ ...styles.container, ...styles.tabsRow }}>
+    <div style={{ ...styles.container, ...styles.tabsRow, justifyContent: "center" }}>
       <button
         onClick={() => setActiveView("summary")}
         style={activeView === "summary" ? styles.buttonPrimary : styles.buttonSecondary}
