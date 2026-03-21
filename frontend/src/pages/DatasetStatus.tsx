@@ -6,7 +6,7 @@ import StatsStyling from "../styles/stats_styling";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
 
 type DatasetStatusResponse = {
-  status?: "processing" | "complete" | "error";
+  status?: "fetching" | "processing" | "complete" | "error";
   status_message?: string | null;
   completed_at?: string | null;
 };
@@ -73,7 +73,7 @@ const DatasetStatusPage = () => {
     };
   }, [navigate, parsedDatasetId, status]);
 
-  const isProcessing = loading || status === "processing";
+  const isProcessing = loading || status === "fetching" || status === "processing";
   const isError = status === "error";
 
   return (
