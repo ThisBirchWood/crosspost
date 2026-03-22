@@ -84,14 +84,14 @@ class CulturalAnalysis:
         }
     
     def get_avg_emotions_per_entity(self, df: pd.DataFrame, top_n: int = 25, min_posts: int = 10) -> dict[str, Any]:
-        if "entities" not in df.columns:
+        if "ner_entities" not in df.columns:
             return {"entity_emotion_avg": {}}
 
         emotion_cols = [c for c in df.columns if c.startswith("emotion_")]
 
-        entity_df = df[["entities"] + emotion_cols].explode("entities")
+        entity_df = df[["ner_entities"] + emotion_cols].explode("ner_entities")
 
-        entity_df["entity_text"] = entity_df["entities"].apply(
+        entity_df["entity_text"] = entity_df["ner_entities"].apply(
             lambda e: e.get("text").strip()
             if isinstance(e, dict) and isinstance(e.get("text"), str) and len(e.get("text")) >= 3
             else None
