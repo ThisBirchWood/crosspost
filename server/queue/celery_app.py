@@ -1,10 +1,15 @@
 from celery import Celery
+from dotenv import load_dotenv
+from server.utils import get_env
+
+load_dotenv()
+REDIS_URL = get_env("REDIS_URL")
 
 def create_celery():
     celery = Celery(
         "ethnograph",
-        broker="redis://redis:6379/0",
-        backend="redis://redis:6379/0",
+        broker=REDIS_URL,
+        backend=REDIS_URL,
     )
     celery.conf.task_serializer = "json"
     celery.conf.result_serializer = "json"
