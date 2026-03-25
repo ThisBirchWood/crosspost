@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 type DatasetStatusResponse = {
   status?: "fetching" | "processing" | "complete" | "error";
@@ -17,7 +17,8 @@ const DatasetStatusPage = () => {
   const navigate = useNavigate();
   const { datasetId } = useParams<{ datasetId: string }>();
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<DatasetStatusResponse["status"]>("processing");
+  const [status, setStatus] =
+    useState<DatasetStatusResponse["status"]>("processing");
   const [statusMessage, setStatusMessage] = useState("");
   const parsedDatasetId = useMemo(() => Number(datasetId), [datasetId]);
 
@@ -34,7 +35,7 @@ const DatasetStatusPage = () => {
     const pollStatus = async () => {
       try {
         const response = await axios.get<DatasetStatusResponse>(
-          `${API_BASE_URL}/dataset/${parsedDatasetId}/status`
+          `${API_BASE_URL}/dataset/${parsedDatasetId}/status`,
         );
 
         const nextStatus = response.data.status ?? "processing";
@@ -51,7 +52,9 @@ const DatasetStatusPage = () => {
         setLoading(false);
         setStatus("error");
         if (axios.isAxiosError(error)) {
-          const message = String(error.response?.data?.error || error.message || "Request failed");
+          const message = String(
+            error.response?.data?.error || error.message || "Request failed",
+          );
           setStatusMessage(message);
         } else {
           setStatusMessage("Unable to fetch dataset status.");
@@ -73,7 +76,8 @@ const DatasetStatusPage = () => {
     };
   }, [navigate, parsedDatasetId, status]);
 
-  const isProcessing = loading || status === "fetching" || status === "processing";
+  const isProcessing =
+    loading || status === "fetching" || status === "processing";
   const isError = status === "error";
 
   return (
@@ -81,26 +85,37 @@ const DatasetStatusPage = () => {
       <div style={styles.containerNarrow}>
         <div style={{ ...styles.card, marginTop: 28 }}>
           <h1 style={styles.sectionHeaderTitle}>
-            {isProcessing ? "Processing dataset..." : isError ? "Dataset processing failed" : "Dataset ready"}
+            {isProcessing
+              ? "Processing dataset..."
+              : isError
+                ? "Dataset processing failed"
+                : "Dataset ready"}
           </h1>
 
           <p style={{ ...styles.sectionSubtitle, marginTop: 10 }}>
             {isProcessing &&
               "Your dataset is being analyzed. This page will redirect to stats automatically once complete."}
-            {isError && "There was an issue while processing your dataset. Please review the error details."}
-            {status === "complete" && "Processing complete. Redirecting to your stats now..."}
+            {isError &&
+              "There was an issue while processing your dataset. Please review the error details."}
+            {status === "complete" &&
+              "Processing complete. Redirecting to your stats now..."}
           </p>
 
           <div
             style={{
               ...styles.card,
               ...styles.statusMessageCard,
-              borderColor: isError ? "rgba(185, 28, 28, 0.28)" : "rgba(0,0,0,0.06)",
+              borderColor: isError
+                ? "rgba(185, 28, 28, 0.28)"
+                : "rgba(0,0,0,0.06)",
               background: isError ? "#fff5f5" : "#ffffff",
               color: isError ? "#991b1b" : "#374151",
             }}
           >
-            {statusMessage || (isProcessing ? "Waiting for updates from the worker queue..." : "No details provided.")}
+            {statusMessage ||
+              (isProcessing
+                ? "Waiting for updates from the worker queue..."
+                : "No details provided.")}
           </div>
         </div>
       </div>

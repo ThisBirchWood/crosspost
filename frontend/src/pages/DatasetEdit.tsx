@@ -51,7 +51,9 @@ const DatasetEditPage = () => {
       .catch((error: unknown) => {
         setHasError(true);
         if (axios.isAxiosError(error)) {
-          setStatusMessage(String(error.response?.data?.error || error.message));
+          setStatusMessage(
+            String(error.response?.data?.error || error.message),
+          );
         } else {
           setStatusMessage("Could not get dataset info.");
         }
@@ -60,7 +62,6 @@ const DatasetEditPage = () => {
         setLoading(false);
       });
   }, [parsedDatasetId]);
-
 
   const saveDatasetName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,14 +88,18 @@ const DatasetEditPage = () => {
       await axios.patch(
         `${API_BASE_URL}/dataset/${parsedDatasetId}`,
         { name: trimmedName },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       navigate("/datasets", { replace: true });
     } catch (error: unknown) {
       setHasError(true);
       if (axios.isAxiosError(error)) {
-        setStatusMessage(String(error.response?.data?.error || error.message || "Save failed."));
+        setStatusMessage(
+          String(
+            error.response?.data?.error || error.message || "Save failed.",
+          ),
+        );
       } else {
         setStatusMessage("Save failed due to an unexpected error.");
       }
@@ -117,17 +122,20 @@ const DatasetEditPage = () => {
       setHasError(false);
       setStatusMessage("");
 
-      await axios.delete(
-        `${API_BASE_URL}/dataset/${parsedDatasetId}`,
-        { headers: { Authorization: `Bearer ${deleteToken}` } }
-      );
+      await axios.delete(`${API_BASE_URL}/dataset/${parsedDatasetId}`, {
+        headers: { Authorization: `Bearer ${deleteToken}` },
+      });
 
       setIsDeleteModalOpen(false);
       navigate("/datasets", { replace: true });
     } catch (error: unknown) {
       setHasError(true);
       if (axios.isAxiosError(error)) {
-        setStatusMessage(String(error.response?.data?.error || error.message || "Delete failed."));
+        setStatusMessage(
+          String(
+            error.response?.data?.error || error.message || "Delete failed.",
+          ),
+        );
       } else {
         setStatusMessage("Delete failed due to an unexpected error.");
       }
@@ -142,7 +150,9 @@ const DatasetEditPage = () => {
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div>
             <h1 style={styles.sectionHeaderTitle}>Edit Dataset</h1>
-            <p style={styles.sectionHeaderSubtitle}>Update the dataset name shown in your datasets list.</p>
+            <p style={styles.sectionHeaderSubtitle}>
+              Update the dataset name shown in your datasets list.
+            </p>
           </div>
         </div>
 
@@ -173,8 +183,8 @@ const DatasetEditPage = () => {
               style={styles.buttonDanger}
               onClick={() => setIsDeleteModalOpen(true)}
               disabled={isSaving || isDeleting}
-              >
-                Delete Dataset
+            >
+              Delete Dataset
             </button>
 
             <button
@@ -187,15 +197,16 @@ const DatasetEditPage = () => {
             </button>
             <button
               type="submit"
-              style={{ ...styles.buttonPrimary, opacity: loading || isSaving ? 0.75 : 1 }}
+              style={{
+                ...styles.buttonPrimary,
+                opacity: loading || isSaving ? 0.75 : 1,
+              }}
               disabled={loading || isSaving || isDeleting}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
 
-            {loading
-            ? "Loading dataset details..."
-            : statusMessage}
+            {loading ? "Loading dataset details..." : statusMessage}
           </div>
         </form>
 

@@ -11,9 +11,15 @@ type Props = {
   username: string;
 };
 
-export default function UserModal({ open, onClose, userData, username }: Props) {
-  const dominantEmotionEntry = Object.entries(userData?.avg_emotions ?? {})
-    .sort((a, b) => b[1] - a[1])[0];
+export default function UserModal({
+  open,
+  onClose,
+  userData,
+  username,
+}: Props) {
+  const dominantEmotionEntry = Object.entries(
+    userData?.avg_emotions ?? {},
+  ).sort((a, b) => b[1] - a[1])[0];
 
   return (
     <Dialog open={open} onClose={onClose} style={styles.modalRoot}>
@@ -36,7 +42,9 @@ export default function UserModal({ open, onClose, userData, username }: Props) 
             <p style={styles.sectionSubtitle}>No data for this user.</p>
           ) : (
             <div style={styles.topUsersList}>
-              <div style={{...styles.topUserName, fontSize: 20}}>{userData.author}</div>
+              <div style={{ ...styles.topUserName, fontSize: 20 }}>
+                {userData.author}
+              </div>
               <div style={styles.topUserItem}>
                 <div style={styles.topUserName}>Posts</div>
                 <div style={styles.topUserMeta}>{userData.post}</div>
@@ -65,7 +73,8 @@ export default function UserModal({ open, onClose, userData, username }: Props) 
                 <div style={styles.topUserItem}>
                   <div style={styles.topUserName}>Vocab Richness</div>
                   <div style={styles.topUserMeta}>
-                    {userData.vocab.vocab_richness} (avg {userData.vocab.avg_words_per_event} words/event)
+                    {userData.vocab.vocab_richness} (avg{" "}
+                    {userData.vocab.avg_words_per_event} words/event)
                   </div>
                 </div>
               ) : null}
@@ -74,7 +83,8 @@ export default function UserModal({ open, onClose, userData, username }: Props) 
                 <div style={styles.topUserItem}>
                   <div style={styles.topUserName}>Dominant Avg Emotion</div>
                   <div style={styles.topUserMeta}>
-                    {dominantEmotionEntry[0].replace("emotion_", "")} ({dominantEmotionEntry[1].toFixed(3)})
+                    {dominantEmotionEntry[0].replace("emotion_", "")} (
+                    {dominantEmotionEntry[1].toFixed(3)})
                   </div>
                 </div>
               ) : null}

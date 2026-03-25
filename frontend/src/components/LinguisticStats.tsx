@@ -23,7 +23,9 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
       <div style={{ ...styles.container, ...styles.grid }}>
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Language Overview</h2>
-          <p style={styles.sectionSubtitle}>Quick read on how broad and repetitive the wording is.</p>
+          <p style={styles.sectionSubtitle}>
+            Quick read on how broad and repetitive the wording is.
+          </p>
         </div>
 
         <Card
@@ -40,7 +42,9 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
         />
         <Card
           label="Vocabulary Variety"
-          value={typeof lexical?.ttr === "number" ? lexical.ttr.toFixed(4) : "—"}
+          value={
+            typeof lexical?.ttr === "number" ? lexical.ttr.toFixed(4) : "—"
+          }
           sublabel="Higher means less repetition"
           style={{ gridColumn: "span 4" }}
         />
@@ -48,11 +52,19 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Words</h2>
           <p style={styles.sectionSubtitle}>Most used single words.</p>
-          <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
+          <div
+            style={{
+              ...styles.topUsersList,
+              maxHeight: 360,
+              overflowY: "auto",
+            }}
+          >
             {topWords.map((item) => (
               <div key={item.word} style={styles.topUserItem}>
                 <div style={styles.topUserName}>{item.word}</div>
-                <div style={styles.topUserMeta}>{item.count.toLocaleString()} uses</div>
+                <div style={styles.topUserMeta}>
+                  {item.count.toLocaleString()} uses
+                </div>
               </div>
             ))}
           </div>
@@ -61,11 +73,19 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Bigrams</h2>
           <p style={styles.sectionSubtitle}>Most used 2-word phrases.</p>
-          <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
+          <div
+            style={{
+              ...styles.topUsersList,
+              maxHeight: 360,
+              overflowY: "auto",
+            }}
+          >
             {topBigrams.map((item) => (
               <div key={item.ngram} style={styles.topUserItem}>
                 <div style={styles.topUserName}>{item.ngram}</div>
-                <div style={styles.topUserMeta}>{item.count.toLocaleString()} uses</div>
+                <div style={styles.topUserMeta}>
+                  {item.count.toLocaleString()} uses
+                </div>
               </div>
             ))}
           </div>
@@ -74,11 +94,19 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Top Trigrams</h2>
           <p style={styles.sectionSubtitle}>Most used 3-word phrases.</p>
-          <div style={{ ...styles.topUsersList, maxHeight: 360, overflowY: "auto" }}>
+          <div
+            style={{
+              ...styles.topUsersList,
+              maxHeight: 360,
+              overflowY: "auto",
+            }}
+          >
             {topTrigrams.map((item) => (
               <div key={item.ngram} style={styles.topUserItem}>
                 <div style={styles.topUserName}>{item.ngram}</div>
-                <div style={styles.topUserMeta}>{item.count.toLocaleString()} uses</div>
+                <div style={styles.topUserMeta}>
+                  {item.count.toLocaleString()} uses
+                </div>
               </div>
             ))}
           </div>

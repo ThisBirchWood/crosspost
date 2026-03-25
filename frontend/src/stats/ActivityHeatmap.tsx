@@ -25,8 +25,7 @@ const DAYS = [
   "Sunday",
 ];
 
-const hourLabel = (h: number) =>
-  `${h.toString().padStart(2, "0")}:00`;
+const hourLabel = (h: number) => `${h.toString().padStart(2, "0")}:00`;
 
 const convertWeeklyData = (dataset: ApiRow[]): ChartSeries[] => {
   return dataset.map((dayData, index) => ({
@@ -40,32 +39,29 @@ const convertWeeklyData = (dataset: ApiRow[]): ChartSeries[] => {
   }));
 };
 
-
 const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
-    const convertedData = convertWeeklyData(data);
+  const convertedData = convertWeeklyData(data);
 
-    const maxValue = Math.max(
-    ...convertedData.flatMap(day =>
-      day.data.map(point => point.y)
-    )
+  const maxValue = Math.max(
+    ...convertedData.flatMap((day) => day.data.map((point) => point.y)),
   );
 
-    return (
-            <ResponsiveHeatMap
-                data={convertedData}
-                valueFormat=">-.2s"
-                axisTop={{ tickRotation: -90 }}
-                axisRight={{ legend: 'Weekday', legendOffset: 70 }}
-                axisLeft={{ legend: 'Weekday', legendOffset: -72 }}
-                colors={{
-                    type: 'diverging',
-                    scheme: 'red_yellow_blue',
-                    divergeAt: 0.3,
-                    minValue: 0,
-                    maxValue: maxValue
-                }}
-        />
-    )
-}
+  return (
+    <ResponsiveHeatMap
+      data={convertedData}
+      valueFormat=">-.2s"
+      axisTop={{ tickRotation: -90 }}
+      axisRight={{ legend: "Weekday", legendOffset: 70 }}
+      axisLeft={{ legend: "Weekday", legendOffset: -72 }}
+      colors={{
+        type: "diverging",
+        scheme: "red_yellow_blue",
+        divergeAt: 0.3,
+        minValue: 0,
+        maxValue: maxValue,
+      }}
+    />
+  );
+};
 
 export default ActivityHeatmap;

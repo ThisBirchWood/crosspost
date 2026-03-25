@@ -58,8 +58,8 @@ const AutoScrapePage = () => {
         if (axios.isAxiosError(requestError)) {
           setReturnMessage(
             `Failed to load available sources: ${String(
-              requestError.response?.data?.error || requestError.message
-            )}`
+              requestError.response?.data?.error || requestError.message,
+            )}`,
           );
         } else {
           setReturnMessage("Failed to load available sources.");
@@ -70,15 +70,19 @@ const AutoScrapePage = () => {
       });
   }, []);
 
-  const updateSourceConfig = (index: number, field: keyof SourceConfig, value: string) => {
+  const updateSourceConfig = (
+    index: number,
+    field: keyof SourceConfig,
+    value: string,
+  ) => {
     setSourceConfigs((previous) =>
       previous.map((config, configIndex) =>
         configIndex === index
           ? field === "sourceName"
             ? { ...config, sourceName: value, search: "", category: "" }
             : { ...config, [field]: value }
-          : config
-      )
+          : config,
+      ),
     );
   };
 
@@ -93,7 +97,9 @@ const AutoScrapePage = () => {
   };
 
   const removeSourceConfig = (index: number) => {
-    setSourceConfigs((previous) => previous.filter((_, configIndex) => configIndex !== index));
+    setSourceConfigs((previous) =>
+      previous.filter((_, configIndex) => configIndex !== index),
+    );
   };
 
   const autoScrape = async () => {
@@ -123,7 +129,9 @@ const AutoScrapePage = () => {
       return {
         name: source.sourceName,
         limit: Number(source.limit || 100),
-        search: supportsSearch(sourceOption) ? source.search.trim() || undefined : undefined,
+        search: supportsSearch(sourceOption)
+          ? source.search.trim() || undefined
+          : undefined,
         category: supportsCategories(sourceOption)
           ? source.category.trim() || undefined
           : undefined,
@@ -131,12 +139,15 @@ const AutoScrapePage = () => {
     });
 
     const invalidSource = normalizedSources.find(
-      (source) => !source.name || !Number.isFinite(source.limit) || source.limit <= 0
+      (source) =>
+        !source.name || !Number.isFinite(source.limit) || source.limit <= 0,
     );
 
     if (invalidSource) {
       setHasError(true);
-      setReturnMessage("Every source needs a name and a limit greater than zero.");
+      setReturnMessage(
+        "Every source needs a name and a limit greater than zero.",
+      );
       return;
     }
 
@@ -155,13 +166,13 @@ const AutoScrapePage = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const datasetId = Number(response.data.dataset_id);
 
       setReturnMessage(
-        `Auto scrape queued successfully (dataset #${datasetId}). Redirecting to processing status...`
+        `Auto scrape queued successfully (dataset #${datasetId}). Redirecting to processing status...`,
       );
 
       setTimeout(() => {
@@ -171,7 +182,9 @@ const AutoScrapePage = () => {
       setHasError(true);
       if (axios.isAxiosError(requestError)) {
         const message = String(
-          requestError.response?.data?.error || requestError.message || "Auto scrape failed."
+          requestError.response?.data?.error ||
+            requestError.message ||
+            "Auto scrape failed.",
         );
         setReturnMessage(`Auto scrape failed: ${message}`);
       } else {
@@ -189,15 +202,26 @@ const AutoScrapePage = () => {
           <div>
             <h1 style={styles.sectionHeaderTitle}>Auto Scrape Dataset</h1>
             <p style={styles.sectionHeaderSubtitle}>
-              Select sources and scrape settings, then queue processing automatically.
+              Select sources and scrape settings, then queue processing
+              automatically.
             </p>
-            <p style={{ ...styles.subtleBodyText, marginTop: 6, color: "#9a6700" }}>
-              Warning: Scraping more than 250 posts from any single site can take hours due to rate limits.
+            <p
+              style={{
+                ...styles.subtleBodyText,
+                marginTop: 6,
+                color: "#9a6700",
+              }}
+            >
+              Warning: Scraping more than 250 posts from any single site can
+              take hours due to rate limits.
             </p>
           </div>
           <button
             type="button"
-            style={{ ...styles.buttonPrimary, opacity: isSubmitting || isLoadingSources ? 0.75 : 1 }}
+            style={{
+              ...styles.buttonPrimary,
+              opacity: isSubmitting || isLoadingSources ? 0.75 : 1,
+            }}
             onClick={autoScrape}
             disabled={isSubmitting || isLoadingSources}
           >
@@ -213,8 +237,12 @@ const AutoScrapePage = () => {
           }}
         >
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Dataset Name</h2>
-            <p style={styles.sectionSubtitle}>Use a clear label so you can identify this run later.</p>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Dataset Name
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Use a clear label so you can identify this run later.
+            </p>
             <input
               style={{ ...styles.input, ...styles.inputFullWidth }}
               type="text"
@@ -225,97 +253,129 @@ const AutoScrapePage = () => {
           </div>
 
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Sources</h2>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Sources
+            </h2>
             <p style={styles.sectionSubtitle}>
               Configure source, limit, optional search, and optional category.
             </p>
 
-            {isLoadingSources && <p style={styles.subtleBodyText}>Loading sources...</p>}
+            {isLoadingSources && (
+              <p style={styles.subtleBodyText}>Loading sources...</p>
+            )}
 
             {!isLoadingSources && sourceOptions.length === 0 && (
-              <p style={styles.subtleBodyText}>No source connectors are currently available.</p>
+              <p style={styles.subtleBodyText}>
+                No source connectors are currently available.
+              </p>
             )}
 
             {!isLoadingSources && sourceOptions.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
                 {sourceConfigs.map((source, index) => {
                   const sourceOption = getSourceOption(source.sourceName);
                   const searchEnabled = supportsSearch(sourceOption);
                   const categoriesEnabled = supportsCategories(sourceOption);
 
                   return (
-                  <div
-                    key={`source-${index}`}
-                    style={{
-                      border: "1px solid #d0d7de",
-                      borderRadius: 8,
-                      padding: 12,
-                      background: "#f6f8fa",
-                      display: "grid",
-                      gap: 8,
-                    }}
-                  >
-                    <select
-                      value={source.sourceName}
-                      style={{ ...styles.input, ...styles.inputFullWidth }}
-                      onChange={(event) => updateSourceConfig(index, "sourceName", event.target.value)}
+                    <div
+                      key={`source-${index}`}
+                      style={{
+                        border: "1px solid #d0d7de",
+                        borderRadius: 8,
+                        padding: 12,
+                        background: "#f6f8fa",
+                        display: "grid",
+                        gap: 8,
+                      }}
                     >
-                      {sourceOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <input
-                      type="number"
-                      min={1}
-                      value={source.limit}
-                      placeholder="Limit"
-                      style={{ ...styles.input, ...styles.inputFullWidth }}
-                      onChange={(event) => updateSourceConfig(index, "limit", event.target.value)}
-                    />
-
-                    <input
-                      type="text"
-                      value={source.search}
-                      placeholder={
-                        searchEnabled
-                          ? "Search term (optional)"
-                          : "Search not supported for this source"
-                      }
-                      style={{ ...styles.input, ...styles.inputFullWidth }}
-                      disabled={!searchEnabled}
-                      onChange={(event) => updateSourceConfig(index, "search", event.target.value)}
-                    />
-
-                    <input
-                      type="text"
-                      value={source.category}
-                      placeholder={
-                        categoriesEnabled
-                          ? "Category (optional)"
-                          : "Categories not supported for this source"
-                      }
-                      style={{ ...styles.input, ...styles.inputFullWidth }}
-                      disabled={!categoriesEnabled}
-                      onChange={(event) => updateSourceConfig(index, "category", event.target.value)}
-                    />
-
-                    {sourceConfigs.length > 1 && (
-                      <button
-                        type="button"
-                        style={styles.buttonSecondary}
-                        onClick={() => removeSourceConfig(index)}
+                      <select
+                        value={source.sourceName}
+                        style={{ ...styles.input, ...styles.inputFullWidth }}
+                        onChange={(event) =>
+                          updateSourceConfig(
+                            index,
+                            "sourceName",
+                            event.target.value,
+                          )
+                        }
                       >
-                        Remove source
-                      </button>
-                    )}
-                  </div>
+                        {sourceOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        type="number"
+                        min={1}
+                        value={source.limit}
+                        placeholder="Limit"
+                        style={{ ...styles.input, ...styles.inputFullWidth }}
+                        onChange={(event) =>
+                          updateSourceConfig(index, "limit", event.target.value)
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        value={source.search}
+                        placeholder={
+                          searchEnabled
+                            ? "Search term (optional)"
+                            : "Search not supported for this source"
+                        }
+                        style={{ ...styles.input, ...styles.inputFullWidth }}
+                        disabled={!searchEnabled}
+                        onChange={(event) =>
+                          updateSourceConfig(
+                            index,
+                            "search",
+                            event.target.value,
+                          )
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        value={source.category}
+                        placeholder={
+                          categoriesEnabled
+                            ? "Category (optional)"
+                            : "Categories not supported for this source"
+                        }
+                        style={{ ...styles.input, ...styles.inputFullWidth }}
+                        disabled={!categoriesEnabled}
+                        onChange={(event) =>
+                          updateSourceConfig(
+                            index,
+                            "category",
+                            event.target.value,
+                          )
+                        }
+                      />
+
+                      {sourceConfigs.length > 1 && (
+                        <button
+                          type="button"
+                          style={styles.buttonSecondary}
+                          onClick={() => removeSourceConfig(index)}
+                        >
+                          Remove source
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
 
-                <button type="button" style={styles.buttonSecondary} onClick={addSourceConfig}>
+                <button
+                  type="button"
+                  style={styles.buttonSecondary}
+                  onClick={addSourceConfig}
+                >
                   Add another source
                 </button>
               </div>

@@ -3,7 +3,7 @@ import axios from "axios";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 type ProfileResponse = {
   user?: Record<string, unknown>;
@@ -33,7 +33,10 @@ const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<Record<string, unknown> | null>(null);
+  const [currentUser, setCurrentUser] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
 
   const syncAuthState = useCallback(async () => {
     const token = localStorage.getItem("access_token");
@@ -48,7 +51,9 @@ const AppLayout = () => {
     axios.defaults.headers.common.Authorization = `Bearer ${token}`;
 
     try {
-      const response = await axios.get<ProfileResponse>(`${API_BASE_URL}/profile`);
+      const response = await axios.get<ProfileResponse>(
+        `${API_BASE_URL}/profile`,
+      );
       setIsSignedIn(true);
       setCurrentUser(response.data.user ?? null);
     } catch {
@@ -81,27 +86,35 @@ const AppLayout = () => {
       <div style={{ ...styles.container, ...styles.appHeaderWrap }}>
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div style={styles.appHeaderBrandRow}>
-            <span style={styles.appTitle}>
-              CrossPost Analysis Engine
-            </span>
+            <span style={styles.appTitle}>CrossPost Analysis Engine</span>
             <span
               style={{
                 ...styles.authStatusBadge,
-                ...(isSignedIn ? styles.authStatusSignedIn : styles.authStatusSignedOut),
+                ...(isSignedIn
+                  ? styles.authStatusSignedIn
+                  : styles.authStatusSignedOut),
               }}
             >
-              {isSignedIn ? `Signed in: ${getUserLabel(currentUser)}` : "Not signed in"}
+              {isSignedIn
+                ? `Signed in: ${getUserLabel(currentUser)}`
+                : "Not signed in"}
             </span>
           </div>
 
           <div style={styles.controlsWrapped}>
-            {isSignedIn && <button
-              type="button"
-              style={location.pathname === "/datasets" ? styles.buttonPrimary : styles.buttonSecondary}
-              onClick={() => navigate("/datasets")}
-            >
-              My datasets
-            </button>}
+            {isSignedIn && (
+              <button
+                type="button"
+                style={
+                  location.pathname === "/datasets"
+                    ? styles.buttonPrimary
+                    : styles.buttonSecondary
+                }
+                onClick={() => navigate("/datasets")}
+              >
+                My datasets
+              </button>
+            )}
 
             <button
               type="button"

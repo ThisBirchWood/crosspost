@@ -13,7 +13,7 @@ export const getDocumentTitle = (pathname: string) => {
   }
 
   if (pathname.includes("stats")) {
-    return "Ethnography Analysis"
+    return "Ethnography Analysis";
   }
 
   return STATIC_TITLES[pathname] ?? DEFAULT_TITLE;

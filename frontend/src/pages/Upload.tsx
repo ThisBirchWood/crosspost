@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
 
 const styles = StatsStyling;
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const UploadPage = () => {
   const [datasetName, setDatasetName] = useState("");
@@ -40,16 +40,20 @@ const UploadPage = () => {
       setHasError(false);
       setReturnMessage("");
 
-      const response = await axios.post(`${API_BASE_URL}/datasets/upload`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await axios.post(
+        `${API_BASE_URL}/datasets/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       const datasetId = Number(response.data.dataset_id);
 
       setReturnMessage(
-        `Upload queued successfully (dataset #${datasetId}). Redirecting to processing status...`
+        `Upload queued successfully (dataset #${datasetId}). Redirecting to processing status...`,
       );
 
       setTimeout(() => {
@@ -58,7 +62,9 @@ const UploadPage = () => {
     } catch (error: unknown) {
       setHasError(true);
       if (axios.isAxiosError(error)) {
-        const message = String(error.response?.data?.error || error.message || "Upload failed.");
+        const message = String(
+          error.response?.data?.error || error.message || "Upload failed.",
+        );
         setReturnMessage(`Upload failed: ${message}`);
       } else {
         setReturnMessage("Upload failed due to an unexpected error.");
@@ -75,12 +81,16 @@ const UploadPage = () => {
           <div>
             <h1 style={styles.sectionHeaderTitle}>Upload Dataset</h1>
             <p style={styles.sectionHeaderSubtitle}>
-              Name your dataset, then upload posts and topic map files to generate analytics.
+              Name your dataset, then upload posts and topic map files to
+              generate analytics.
             </p>
           </div>
           <button
             type="button"
-            style={{ ...styles.buttonPrimary, opacity: isSubmitting ? 0.75 : 1 }}
+            style={{
+              ...styles.buttonPrimary,
+              opacity: isSubmitting ? 0.75 : 1,
+            }}
             onClick={uploadFiles}
             disabled={isSubmitting}
           >
@@ -96,8 +106,12 @@ const UploadPage = () => {
           }}
         >
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Dataset Name</h2>
-            <p style={styles.sectionSubtitle}>Use a clear label so you can identify this upload later.</p>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Dataset Name
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Use a clear label so you can identify this upload later.
+            </p>
             <input
               style={{ ...styles.input, ...styles.inputFullWidth }}
               type="text"
@@ -108,8 +122,12 @@ const UploadPage = () => {
           </div>
 
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Posts File (.jsonl)</h2>
-            <p style={styles.sectionSubtitle}>Upload the raw post records export.</p>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Posts File (.jsonl)
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Upload the raw post records export.
+            </p>
             <input
               style={{ ...styles.input, ...styles.inputFullWidth }}
               type="file"
@@ -122,16 +140,24 @@ const UploadPage = () => {
           </div>
 
           <div style={{ ...styles.card, gridColumn: "auto" }}>
-            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>Topics File (.json)</h2>
-            <p style={styles.sectionSubtitle}>Upload your topic bucket mapping file.</p>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Topics File (.json)
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Upload your topic bucket mapping file.
+            </p>
             <input
               style={{ ...styles.input, ...styles.inputFullWidth }}
               type="file"
               accept=".json"
-              onChange={(event) => setTopicBucketFile(event.target.files?.[0] ?? null)}
+              onChange={(event) =>
+                setTopicBucketFile(event.target.files?.[0] ?? null)
+              }
             />
             <p style={styles.subtleBodyText}>
-              {topicBucketFile ? `Selected: ${topicBucketFile.name}` : "No file selected"}
+              {topicBucketFile
+                ? `Selected: ${topicBucketFile.name}`
+                : "No file selected"}
             </p>
           </div>
         </div>
@@ -143,7 +169,8 @@ const UploadPage = () => {
             ...(hasError ? styles.alertCardError : styles.alertCardInfo),
           }}
         >
-          {returnMessage || "After upload, your dataset is queued for processing and you'll land on stats."}
+          {returnMessage ||
+            "After upload, your dataset is queued for processing and you'll land on stats."}
         </div>
       </div>
     </div>

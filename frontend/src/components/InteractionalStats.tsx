@@ -24,25 +24,32 @@ type InteractionalStatsProps = {
 const InteractionalStats = ({ data }: InteractionalStatsProps) => {
   const graph = data.interaction_graph ?? {};
   const userCount = Object.keys(graph).length;
-  const edges = Object.values(graph).flatMap((targets) => Object.values(targets));
+  const edges = Object.values(graph).flatMap((targets) =>
+    Object.values(targets),
+  );
   const edgeCount = edges.length;
   const interactionVolume = edges.reduce((sum, value) => sum + value, 0);
   const concentration = data.conversation_concentration;
-  const topTenCommentShare = typeof concentration?.top_10pct_comment_share === "number"
-    ? concentration?.top_10pct_comment_share
-    : null;
-  const topTenAuthorCount = typeof concentration?.top_10pct_author_count === "number"
-    ? concentration.top_10pct_author_count
-    : null;
-  const totalCommentingAuthors = typeof concentration?.total_commenting_authors === "number"
-    ? concentration.total_commenting_authors
-    : null;
-  const singleCommentAuthorRatio = typeof concentration?.single_comment_author_ratio === "number"
-    ? concentration.single_comment_author_ratio
-    : null;
-  const singleCommentAuthors = typeof concentration?.single_comment_authors === "number"
-    ? concentration.single_comment_authors
-    : null;
+  const topTenCommentShare =
+    typeof concentration?.top_10pct_comment_share === "number"
+      ? concentration?.top_10pct_comment_share
+      : null;
+  const topTenAuthorCount =
+    typeof concentration?.top_10pct_author_count === "number"
+      ? concentration.top_10pct_author_count
+      : null;
+  const totalCommentingAuthors =
+    typeof concentration?.total_commenting_authors === "number"
+      ? concentration.total_commenting_authors
+      : null;
+  const singleCommentAuthorRatio =
+    typeof concentration?.single_comment_author_ratio === "number"
+      ? concentration.single_comment_author_ratio
+      : null;
+  const singleCommentAuthors =
+    typeof concentration?.single_comment_authors === "number"
+      ? concentration.single_comment_authors
+      : null;
 
   const topPairs = (data.top_interaction_pairs ?? [])
     .filter((item): item is [[string, string], number] => {
@@ -53,26 +60,28 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
       const pair = item[0];
       const count = item[1];
 
-      return Array.isArray(pair)
-        && pair.length === 2
-        && typeof pair[0] === "string"
-        && typeof pair[1] === "string"
-        && typeof count === "number";
+      return (
+        Array.isArray(pair) &&
+        pair.length === 2 &&
+        typeof pair[0] === "string" &&
+        typeof pair[1] === "string" &&
+        typeof count === "number"
+      );
     })
     .slice(0, 20);
 
-  const topPairChartData = topPairs.slice(0, 8).map(([[source, target], value], index) => ({
-    pair: `${source} -> ${target}`,
-    replies: value,
-    rank: index + 1,
-  }));
+  const topPairChartData = topPairs
+    .slice(0, 8)
+    .map(([[source, target], value], index) => ({
+      pair: `${source} -> ${target}`,
+      replies: value,
+      rank: index + 1,
+    }));
 
-  const topTenSharePercent = topTenCommentShare === null
-    ? null
-    : topTenCommentShare * 100;
-  const nonTopTenSharePercent = topTenSharePercent === null
-    ? null
-    : Math.max(0, 100 - topTenSharePercent);
+  const topTenSharePercent =
+    topTenCommentShare === null ? null : topTenCommentShare * 100;
+  const nonTopTenSharePercent =
+    topTenSharePercent === null ? null : Math.max(0, 100 - topTenSharePercent);
 
   let concentrationPieData: { name: string; value: number }[] = [];
   if (topTenSharePercent !== null && nonTopTenSharePercent !== null) {
@@ -89,12 +98,18 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
       <div style={{ ...styles.container, ...styles.grid }}>
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Conversation Overview</h2>
-          <p style={styles.sectionSubtitle}>Who talks to who, and how concentrated the replies are.</p>
+          <p style={styles.sectionSubtitle}>
+            Who talks to who, and how concentrated the replies are.
+          </p>
         </div>
 
         <Card
           label="Average Reply Depth"
-          value={typeof data.average_thread_depth === "number" ? data.average_thread_depth.toFixed(2) : "—"}
+          value={
+            typeof data.average_thread_depth === "number"
+              ? data.average_thread_depth.toFixed(2)
+              : "—"
+          }
           sublabel="How deep reply chains usually go"
           style={{ gridColumn: "span 3" }}
         />
@@ -118,31 +133,51 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
         />
         <Card
           label="Concentrated Replies"
-          value={topTenSharePercent === null ? "-" : `${topTenSharePercent.toFixed(1)}%`}
-          sublabel={topTenAuthorCount === null || totalCommentingAuthors === null
-            ? "Reply share from the top 10% commenters"
-            : `${topTenAuthorCount.toLocaleString()} of ${totalCommentingAuthors.toLocaleString()} authors`}
+          value={
+            topTenSharePercent === null
+              ? "-"
+              : `${topTenSharePercent.toFixed(1)}%`
+          }
+          sublabel={
+            topTenAuthorCount === null || totalCommentingAuthors === null
+              ? "Reply share from the top 10% commenters"
+              : `${topTenAuthorCount.toLocaleString()} of ${totalCommentingAuthors.toLocaleString()} authors`
+          }
           style={{ gridColumn: "span 6" }}
         />
         <Card
           label="Single-Comment Authors"
-          value={singleCommentAuthorRatio === null ? "-" : `${(singleCommentAuthorRatio * 100).toFixed(1)}%`}
-          sublabel={singleCommentAuthors === null
-            ? "Authors who commented exactly once"
-            : `${singleCommentAuthors.toLocaleString()} authors commented exactly once`}
+          value={
+            singleCommentAuthorRatio === null
+              ? "-"
+              : `${(singleCommentAuthorRatio * 100).toFixed(1)}%`
+          }
+          sublabel={
+            singleCommentAuthors === null
+              ? "Authors who commented exactly once"
+              : `${singleCommentAuthors.toLocaleString()} authors commented exactly once`
+          }
           style={{ gridColumn: "span 6" }}
         />
 
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Conversation Visuals</h2>
-          <p style={styles.sectionSubtitle}>Main reply links and concentration split.</p>
+          <p style={styles.sectionSubtitle}>
+            Main reply links and concentration split.
+          </p>
 
           <div style={{ ...styles.grid, marginTop: 12 }}>
             <div style={{ ...styles.cardBase, gridColumn: "span 6" }}>
-              <h3 style={{ ...styles.sectionTitle, fontSize: "1rem" }}>Top Interaction Pairs</h3>
+              <h3 style={{ ...styles.sectionTitle, fontSize: "1rem" }}>
+                Top Interaction Pairs
+              </h3>
               <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
-                  <BarChart data={topPairChartData} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
+                  <BarChart
+                    data={topPairChartData}
+                    layout="vertical"
+                    margin={{ top: 8, right: 16, left: 16, bottom: 8 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#d9e2ec" />
                     <XAxis type="number" allowDecimals={false} />
                     <YAxis
@@ -152,14 +187,20 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
                       width={36}
                     />
                     <Tooltip />
-                    <Bar dataKey="replies" fill="#2b6777" radius={[0, 6, 6, 0]} />
+                    <Bar
+                      dataKey="replies"
+                      fill="#2b6777"
+                      radius={[0, 6, 6, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             <div style={{ ...styles.cardBase, gridColumn: "span 6" }}>
-              <h3 style={{ ...styles.sectionTitle, fontSize: "1rem" }}>Top 10% vs Other Comment Share</h3>
+              <h3 style={{ ...styles.sectionTitle, fontSize: "1rem" }}>
+                Top 10% vs Other Comment Share
+              </h3>
               <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <PieChart>
@@ -172,7 +213,10 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
                       paddingAngle={2}
                     >
                       {concentrationPieData.map((entry, index) => (
-                        <Cell key={`${entry.name}-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        <Cell
+                          key={`${entry.name}-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -186,15 +230,32 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
 
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Frequent Reply Paths</h2>
-          <p style={styles.sectionSubtitle}>Most common user-to-user reply paths.</p>
+          <p style={styles.sectionSubtitle}>
+            Most common user-to-user reply paths.
+          </p>
           {!topPairs.length ? (
-            <div style={styles.topUserMeta}>No interaction pair data available.</div>
+            <div style={styles.topUserMeta}>
+              No interaction pair data available.
+            </div>
           ) : (
-            <div style={{ ...styles.topUsersList, maxHeight: 420, overflowY: "auto" }}>
+            <div
+              style={{
+                ...styles.topUsersList,
+                maxHeight: 420,
+                overflowY: "auto",
+              }}
+            >
               {topPairs.map(([[source, target], value], index) => (
-                <div key={`${source}->${target}-${index}`} style={styles.topUserItem}>
-                  <div style={styles.topUserName}>{source} -&gt; {target}</div>
-                  <div style={styles.topUserMeta}>{value.toLocaleString()} replies</div>
+                <div
+                  key={`${source}->${target}-${index}`}
+                  style={styles.topUserItem}
+                >
+                  <div style={styles.topUserName}>
+                    {source} -&gt; {target}
+                  </div>
+                  <div style={styles.topUserMeta}>
+                    {value.toLocaleString()} replies
+                  </div>
                 </div>
               ))}
             </div>

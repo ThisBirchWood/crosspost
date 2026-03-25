@@ -17,7 +17,7 @@ type Emotion = {
   emotion_sadness: number;
 };
 
-// User 
+// User
 type TopUser = {
   author: string;
   source: string;
@@ -57,7 +57,7 @@ type UserAnalysisResponse = {
   interaction_graph: InteractionGraph;
 };
 
-// Time 
+// Time
 type EventsPerDay = {
   date: Date;
   count: number;
@@ -125,7 +125,7 @@ type EmotionalAnalysisResponse = {
   emotion_by_source?: EmotionBySource[];
 };
 
-// Interactional 
+// Interactional
 type ConversationConcentration = {
   total_commenting_authors: number;
   top_10pct_author_count: number;
@@ -180,7 +180,7 @@ type CulturalAnalysisResponse = {
   avg_emotion_per_entity?: AverageEmotionPerEntity;
 };
 
-// Summary 
+// Summary
 type SummaryResponse = {
   total_events: number;
   total_posts: number;
@@ -195,7 +195,7 @@ type SummaryResponse = {
   sources: string[];
 };
 
-// Filter 
+// Filter
 type FilterResponse = {
   rows: number;
   data: any;

@@ -8,20 +8,20 @@ const Card = (props: {
   value: string | number;
   sublabel?: string;
   rightSlot?: React.ReactNode;
-  style?: CSSProperties
+  style?: CSSProperties;
 }) => {
   return (
     <div style={{ ...styles.cardBase, ...props.style }}>
       <div style={styles.cardTopRow}>
-        <div style={styles.cardLabel}>
-                {props.label}
-        </div>
+        <div style={styles.cardLabel}>{props.label}</div>
         {props.rightSlot ? <div>{props.rightSlot}</div> : null}
       </div>
       <div style={styles.cardValue}>{props.value}</div>
-      {props.sublabel ? <div style={styles.cardSubLabel}>{props.sublabel}</div> : null}
+      {props.sublabel ? (
+        <div style={styles.cardSubLabel}>{props.sublabel}</div>
+      ) : null}
     </div>
   );
-}
+};
 
 export default Card;

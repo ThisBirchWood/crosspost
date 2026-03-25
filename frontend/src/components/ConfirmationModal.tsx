@@ -34,10 +34,20 @@ export default function ConfirmationModal({
           <p style={styles.sectionSubtitle}>{message}</p>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            <button type="button" onClick={onCancel} style={styles.buttonSecondary} disabled={loading}>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={styles.buttonSecondary}
+              disabled={loading}
+            >
               {cancelLabel}
             </button>
-            <button type="button" onClick={onConfirm} style={styles.buttonDanger} disabled={loading}>
+            <button
+              type="button"
+              onClick={onConfirm}
+              style={styles.buttonDanger}
+              disabled={loading}
+            >
               {loading ? "Deleting..." : confirmLabel}
             </button>
           </div>

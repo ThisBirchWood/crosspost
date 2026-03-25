@@ -39,7 +39,9 @@ const DatasetsPage = () => {
       })
       .catch((requestError: unknown) => {
         if (axios.isAxiosError(requestError)) {
-          setError(String(requestError.response?.data?.error || requestError.message));
+          setError(
+            String(requestError.response?.data?.error || requestError.message),
+          );
         } else {
           setError("Failed to load datasets.");
         }
@@ -61,13 +63,28 @@ const DatasetsPage = () => {
           </div>
 
           <div style={styles.loadingSkeleton}>
-            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineLong }} />
-            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineMed }} />
-            <div style={{ ...styles.loadingSkeletonLine, ...styles.loadingSkeletonLineShort }} />
+            <div
+              style={{
+                ...styles.loadingSkeletonLine,
+                ...styles.loadingSkeletonLineLong,
+              }}
+            />
+            <div
+              style={{
+                ...styles.loadingSkeletonLine,
+                ...styles.loadingSkeletonLineMed,
+              }}
+            />
+            <div
+              style={{
+                ...styles.loadingSkeletonLine,
+                ...styles.loadingSkeletonLineShort,
+              }}
+            />
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -81,7 +98,11 @@ const DatasetsPage = () => {
             </p>
           </div>
           <div style={styles.controlsWrapped}>
-            <button type="button" style={styles.buttonPrimary} onClick={() => navigate("/upload")}>
+            <button
+              type="button"
+              style={styles.buttonPrimary}
+              onClick={() => navigate("/upload")}
+            >
               Upload New Dataset
             </button>
             <button
@@ -116,20 +137,25 @@ const DatasetsPage = () => {
         )}
 
         {!error && datasets.length > 0 && (
-          <div style={{ ...styles.card, marginTop: 14, padding: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              ...styles.card,
+              marginTop: 14,
+              padding: 0,
+              overflow: "hidden",
+            }}
+          >
             <ul style={styles.listNoBullets}>
               {datasets.map((dataset) => {
-                const isComplete = dataset.status === "complete" || dataset.status === "error";
+                const isComplete =
+                  dataset.status === "complete" || dataset.status === "error";
                 const editPath = `/dataset/${dataset.id}/edit`;
                 const targetPath = isComplete
                   ? `/dataset/${dataset.id}/stats`
                   : `/dataset/${dataset.id}/status`;
 
                 return (
-                  <li
-                    key={dataset.id}
-                    style={styles.datasetListItem}
-                  >
+                  <li key={dataset.id} style={styles.datasetListItem}>
                     <div style={{ minWidth: 0 }}>
                       <div style={styles.datasetName}>
                         {dataset.name || `Dataset #${dataset.id}`}
@@ -145,19 +171,23 @@ const DatasetsPage = () => {
                     </div>
 
                     <div>
-                      { isComplete &&
+                      {isComplete && (
                         <button
                           type="button"
-                          style={{...styles.buttonSecondary, "margin": "5px"}}
+                          style={{ ...styles.buttonSecondary, margin: "5px" }}
                           onClick={() => navigate(editPath)}
                         >
                           Edit Dataset
                         </button>
-                      }
+                      )}
 
                       <button
                         type="button"
-                        style={isComplete ? styles.buttonPrimary : styles.buttonSecondary}
+                        style={
+                          isComplete
+                            ? styles.buttonPrimary
+                            : styles.buttonSecondary
+                        }
                         onClick={() => navigate(targetPath)}
                       >
                         {isComplete ? "Open stats" : "View status"}
