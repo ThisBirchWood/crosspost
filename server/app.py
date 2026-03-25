@@ -30,7 +30,9 @@ load_dotenv()
 max_fetch_limit = int(get_env("MAX_FETCH_LIMIT"))
 frontend_url = get_env("FRONTEND_URL")
 jwt_secret_key = get_env("JWT_SECRET_KEY")
-jwt_access_token_expires = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 1200))  # Default to 20 minutes
+jwt_access_token_expires = int(
+    os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 1200)
+)  # Default to 20 minutes
 
 # Flask Configuration
 CORS(app, resources={r"/*": {"origins": frontend_url}})
@@ -51,6 +53,7 @@ connectors = get_available_connectors()
 # Default Files
 with open("server/topics.json") as f:
     default_topic_list = json.load(f)
+
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -107,9 +110,13 @@ def login_user():
 def profile():
     current_user = get_jwt_identity()
 
-    return jsonify(
-        message="Access granted", user=auth_manager.get_user_by_id(current_user)
-    ), 200
+    return (
+        jsonify(
+            message="Access granted", user=auth_manager.get_user_by_id(current_user)
+        ),
+        200,
+    )
+
 
 @app.route("/user/datasets")
 @jwt_required()
@@ -117,10 +124,12 @@ def get_user_datasets():
     current_user = int(get_jwt_identity())
     return jsonify(dataset_manager.get_user_datasets(current_user)), 200
 
+
 @app.route("/datasets/sources", methods=["GET"])
 def get_dataset_sources():
     list_metadata = list(get_connector_metadata().values())
     return jsonify(list_metadata)
+
 
 @app.route("/datasets/scrape", methods=["POST"])
 @jwt_required()
@@ -160,7 +169,7 @@ def scrape_data():
                 limit = int(limit)
             except (ValueError, TypeError):
                 return jsonify({"error": "Limit must be an integer"}), 400
-            
+
             if limit > 1000:
                 limit = 1000
 
@@ -172,15 +181,13 @@ def scrape_data():
 
         if category and not connector_metadata[name]["categories_enabled"]:
             return jsonify({"error": f"Source {name} does not support categories"}), 400
-        
+
         if category and not connectors[name]().category_exists(category):
             return jsonify({"error": f"Category does not exist for {name}"}), 400
 
     try:
         dataset_id = dataset_manager.save_dataset_info(
-            user_id,
-            dataset_name,
-            default_topic_list
+            user_id, dataset_name, default_topic_list
         )
 
         dataset_manager.set_dataset_status(
@@ -189,22 +196,21 @@ def scrape_data():
             f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}",
         )
 
-        fetch_and_process_dataset.delay(
-            dataset_id,
-            source_configs,
-            default_topic_list
-        )
+        fetch_and_process_dataset.delay(dataset_id, source_configs, default_topic_list)
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error": "Failed to queue dataset processing"}), 500
 
-    return jsonify(
-        {
-            "message": "Dataset queued for processing",
-            "dataset_id": dataset_id,
-            "status": "processing",
-        }
-    ), 202
+    return (
+        jsonify(
+            {
+                "message": "Dataset queued for processing",
+                "dataset_id": dataset_id,
+                "status": "processing",
+            }
+        ),
+        202,
+    )
 
 
 @app.route("/datasets/upload", methods=["POST"])
@@ -226,9 +232,12 @@ def upload_data():
     if not post_file.filename.endswith(".jsonl") or not topic_file.filename.endswith(
         ".json"
     ):
-        return jsonify(
-            {"error": "Invalid file type. Only .jsonl and .json files are allowed."}
-        ), 400
+        return (
+            jsonify(
+                {"error": "Invalid file type. Only .jsonl and .json files are allowed."}
+            ),
+            400,
+        )
 
     try:
         current_user = int(get_jwt_identity())
@@ -241,13 +250,16 @@ def upload_data():
 
         process_dataset.delay(dataset_id, posts_df.to_dict(orient="records"), topics)
 
-        return jsonify(
-            {
-                "message": "Dataset queued for processing",
-                "dataset_id": dataset_id,
-                "status": "processing",
-            }
-        ), 202
+        return (
+            jsonify(
+                {
+                    "message": "Dataset queued for processing",
+                    "dataset_id": dataset_id,
+                    "status": "processing",
+                }
+            ),
+            202,
+        )
     except ValueError as e:
         return jsonify({"error": f"Failed to read JSONL file"}), 400
     except Exception as e:
@@ -296,9 +308,12 @@ def update_dataset(dataset_id):
             return jsonify({"error": "A valid name must be provided"}), 400
 
         dataset_manager.update_dataset_name(dataset_id, new_name.strip())
-        return jsonify(
-            {"message": f"Dataset {dataset_id} renamed to '{new_name.strip()}'"}
-        ), 200
+        return (
+            jsonify(
+                {"message": f"Dataset {dataset_id} renamed to '{new_name.strip()}'"}
+            ),
+            200,
+        )
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -321,11 +336,14 @@ def delete_dataset(dataset_id):
 
         dataset_manager.delete_dataset_info(dataset_id)
         dataset_manager.delete_dataset_content(dataset_id)
-        return jsonify(
-            {
-                "message": f"Dataset {dataset_id} metadata and content successfully deleted"
-            }
-        ), 200
+        return (
+            jsonify(
+                {
+                    "message": f"Dataset {dataset_id} metadata and content successfully deleted"
+                }
+            ),
+            200,
+        )
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -523,7 +541,8 @@ def get_interaction_analysis(dataset_id):
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred"}), 500
-    
+
+
 @app.route("/dataset/<int:dataset_id>/all", methods=["GET"])
 @jwt_required()
 def get_full_dataset(dataset_id: int):
@@ -545,6 +564,7 @@ def get_full_dataset(dataset_id: int):
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": f"An unexpected error occurred"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

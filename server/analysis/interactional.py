@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 
+
 class InteractionAnalysis:
     def __init__(self, word_exclusions: set[str]):
         self.word_exclusions = word_exclusions
@@ -51,7 +52,7 @@ class InteractionAnalysis:
             return 0
 
         return round(sum(depths) / len(depths), 2)
-    
+
     def top_interaction_pairs(self, df: pd.DataFrame, top_n=10):
         graph = self.interaction_graph(df)
         pairs = []
@@ -62,7 +63,7 @@ class InteractionAnalysis:
 
         pairs.sort(key=lambda x: x[1], reverse=True)
         return pairs[:top_n]
-    
+
     def conversation_concentration(self, df: pd.DataFrame) -> dict:
         if "type" not in df.columns:
             return {}
@@ -76,12 +77,16 @@ class InteractionAnalysis:
         total_authors = len(author_counts)
 
         top_10_pct_n = max(1, int(total_authors * 0.1))
-        top_10_pct_share = round(author_counts.head(top_10_pct_n).sum() / total_comments, 4)
+        top_10_pct_share = round(
+            author_counts.head(top_10_pct_n).sum() / total_comments, 4
+        )
 
         return {
             "total_commenting_authors": total_authors,
             "top_10pct_author_count": top_10_pct_n,
             "top_10pct_comment_share": float(top_10_pct_share),
             "single_comment_authors": int((author_counts == 1).sum()),
-            "single_comment_author_ratio": float(round((author_counts == 1).sum() / total_authors, 4)),
+            "single_comment_author_ratio": float(
+                round((author_counts == 1).sum() / total_authors, 4)
+            ),
         }

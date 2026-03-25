@@ -11,9 +11,8 @@ from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; ForumScraper/1.0)"
-}
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ForumScraper/1.0)"}
+
 
 class BoardsAPI(BaseConnector):
     source_name: str = "boards.ie"
@@ -25,19 +24,17 @@ class BoardsAPI(BaseConnector):
     def __init__(self):
         self.base_url = "https://www.boards.ie"
 
-    def get_new_posts_by_search(self, 
-                                search: str,
-                                category: str, 
-                                post_limit: int
-                                )  -> list[Post]:
+    def get_new_posts_by_search(
+        self, search: str, category: str, post_limit: int
+    ) -> list[Post]:
         if search:
             raise NotImplementedError("Search not compatible with boards.ie")
-        
+
         if category:
             return self._get_posts(f"{self.base_url}/categories/{category}", post_limit)
         else:
             return self._get_posts(f"{self.base_url}/discussions", post_limit)
-        
+
     def category_exists(self, category: str) -> bool:
         if not category:
             return False
@@ -59,7 +56,7 @@ class BoardsAPI(BaseConnector):
         except requests.RequestException as e:
             logger.error(f"Error checking category '{category}': {e}")
             return False
-        
+
     ## Private
     def _get_posts(self, url, limit) -> list[Post]:
         urls = []
@@ -78,7 +75,7 @@ class BoardsAPI(BaseConnector):
                 href = a.get("href")
                 if href:
                     urls.append(href)
-            
+
             current_page += 1
 
         logger.debug(f"Fetched {len(urls)} post URLs")
@@ -96,7 +93,9 @@ class BoardsAPI(BaseConnector):
 
             for i, future in enumerate(as_completed(futures)):
                 post_url = futures[future]
-                logger.debug(f"Fetching Post {i + 1} / {len(urls)} details from URL: {post_url}")
+                logger.debug(
+                    f"Fetching Post {i + 1} / {len(urls)} details from URL: {post_url}"
+                )
                 try:
                     post = future.result()
                     posts.append(post)
@@ -105,7 +104,6 @@ class BoardsAPI(BaseConnector):
 
         return posts
 
-
     def _fetch_page(self, url: str) -> str:
         response = requests.get(url, headers=HEADERS)
         response.raise_for_status()
@@ -113,7 +111,7 @@ class BoardsAPI(BaseConnector):
 
     def _parse_thread(self, html: str, post_url: str) -> Post:
         soup = BeautifulSoup(html, "html.parser")
-        
+
         # Author
         author_tag = soup.select_one(".userinfo-username-title")
         author = author_tag.text.strip() if author_tag else None
@@ -122,10 +120,16 @@ class BoardsAPI(BaseConnector):
         timestamp_tag = soup.select_one(".postbit-header")
         timestamp = None
         if timestamp_tag:
-            match = re.search(r"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}[AP]M", timestamp_tag.get_text())
+            match = re.search(
+                r"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}[AP]M", timestamp_tag.get_text()
+            )
             timestamp = match.group(0) if match else None
             # convert to unix epoch
-            timestamp = datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp() if timestamp else None
+            timestamp = (
+                datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp()
+                if timestamp
+                else None
+            )
 
         # Post ID
         post_num = re.search(r"discussion/(\d+)", post_url)
@@ -133,7 +137,9 @@ class BoardsAPI(BaseConnector):
 
         # Content
         content_tag = soup.select_one(".Message.userContent")
-        content = content_tag.get_text(separator="\n", strip=True) if content_tag else None
+        content = (
+            content_tag.get_text(separator="\n", strip=True) if content_tag else None
+        )
 
         # Title
         title_tag = soup.select_one(".PageTitle h1")
@@ -150,7 +156,7 @@ class BoardsAPI(BaseConnector):
             url=post_url,
             timestamp=timestamp,
             source=self.source_name,
-            comments=comments
+            comments=comments,
         )
 
         return post
@@ -168,9 +174,9 @@ class BoardsAPI(BaseConnector):
             soup = BeautifulSoup(html, "html.parser")
             next_link = soup.find("a", class_="Next")
 
-            if next_link and next_link.get('href'):
-                href = next_link.get('href')
-                current_url = href if href.startswith('http') else url + href
+            if next_link and next_link.get("href"):
+                href = next_link.get("href")
+                current_url = href if href.startswith("http") else url + href
             else:
                 current_url = None
 
@@ -186,21 +192,29 @@ class BoardsAPI(BaseConnector):
             comment_id = tag.get("id")
 
             # Author
-            user_elem = tag.find('span', class_='userinfo-username-title')
+            user_elem = tag.find("span", class_="userinfo-username-title")
             username = user_elem.get_text(strip=True) if user_elem else None
 
             # Timestamp
-            date_elem = tag.find('span', class_='DateCreated')
+            date_elem = tag.find("span", class_="DateCreated")
             timestamp = date_elem.get_text(strip=True) if date_elem else None
-            timestamp = datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp() if timestamp else None
+            timestamp = (
+                datetime.datetime.strptime(timestamp, "%d-%m-%Y %I:%M%p").timestamp()
+                if timestamp
+                else None
+            )
 
             # Content
-            message_div = tag.find('div', class_='Message userContent')
+            message_div = tag.find("div", class_="Message userContent")
 
             if message_div.blockquote:
                 message_div.blockquote.decompose()
 
-            content = message_div.get_text(separator="\n", strip=True) if message_div else None
+            content = (
+                message_div.get_text(separator="\n", strip=True)
+                if message_div
+                else None
+            )
 
             comment = Comment(
                 id=comment_id,
@@ -209,10 +223,8 @@ class BoardsAPI(BaseConnector):
                 content=content,
                 timestamp=timestamp,
                 reply_to=None,
-                source=self.source_name
+                source=self.source_name,
             )
             comments.append(comment)
 
         return comments
-
-

@@ -64,7 +64,10 @@ class LinguisticAnalysis:
 
     def lexical_diversity(self, df: pd.DataFrame) -> dict:
         tokens = (
-            df["content"].fillna("").astype(str).str.lower()
+            df["content"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
             .str.findall(r"\b[a-z]{2,}\b")
             .explode()
         )

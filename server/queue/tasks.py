@@ -9,6 +9,7 @@ from server.connectors.registry import get_available_connectors
 
 logger = logging.getLogger(__name__)
 
+
 @celery.task(bind=True, max_retries=3)
 def process_dataset(self, dataset_id: int, posts: list, topics: dict):
     db = PostgresConnector()
@@ -21,15 +22,19 @@ def process_dataset(self, dataset_id: int, posts: list, topics: dict):
         enriched_df = processor.enrich()
 
         dataset_manager.save_dataset_content(dataset_id, enriched_df)
-        dataset_manager.set_dataset_status(dataset_id, "complete", "NLP Processing Completed Successfully")
+        dataset_manager.set_dataset_status(
+            dataset_id, "complete", "NLP Processing Completed Successfully"
+        )
     except Exception as e:
-        dataset_manager.set_dataset_status(dataset_id, "error", f"An error occurred: {e}")
+        dataset_manager.set_dataset_status(
+            dataset_id, "error", f"An error occurred: {e}"
+        )
+
 
 @celery.task(bind=True, max_retries=3)
-def fetch_and_process_dataset(self, 
-                              dataset_id: int, 
-                              source_info: list[dict],
-                              topics: dict):
+def fetch_and_process_dataset(
+    self, dataset_id: int, source_info: list[dict], topics: dict
+):
     connectors = get_available_connectors()
     db = PostgresConnector()
     dataset_manager = DatasetManager(db)
@@ -44,9 +49,7 @@ def fetch_and_process_dataset(self,
 
             connector = connectors[name]()
             raw_posts = connector.get_new_posts_by_search(
-                search=search,
-                category=category,
-                post_limit=limit
+                search=search, category=category, post_limit=limit
             )
             posts.extend(post.to_dict() for post in raw_posts)
 
@@ -56,6 +59,10 @@ def fetch_and_process_dataset(self,
         enriched_df = processor.enrich()
 
         dataset_manager.save_dataset_content(dataset_id, enriched_df)
-        dataset_manager.set_dataset_status(dataset_id, "complete", "NLP Processing Completed Successfully")
+        dataset_manager.set_dataset_status(
+            dataset_id, "complete", "NLP Processing Completed Successfully"
+        )
     except Exception as e:
-        dataset_manager.set_dataset_status(dataset_id, "error", f"An error occurred: {e}")
+        dataset_manager.set_dataset_status(
+            dataset_id, "error", f"An error occurred: {e}"
+        )

@@ -22,8 +22,10 @@ class PostgresConnector:
                 database=os.getenv("POSTGRES_DB", "postgres"),
             )
         except psycopg2.OperationalError as e:
-            raise DatabaseNotConfiguredException(f"Ensure database is up and running: {e}")
-        
+            raise DatabaseNotConfiguredException(
+                f"Ensure database is up and running: {e}"
+            )
+
         self.connection.autocommit = False
 
     def execute(self, query, params=None, fetch=False) -> list:

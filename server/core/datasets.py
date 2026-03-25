@@ -3,6 +3,7 @@ from server.db.database import PostgresConnector
 from psycopg2.extras import Json
 from server.exceptions import NonExistentDatasetException
 
+
 class DatasetManager:
     def __init__(self, db: PostgresConnector):
         self.db = db
@@ -15,18 +16,18 @@ class DatasetManager:
 
         if dataset_info.get("user_id") != user_id:
             return False
-        
+
         return True
-    
+
     def get_user_datasets(self, user_id: int) -> list[dict]:
         query = "SELECT * FROM datasets WHERE user_id = %s"
-        return self.db.execute(query, (user_id, ), fetch=True)
+        return self.db.execute(query, (user_id,), fetch=True)
 
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
         result = self.db.execute(query, (dataset_id,), fetch=True)
         return pd.DataFrame(result)
-    
+
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
         result = self.db.execute(query, (dataset_id,), fetch=True)
@@ -35,14 +36,16 @@ class DatasetManager:
             raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
 
         return result[0]
-    
+
     def save_dataset_info(self, user_id: int, dataset_name: str, topics: dict) -> int:
         query = """
             INSERT INTO datasets (user_id, name, topics)
             VALUES (%s, %s, %s)
             RETURNING id
         """
-        result = self.db.execute(query, (user_id, dataset_name, Json(topics)), fetch=True)
+        result = self.db.execute(
+            query, (user_id, dataset_name, Json(topics)), fetch=True
+        )
         return result[0]["id"] if result else None
 
     def save_dataset_content(self, dataset_id: int, event_data: pd.DataFrame):
@@ -113,7 +116,9 @@ class DatasetManager:
 
         self.db.execute_batch(query, values)
 
-    def set_dataset_status(self, dataset_id: int, status: str, status_message: str | None = None):
+    def set_dataset_status(
+        self, dataset_id: int, status: str, status_message: str | None = None
+    ):
         if status not in ["fetching", "processing", "complete", "error"]:
             raise ValueError("Invalid status")
 
@@ -137,24 +142,24 @@ class DatasetManager:
             WHERE id = %s
         """
 
-        result = self.db.execute(query, (dataset_id, ), fetch=True)
-        
+        result = self.db.execute(query, (dataset_id,), fetch=True)
+
         if not result:
             print(result)
             raise NonExistentDatasetException(f"Dataset {dataset_id} does not exist")
-        
+
         return result[0]
-    
+
     def update_dataset_name(self, dataset_id: int, new_name: str):
         query = "UPDATE datasets SET name = %s WHERE id = %s"
         self.db.execute(query, (new_name, dataset_id))
-    
+
     def delete_dataset_info(self, dataset_id: int):
         query = "DELETE FROM datasets WHERE id = %s"
 
-        self.db.execute(query, (dataset_id, ))
+        self.db.execute(query, (dataset_id,))
 
     def delete_dataset_content(self, dataset_id: int):
         query = "DELETE FROM events WHERE dataset_id = %s"
 
-        self.db.execute(query, (dataset_id, ))
+        self.db.execute(query, (dataset_id,))
