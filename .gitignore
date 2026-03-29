@@ -11,5 +11,5 @@ node_modules/
 dist/
 
 helper
-
+db
 report/build

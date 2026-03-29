@@ -1,7 +1,16 @@
 import os
 import psycopg2
+import os
+from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 from psycopg2.extras import execute_batch
+
+load_dotenv()
+postgres_host = os.getenv("POSTGRES_HOST", "localhost")
+postgres_port = os.getenv("POSTGRES_PORT", 5432)
+postgres_user = os.getenv("POSTGRES_USER", "postgres")
+postgres_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+postgres_db = os.getenv("POSTGRES_DB", "postgres")
 
 from server.exceptions import DatabaseNotConfiguredException
 
@@ -15,11 +24,11 @@ class PostgresConnector:
 
         try:
             self.connection = psycopg2.connect(
-                host=os.getenv("POSTGRES_HOST", "localhost"),
-                port=os.getenv("POSTGRES_PORT", 5432),
-                user=os.getenv("POSTGRES_USER", "postgres"),
-                password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-                database=os.getenv("POSTGRES_DB", "postgres"),
+                host=postgres_host,
+                port=postgres_port,
+                user=postgres_user,
+                password=postgres_password,
+                database=postgres_db,
             )
         except psycopg2.OperationalError as e:
             raise DatabaseNotConfiguredException(
