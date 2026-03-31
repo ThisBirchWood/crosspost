@@ -1,9 +1,13 @@
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 import StatsStyling from "../styles/stats_styling";
 import type { DatasetRecord } from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
+const INITIAL_RECORD_COUNT = 60;
+const RECORD_BATCH_SIZE = 60;
+const EXCERPT_LENGTH = 320;
 
 const cleanText = (value: unknown) => {
   if (typeof value !== "string") {
@@ -79,15 +83,6 @@ const getRecordTitle = (record: DatasetRecord) => {
   return content.length > 120 ? `${content.slice(0, 117)}...` : content;
 };
 
-const getRecordExcerpt = (record: DatasetRecord) => {
-  const content = cleanText(record.content);
-  if (!content) {
-    return "No content available.";
-  }
-
-  return content.length > 320 ? `${content.slice(0, 317)}...` : content;
-};
-
 const CorpusExplorer = ({
   open,
   onClose,
@@ -97,79 +92,161 @@ const CorpusExplorer = ({
   loading,
   error,
   emptyMessage,
-}: CorpusExplorerProps) => (
-  <Dialog open={open} onClose={onClose} style={styles.modalRoot}>
-    <div style={styles.modalBackdrop} />
+}: CorpusExplorerProps) => {
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RECORD_COUNT);
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
-    <div style={styles.modalContainer}>
-      <DialogPanel
-        style={{
-          ...styles.card,
-          ...styles.modalPanel,
-          width: "min(960px, 96vw)",
-          maxHeight: "88vh",
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
-        <div style={styles.headerBar}>
-          <div>
-            <DialogTitle style={styles.sectionTitle}>{title}</DialogTitle>
-            <p style={styles.sectionSubtitle}>
-              {description} {loading ? "Loading records..." : `${records.length.toLocaleString()} records.`}
-            </p>
+  useEffect(() => {
+    if (open) {
+      setVisibleCount(INITIAL_RECORD_COUNT);
+      setExpandedKeys({});
+    }
+  }, [open, title, records.length]);
+
+  const visibleRecords = useMemo(
+    () => records.slice(0, visibleCount),
+    [records, visibleCount],
+  );
+
+  const hasMoreRecords = visibleCount < records.length;
+
+  return (
+    <Dialog open={open} onClose={onClose} style={styles.modalRoot}>
+      <div style={styles.modalBackdrop} />
+
+      <div style={styles.modalContainer}>
+        <DialogPanel
+          style={{
+            ...styles.card,
+            ...styles.modalPanel,
+            width: "min(960px, 96vw)",
+            maxHeight: "88vh",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            overflow: "hidden",
+          }}
+        >
+          <div style={styles.headerBar}>
+            <div style={{ minWidth: 0 }}>
+              <DialogTitle style={styles.sectionTitle}>{title}</DialogTitle>
+              <p style={styles.sectionSubtitle}>
+                {description} {loading ? "Loading records..." : `${records.length.toLocaleString()} records.`}
+              </p>
+            </div>
+
+            <button onClick={onClose} style={styles.buttonSecondary}>
+              Close
+            </button>
           </div>
 
-          <button onClick={onClose} style={styles.buttonSecondary}>
-            Close
-          </button>
-        </div>
+          {error ? <p style={styles.sectionSubtitle}>{error}</p> : null}
 
-        {error ? <p style={styles.sectionSubtitle}>{error}</p> : null}
+          {!loading && !error && !records.length ? (
+            <p style={styles.sectionSubtitle}>{emptyMessage}</p>
+          ) : null}
 
-        {!loading && !error && !records.length ? (
-          <p style={styles.sectionSubtitle}>{emptyMessage}</p>
-        ) : null}
+          {loading ? <div style={styles.topUserMeta}>Preparing corpus slice...</div> : null}
 
-        {loading ? (
-          <div style={styles.topUserMeta}>Preparing corpus slice...</div>
-        ) : null}
+          {!loading && !error && records.length ? (
+            <>
+              <div
+                style={{
+                  ...styles.topUsersList,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  paddingRight: 4,
+                }}
+              >
+                {visibleRecords.map((record, index) => {
+                  const recordKey = getRecordKey(record, index);
+                  const titleText = getRecordTitle(record);
+                  const content = cleanText(record.content);
+                  const isExpanded = !!expandedKeys[recordKey];
+                  const canExpand = content.length > EXCERPT_LENGTH;
+                  const excerpt =
+                    canExpand && !isExpanded
+                      ? `${content.slice(0, EXCERPT_LENGTH - 3)}...`
+                      : content || "No content available.";
 
-        {!loading && !error && records.length ? (
-          <div
-            style={{
-              ...styles.topUsersList,
-              overflowY: "auto",
-              paddingRight: 4,
-            }}
-          >
-            {records.map((record, index) => (
-              <div key={getRecordKey(record, index)} style={styles.topUserItem}>
-                <div style={{ ...styles.headerBar, alignItems: "flex-start" }}>
-                  <div>
-                    {getRecordTitle(record) ? (
-                      <div style={styles.topUserName}>{getRecordTitle(record)}</div>
-                    ) : null}
-                    <div style={styles.topUserMeta}>
-                      {displayText(record.author, "Unknown author")} • {displayText(record.source, "Unknown source")} • {displayText(record.type, "record")} • {formatRecordDate(record)}
+                  return (
+                    <div key={recordKey} style={styles.topUserItem}>
+                      <div style={{ ...styles.headerBar, alignItems: "flex-start" }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          {titleText ? <div style={styles.topUserName}>{titleText}</div> : null}
+                          <div
+                            style={{
+                              ...styles.topUserMeta,
+                              overflowWrap: "anywhere",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {displayText(record.author, "Unknown author")} • {displayText(record.source, "Unknown source")} • {displayText(record.type, "record")} • {formatRecordDate(record)}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            ...styles.topUserMeta,
+                            marginLeft: 12,
+                            textAlign: "right",
+                            overflowWrap: "anywhere",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {cleanText(record.topic) ? `Topic: ${cleanText(record.topic)}` : ""}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          ...styles.topUserMeta,
+                          marginTop: 8,
+                          whiteSpace: "pre-wrap",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {excerpt}
+                      </div>
+
+                      {canExpand ? (
+                        <div style={{ marginTop: 10 }}>
+                          <button
+                            onClick={() =>
+                              setExpandedKeys((current) => ({
+                                ...current,
+                                [recordKey]: !current[recordKey],
+                              }))
+                            }
+                            style={styles.buttonSecondary}
+                          >
+                            {isExpanded ? "Show Less" : "Show More"}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
-                  </div>
-                  <div style={styles.topUserMeta}>
-                    {cleanText(record.topic) ? `Topic: ${cleanText(record.topic)}` : ""}
-                  </div>
-                </div>
-
-                <div style={{ ...styles.topUserMeta, marginTop: 8, whiteSpace: "pre-wrap" }}>
-                  {getRecordExcerpt(record)}
-                </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        ) : null}
-      </DialogPanel>
-    </div>
-  </Dialog>
-);
+
+              {hasMoreRecords ? (
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <button
+                    onClick={() =>
+                      setVisibleCount((current) => current + RECORD_BATCH_SIZE)
+                    }
+                    style={styles.buttonSecondary}
+                  >
+                    Show More Records
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </DialogPanel>
+      </div>
+    </Dialog>
+  );
+};
 
 export default CorpusExplorer;
