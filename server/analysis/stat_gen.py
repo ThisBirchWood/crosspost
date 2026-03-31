@@ -1,4 +1,5 @@
 import nltk
+import json
 import pandas as pd
 from nltk.corpus import stopwords
 
@@ -27,6 +28,8 @@ DOMAIN_STOPWORDS = {
     "one",
 }
 
+EXCLUDED_AUTHORS = {"[deleted]", "automoderator"}
+
 nltk.download("stopwords")
 EXCLUDE_WORDS = set(stopwords.words("english")) | DOMAIN_STOPWORDS
 
@@ -45,6 +48,12 @@ class StatGen:
     def _prepare_filtered_df(self, df: pd.DataFrame, filters: dict | None = None) -> pd.DataFrame:
         filters = filters or {}
         filtered_df = df.copy()
+
+        if "author" in filtered_df.columns:
+            normalized_authors = (
+                filtered_df["author"].fillna("").astype(str).str.strip().str.lower()
+            )
+            filtered_df = filtered_df[~normalized_authors.isin(EXCLUDED_AUTHORS)]
 
         search_query = filters.get("search_query", None)
         start_date_filter = filters.get("start_date", None)
@@ -75,9 +84,15 @@ class StatGen:
 
         return filtered_df
 
+    def _json_ready_records(self, df: pd.DataFrame) -> list[dict]:
+        return json.loads(
+            df.to_json(orient="records", date_format="iso", date_unit="s")
+        )
+
     ## Public Methods
     def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> list[dict]:
-        return self._prepare_filtered_df(df, filters).to_dict(orient="records")
+        filtered_df = self._prepare_filtered_df(df, filters)
+        return self._json_ready_records(filtered_df)
 
     def temporal(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)

@@ -1,14 +1,20 @@
 import Card from "./Card";
 import StatsStyling from "../styles/stats_styling";
 import type { LinguisticAnalysisResponse } from "../types/ApiTypes";
+import {
+  buildNgramSpec,
+  buildWordSpec,
+  type CorpusExplorerSpec,
+} from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
 
 type LinguisticStatsProps = {
   data: LinguisticAnalysisResponse;
+  onExplore: (spec: CorpusExplorerSpec) => void;
 };
 
-const LinguisticStats = ({ data }: LinguisticStatsProps) => {
+const LinguisticStats = ({ data, onExplore }: LinguisticStatsProps) => {
   const lexical = data.lexical_diversity;
   const words = data.word_frequencies ?? [];
   const bigrams = data.common_two_phrases ?? [];
@@ -60,7 +66,11 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
             }}
           >
             {topWords.map((item) => (
-              <div key={item.word} style={styles.topUserItem}>
+              <div
+                key={item.word}
+                style={{ ...styles.topUserItem, cursor: "pointer" }}
+                onClick={() => onExplore(buildWordSpec(item.word))}
+              >
                 <div style={styles.topUserName}>{item.word}</div>
                 <div style={styles.topUserMeta}>
                   {item.count.toLocaleString()} uses
@@ -81,7 +91,11 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
             }}
           >
             {topBigrams.map((item) => (
-              <div key={item.ngram} style={styles.topUserItem}>
+              <div
+                key={item.ngram}
+                style={{ ...styles.topUserItem, cursor: "pointer" }}
+                onClick={() => onExplore(buildNgramSpec(item.ngram))}
+              >
                 <div style={styles.topUserName}>{item.ngram}</div>
                 <div style={styles.topUserMeta}>
                   {item.count.toLocaleString()} uses
@@ -102,7 +116,11 @@ const LinguisticStats = ({ data }: LinguisticStatsProps) => {
             }}
           >
             {topTrigrams.map((item) => (
-              <div key={item.ngram} style={styles.topUserItem}>
+              <div
+                key={item.ngram}
+                style={{ ...styles.topUserItem, cursor: "pointer" }}
+                onClick={() => onExplore(buildNgramSpec(item.ngram))}
+              >
                 <div style={styles.topUserName}>{item.ngram}</div>
                 <div style={styles.topUserMeta}>
                   {item.count.toLocaleString()} uses

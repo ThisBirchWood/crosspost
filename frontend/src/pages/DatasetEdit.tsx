@@ -22,12 +22,10 @@ const DatasetEditPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [hasError, setHasError] = useState(false);
 
   const [datasetName, setDatasetName] = useState("");
   useEffect(() => {
     if (!Number.isInteger(parsedDatasetId) || parsedDatasetId <= 0) {
-      setHasError(true);
       setStatusMessage("Invalid dataset id.");
       setLoading(false);
       return;
@@ -35,7 +33,6 @@ const DatasetEditPage = () => {
 
     const token = localStorage.getItem("access_token");
     if (!token) {
-      setHasError(true);
       setStatusMessage("You must be signed in to edit datasets.");
       setLoading(false);
       return;
@@ -49,7 +46,6 @@ const DatasetEditPage = () => {
         setDatasetName(response.data.name || "");
       })
       .catch((error: unknown) => {
-        setHasError(true);
         if (axios.isAxiosError(error)) {
           setStatusMessage(
             String(error.response?.data?.error || error.message),
@@ -68,21 +64,18 @@ const DatasetEditPage = () => {
 
     const trimmedName = datasetName.trim();
     if (!trimmedName) {
-      setHasError(true);
       setStatusMessage("Please enter a valid dataset name.");
       return;
     }
 
     const token = localStorage.getItem("access_token");
     if (!token) {
-      setHasError(true);
       setStatusMessage("You must be signed in to save changes.");
       return;
     }
 
     try {
       setIsSaving(true);
-      setHasError(false);
       setStatusMessage("");
 
       await axios.patch(
@@ -93,7 +86,6 @@ const DatasetEditPage = () => {
 
       navigate("/datasets", { replace: true });
     } catch (error: unknown) {
-      setHasError(true);
       if (axios.isAxiosError(error)) {
         setStatusMessage(
           String(
@@ -111,7 +103,6 @@ const DatasetEditPage = () => {
   const deleteDataset = async () => {
     const deleteToken = localStorage.getItem("access_token");
     if (!deleteToken) {
-      setHasError(true);
       setStatusMessage("You must be signed in to delete datasets.");
       setIsDeleteModalOpen(false);
       return;
@@ -119,7 +110,6 @@ const DatasetEditPage = () => {
 
     try {
       setIsDeleting(true);
-      setHasError(false);
       setStatusMessage("");
 
       await axios.delete(`${API_BASE_URL}/dataset/${parsedDatasetId}`, {
@@ -129,7 +119,6 @@ const DatasetEditPage = () => {
       setIsDeleteModalOpen(false);
       navigate("/datasets", { replace: true });
     } catch (error: unknown) {
-      setHasError(true);
       if (axios.isAxiosError(error)) {
         setStatusMessage(
           String(

@@ -591,7 +591,8 @@ def get_full_dataset(dataset_id: int):
             )
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
-        return jsonify(dataset_content.to_dict(orient="records")), 200
+        filters = get_request_filters()
+        return jsonify(stat_gen.filter_dataset(dataset_content, filters)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
