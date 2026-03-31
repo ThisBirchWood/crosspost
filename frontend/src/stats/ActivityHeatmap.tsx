@@ -1,4 +1,5 @@
 import { ResponsiveHeatMap } from "@nivo/heatmap";
+import { memo, useMemo } from "react";
 
 type ApiRow = Record<number, number>;
 type ActivityHeatmapProps = {
@@ -40,11 +41,19 @@ const convertWeeklyData = (dataset: ApiRow[]): ChartSeries[] => {
 };
 
 const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
-  const convertedData = convertWeeklyData(data);
+  const convertedData = useMemo(() => convertWeeklyData(data), [data]);
 
-  const maxValue = Math.max(
-    ...convertedData.flatMap((day) => day.data.map((point) => point.y)),
-  );
+  const maxValue = useMemo(() => {
+    let max = 0;
+    for (const day of convertedData) {
+      for (const point of day.data) {
+        if (point.y > max) {
+          max = point.y;
+        }
+      }
+    }
+    return max;
+  }, [convertedData]);
 
   return (
     <ResponsiveHeatMap
@@ -64,4 +73,4 @@ const ActivityHeatmap = ({ data }: ActivityHeatmapProps) => {
   );
 };
 
-export default ActivityHeatmap;
+export default memo(ActivityHeatmap);

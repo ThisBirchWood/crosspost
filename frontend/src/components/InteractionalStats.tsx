@@ -24,11 +24,14 @@ type InteractionalStatsProps = {
 const InteractionalStats = ({ data }: InteractionalStatsProps) => {
   const graph = data.interaction_graph ?? {};
   const userCount = Object.keys(graph).length;
-  const edges = Object.values(graph).flatMap((targets) =>
-    Object.values(targets),
-  );
-  const edgeCount = edges.length;
-  const interactionVolume = edges.reduce((sum, value) => sum + value, 0);
+  let edgeCount = 0;
+  let interactionVolume = 0;
+  for (const targets of Object.values(graph)) {
+    for (const value of Object.values(targets)) {
+      edgeCount += 1;
+      interactionVolume += value;
+    }
+  }
   const concentration = data.conversation_concentration;
   const topTenCommentShare =
     typeof concentration?.top_10pct_comment_share === "number"

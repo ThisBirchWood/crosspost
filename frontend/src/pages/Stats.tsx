@@ -11,9 +11,8 @@ import CulturalStats from "../components/CulturalStats";
 
 import {
   type SummaryResponse,
-  type UserAnalysisResponse,
   type TimeAnalysisResponse,
-  type ContentAnalysisResponse,
+  type User,
   type UserEndpointResponse,
   type LinguisticAnalysisResponse,
   type EmotionalAnalysisResponse,
@@ -28,30 +27,40 @@ const DELETED_USERS = ["[deleted]"];
 const isDeletedUser = (value: string | null | undefined) =>
   DELETED_USERS.includes((value ?? "").trim().toLowerCase());
 
+type ActiveView =
+  | "summary"
+  | "emotional"
+  | "user"
+  | "linguistic"
+  | "interactional"
+  | "cultural";
+
+type UserStatsMeta = {
+  totalUsers: number;
+  mostCommentHeavyUser: { author: string; commentShare: number } | null;
+};
+
 const StatPage = () => {
   const { datasetId: routeDatasetId } = useParams<{ datasetId: string }>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<
-    | "summary"
-    | "emotional"
-    | "user"
-    | "linguistic"
-    | "interactional"
-    | "cultural"
-  >("summary");
+  const [activeView, setActiveView] = useState<ActiveView>("summary");
 
-  const [userData, setUserData] = useState<UserAnalysisResponse | null>(null);
+  const [userData, setUserData] = useState<UserEndpointResponse | null>(null);
   const [timeData, setTimeData] = useState<TimeAnalysisResponse | null>(null);
-  const [contentData, setContentData] =
-    useState<ContentAnalysisResponse | null>(null);
   const [linguisticData, setLinguisticData] =
     useState<LinguisticAnalysisResponse | null>(null);
+  const [emotionalData, setEmotionalData] =
+    useState<EmotionalAnalysisResponse | null>(null);
   const [interactionData, setInteractionData] =
     useState<InteractionAnalysisResponse | null>(null);
   const [culturalData, setCulturalData] =
     useState<CulturalAnalysisResponse | null>(null);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
+  const [userStatsMeta, setUserStatsMeta] = useState<UserStatsMeta>({
+    totalUsers: 0,
+    mostCommentHeavyUser: null,
+  });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const beforeDateRef = useRef<HTMLInputElement>(null);
@@ -185,14 +194,35 @@ const StatPage = () => {
 
           const filteredTopUsers: typeof topUsersList = [];
           for (const user of topUsersList) {
-            if (isDeletedUser(user.author)) continue;
-            filteredTopUsers.push(user);
+              if (isDeletedUser(user.author)) continue;
+              filteredTopUsers.push(user);
           }
 
-          const filteredInteractionGraph: Record<
-            string,
-            Record<string, number>
-          > = {};
+          let mostCommentHeavyUser: UserStatsMeta["mostCommentHeavyUser"] =
+            null;
+          for (const user of filteredUsers) {
+            const currentShare = user.comment_share ?? 0;
+            if (
+              !mostCommentHeavyUser ||
+              currentShare > mostCommentHeavyUser.commentShare
+            ) {
+              mostCommentHeavyUser = {
+                author: user.author,
+                commentShare: currentShare,
+              };
+            }
+          }
+
+          const topAuthors = new Set(filteredTopUsers.map((entry) => entry.author));
+          const summaryUsers: User[] = [];
+          for (const user of filteredUsers) {
+            if (topAuthors.has(user.author)) {
+              summaryUsers.push(user);
+            }
+          }
+
+          const filteredInteractionGraph: Record<string, Record<string, number>> =
+            {};
           for (const [source, targets] of Object.entries(interactionGraphRaw)) {
             if (isDeletedUser(source)) {
               continue;
@@ -220,16 +250,9 @@ const StatPage = () => {
             filteredTopInteractionPairs.push(pairEntry);
           }
 
-          const combinedUserData: UserAnalysisResponse = {
-            ...userRes.data,
-            users: filteredUsers,
+          const filteredUserData: UserEndpointResponse = {
+            users: summaryUsers,
             top_users: filteredTopUsers,
-            interaction_graph: filteredInteractionGraph,
-          };
-
-          const combinedContentData: ContentAnalysisResponse = {
-            ...linguisticRes.data,
-            ...emotionalRes.data,
           };
 
           const filteredInteractionData: InteractionAnalysisResponse = {
@@ -243,10 +266,14 @@ const StatPage = () => {
             unique_users: filteredUsers.length,
           };
 
-          setUserData(combinedUserData);
+          setUserData(filteredUserData);
+          setUserStatsMeta({
+            totalUsers: filteredUsers.length,
+            mostCommentHeavyUser,
+          });
           setTimeData(timeRes.data || null);
-          setContentData(combinedContentData);
           setLinguisticData(linguisticRes.data || null);
+          setEmotionalData(emotionalRes.data || null);
           setInteractionData(filteredInteractionData || null);
           setCulturalData(culturalRes.data || null);
           setSummary(filteredSummary || null);
@@ -435,22 +462,35 @@ const StatPage = () => {
         <SummaryStats
           userData={userData}
           timeData={timeData}
-          contentData={contentData}
+          linguisticData={linguisticData}
           summary={summary}
         />
       )}
 
-      {activeView === "emotional" && contentData && (
-        <EmotionalStats contentData={contentData} />
+      {activeView === "emotional" && emotionalData && (
+        <EmotionalStats emotionalData={emotionalData} />
       )}
 
-      {activeView === "emotional" && !contentData && (
+      {activeView === "emotional" && !emotionalData && (
         <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
           No emotional data available.
         </div>
       )}
 
-      {activeView === "user" && userData && <UserStats data={userData} />}
+      {activeView === "user" && userData && interactionData && (
+        <UserStats
+          topUsers={userData.top_users}
+          interactionGraph={interactionData.interaction_graph}
+          totalUsers={userStatsMeta.totalUsers}
+          mostCommentHeavyUser={userStatsMeta.mostCommentHeavyUser}
+        />
+      )}
+
+      {activeView === "user" && (!userData || !interactionData) && (
+        <div style={{ ...styles.container, ...styles.card, marginTop: 16 }}>
+          No user network data available.
+        </div>
+      )}
 
       {activeView === "linguistic" && linguisticData && (
         <LinguisticStats data={linguisticData} />

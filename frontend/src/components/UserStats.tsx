@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
-import {
-  type UserAnalysisResponse,
-  type InteractionGraph,
-} from "../types/ApiTypes";
+import { type TopUser, type InteractionGraph } from "../types/ApiTypes";
 
 import StatsStyling from "../styles/stats_styling";
 import Card from "./Card";
@@ -18,36 +15,41 @@ type GraphLink = {
 };
 
 function ApiToGraphData(apiData: InteractionGraph) {
-  const nodes = Object.keys(apiData).map((username) => ({ id: username }));
   const links: GraphLink[] = [];
+  const connectedNodeIds = new Set<string>();
 
   for (const [source, targets] of Object.entries(apiData)) {
     for (const [target, count] of Object.entries(targets)) {
+      if (count < 2 || source === "[deleted]" || target === "[deleted]") {
+        continue;
+      }
       links.push({ source, target, value: count });
+      connectedNodeIds.add(source);
+      connectedNodeIds.add(target);
     }
   }
 
-  // drop low-value and deleted interactions to reduce clutter
-  const filteredLinks = links.filter(
-    (link) =>
-      link.value >= 2 &&
-      link.source !== "[deleted]" &&
-      link.target !== "[deleted]",
-  );
+  const filteredNodes = Array.from(connectedNodeIds, (id) => ({ id }));
 
-  // also filter out nodes that are no longer connected after link filtering
-  const connectedNodeIds = new Set(
-    filteredLinks.flatMap((link) => [link.source, link.target]),
-  );
-  const filteredNodes = nodes.filter((node) => connectedNodeIds.has(node.id));
-
-  return { nodes: filteredNodes, links: filteredLinks };
+  return { nodes: filteredNodes, links };
 }
 
-const UserStats = (props: { data: UserAnalysisResponse }) => {
+type UserStatsProps = {
+  topUsers: TopUser[];
+  interactionGraph: InteractionGraph;
+  totalUsers: number;
+  mostCommentHeavyUser: { author: string; commentShare: number } | null;
+};
+
+const UserStats = ({
+  topUsers,
+  interactionGraph,
+  totalUsers,
+  mostCommentHeavyUser,
+}: UserStatsProps) => {
   const graphData = useMemo(
-    () => ApiToGraphData(props.data.interaction_graph),
-    [props.data.interaction_graph],
+    () => ApiToGraphData(interactionGraph),
+    [interactionGraph],
   );
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
   const [graphSize, setGraphSize] = useState({ width: 720, height: 540 });
@@ -66,7 +68,6 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
     return () => window.removeEventListener("resize", updateGraphSize);
   }, []);
 
-  const totalUsers = props.data.users.length;
   const connectedUsers = graphData.nodes.length;
   const totalInteractions = graphData.links.reduce(
     (sum, link) => sum + link.value,
@@ -86,11 +87,7 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
     null,
   );
 
-  const highlyInteractiveUser = [...props.data.users].sort(
-    (a, b) => b.comment_share - a.comment_share,
-  )[0];
-
-  const mostActiveUser = props.data.top_users.find(
+  const mostActiveUser = topUsers.find(
     (u) => u.author !== "[deleted]",
   );
 
@@ -142,10 +139,10 @@ const UserStats = (props: { data: UserAnalysisResponse }) => {
         />
         <Card
           label="Most Comment-Heavy User"
-          value={highlyInteractiveUser?.author ?? "—"}
+          value={mostCommentHeavyUser?.author ?? "—"}
           sublabel={
-            highlyInteractiveUser
-              ? `${Math.round(highlyInteractiveUser.comment_share * 100)}% comments`
+            mostCommentHeavyUser
+              ? `${Math.round(mostCommentHeavyUser.commentShare * 100)}% comments`
               : "No user distribution available"
           }
           style={{ gridColumn: "span 6" }}

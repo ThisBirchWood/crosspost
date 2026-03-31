@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -18,20 +18,36 @@ import UserModal from "../components/UserModal";
 import {
   type SummaryResponse,
   type FrequencyWord,
-  type UserAnalysisResponse,
+  type UserEndpointResponse,
   type TimeAnalysisResponse,
-  type ContentAnalysisResponse,
+  type LinguisticAnalysisResponse,
   type User,
 } from "../types/ApiTypes";
 
 const styles = StatsStyling;
+const MAX_WORDCLOUD_WORDS = 250;
+
+const WORDCLOUD_OPTIONS = {
+  rotations: 2,
+  rotationAngles: [0, 90] as [number, number],
+  fontSizes: [14, 60] as [number, number],
+  enableTooltip: true,
+};
 
 type SummaryStatsProps = {
-  userData: UserAnalysisResponse | null;
+  userData: UserEndpointResponse | null;
   timeData: TimeAnalysisResponse | null;
-  contentData: ContentAnalysisResponse | null;
+  linguisticData: LinguisticAnalysisResponse | null;
   summary: SummaryResponse | null;
 };
+
+type WordCloudPanelProps = {
+  words: { text: string; value: number }[];
+};
+
+const WordCloudPanel = memo(({ words }: WordCloudPanelProps) => (
+  <ReactWordcloud words={words} options={WORDCLOUD_OPTIONS} />
+));
 
 function formatDateRange(startUnix: number, endUnix: number) {
   const start = new Date(startUnix * 1000);
@@ -57,12 +73,34 @@ function convertFrequencyData(data: FrequencyWord[]) {
 const SummaryStats = ({
   userData,
   timeData,
-  contentData,
+  linguisticData,
   summary,
 }: SummaryStatsProps) => {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const selectedUserData: User | null =
-    userData?.users.find((u) => u.author === selectedUser) ?? null;
+  const usersByAuthor = useMemo(() => {
+    const nextMap = new Map<string, User>();
+    for (const user of userData?.users ?? []) {
+      nextMap.set(user.author, user);
+    }
+    return nextMap;
+  }, [userData?.users]);
+
+  const selectedUserData: User | null = selectedUser
+    ? usersByAuthor.get(selectedUser) ?? null
+    : null;
+
+  const wordCloudWords = useMemo(
+    () =>
+      convertFrequencyData(
+        (linguisticData?.word_frequencies ?? []).slice(0, MAX_WORDCLOUD_WORDS),
+      ),
+    [linguisticData?.word_frequencies],
+  );
+
+  const topUsersPreview = useMemo(
+    () => (userData?.top_users ?? []).slice(0, 100),
+    [userData?.top_users],
+  );
 
   return (
     <div style={styles.page}>
@@ -152,7 +190,12 @@ const SummaryStats = ({
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="count" name="Events" />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Events"
+                  isAnimationActive={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -166,15 +209,7 @@ const SummaryStats = ({
           </p>
 
           <div style={styles.chartWrapper}>
-            <ReactWordcloud
-              words={convertFrequencyData(contentData?.word_frequencies ?? [])}
-              options={{
-                rotations: 2,
-                rotationAngles: [0, 90],
-                fontSizes: [14, 60],
-                enableTooltip: true,
-              }}
-            />
+            <WordCloudPanel words={wordCloudWords} />
           </div>
         </div>
 
@@ -186,7 +221,7 @@ const SummaryStats = ({
           <p style={styles.sectionSubtitle}>Who posted the most events.</p>
 
           <div style={styles.topUsersList}>
-            {userData?.top_users.slice(0, 100).map((item) => (
+            {topUsersPreview.map((item) => (
               <div
                 key={`${item.author}-${item.source}`}
                 style={{ ...styles.topUserItem, cursor: "pointer" }}

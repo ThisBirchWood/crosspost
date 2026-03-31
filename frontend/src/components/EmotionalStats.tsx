@@ -1,18 +1,18 @@
-import type { ContentAnalysisResponse } from "../types/ApiTypes";
+import type { EmotionalAnalysisResponse } from "../types/ApiTypes";
 import StatsStyling from "../styles/stats_styling";
 
 const styles = StatsStyling;
 
 type EmotionalStatsProps = {
-  contentData: ContentAnalysisResponse;
+  emotionalData: EmotionalAnalysisResponse;
 };
 
-const EmotionalStats = ({ contentData }: EmotionalStatsProps) => {
-  const rows = contentData.average_emotion_by_topic ?? [];
-  const overallEmotionAverage = contentData.overall_emotion_average ?? [];
+const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
+  const rows = emotionalData.average_emotion_by_topic ?? [];
+  const overallEmotionAverage = emotionalData.overall_emotion_average ?? [];
   const dominantEmotionDistribution =
-    contentData.dominant_emotion_distribution ?? [];
-  const emotionBySource = contentData.emotion_by_source ?? [];
+    emotionalData.dominant_emotion_distribution ?? [];
+  const emotionBySource = emotionalData.emotion_by_source ?? [];
   const lowSampleThreshold = 20;
   const stableSampleThreshold = 50;
   const emotionKeys = rows.length
