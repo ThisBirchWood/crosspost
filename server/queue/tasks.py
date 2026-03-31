@@ -18,6 +18,10 @@ def process_dataset(self, dataset_id: int, posts: list, topics: dict):
     try:
         df = pd.DataFrame(posts)
 
+        dataset_manager.set_dataset_status(
+            dataset_id, "processing", "NLP Processing Started"
+        )
+
         processor = DatasetEnrichment(df, topics)
         enriched_df = processor.enrich()
 
@@ -54,6 +58,10 @@ def fetch_and_process_dataset(
             posts.extend(post.to_dict() for post in raw_posts)
 
         df = pd.DataFrame(posts)
+
+        dataset_manager.set_dataset_status(
+            dataset_id, "processing", "NLP Processing Started"
+        )
 
         processor = DatasetEnrichment(df, topics)
         enriched_df = processor.enrich()
