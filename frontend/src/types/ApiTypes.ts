@@ -135,7 +135,6 @@ type ConversationConcentration = {
 };
 
 type InteractionAnalysisResponse = {
-  average_thread_depth?: number;
   top_interaction_pairs?: [[string, string], number][];
   conversation_concentration?: ConversationConcentration;
   interaction_graph: InteractionGraph;

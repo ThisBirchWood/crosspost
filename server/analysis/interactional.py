@@ -31,28 +31,6 @@ class InteractionAnalysis:
 
         return interactions
 
-    def average_thread_depth(self, df: pd.DataFrame):
-        depths = []
-        id_to_reply = df.set_index("id")["reply_to"].to_dict()
-        for _, row in df.iterrows():
-            depth = 0
-            current_id = row["id"]
-
-            while True:
-                reply_to = id_to_reply.get(current_id)
-                if pd.isna(reply_to) or reply_to == "":
-                    break
-
-                depth += 1
-                current_id = reply_to
-
-            depths.append(depth)
-
-        if not depths:
-            return 0
-
-        return round(sum(depths) / len(depths), 2)
-
     def top_interaction_pairs(self, df: pd.DataFrame, top_n=10):
         graph = self.interaction_graph(df)
         pairs = []

@@ -119,7 +119,6 @@ class StatGen:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
-            "average_thread_depth": self.interaction_analysis.average_thread_depth(filtered_df),
             "top_interaction_pairs": self.interaction_analysis.top_interaction_pairs(filtered_df, top_n=100),
             "interaction_graph": self.interaction_analysis.interaction_graph(filtered_df),
             "conversation_concentration": self.interaction_analysis.conversation_concentration(filtered_df)

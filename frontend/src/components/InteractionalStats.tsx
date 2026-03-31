@@ -99,37 +99,27 @@ const InteractionalStats = ({ data }: InteractionalStatsProps) => {
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Conversation Overview</h2>
           <p style={styles.sectionSubtitle}>
-            Who talks to who, and how concentrated the replies are.
+            Who talks to who, how much they interact, and how concentrated the replies are.
           </p>
         </div>
 
         <Card
-          label="Average Reply Depth"
-          value={
-            typeof data.average_thread_depth === "number"
-              ? data.average_thread_depth.toFixed(2)
-              : "—"
-          }
-          sublabel="How deep reply chains usually go"
-          style={{ gridColumn: "span 3" }}
-        />
-        <Card
           label="Users in Network"
           value={userCount.toLocaleString()}
           sublabel="Users in the reply graph"
-          style={{ gridColumn: "span 3" }}
+          style={{ gridColumn: "span 4" }}
         />
         <Card
           label="User-to-User Links"
           value={edgeCount.toLocaleString()}
           sublabel="Unique reply directions"
-          style={{ gridColumn: "span 3" }}
+          style={{ gridColumn: "span 4" }}
         />
         <Card
           label="Total Replies"
           value={interactionVolume.toLocaleString()}
           sublabel="All reply links combined"
-          style={{ gridColumn: "span 3" }}
+          style={{ gridColumn: "span 4" }}
         />
         <Card
           label="Concentrated Replies"
