@@ -55,6 +55,27 @@ with open("server/topics.json") as f:
     default_topic_list = json.load(f)
 
 
+def normalize_topics(topics):
+    if not isinstance(topics, dict) or len(topics) == 0:
+        return None
+
+    normalized = {}
+
+    for topic_name, topic_keywords in topics.items():
+        if not isinstance(topic_name, str) or not isinstance(topic_keywords, str):
+            return None
+
+        clean_name = topic_name.strip()
+        clean_keywords = topic_keywords.strip()
+
+        if not clean_name or not clean_keywords:
+            return None
+
+        normalized[clean_name] = clean_keywords
+
+    return normalized
+
+
 @app.route("/register", methods=["POST"])
 def register_user():
     data = request.get_json()
@@ -146,6 +167,8 @@ def scrape_data():
 
     dataset_name = data["name"].strip()
     user_id = int(get_jwt_identity())
+    custom_topics = data.get("topics")
+    topics_for_processing = default_topic_list
 
     source_configs = data["sources"]
 
@@ -182,12 +205,26 @@ def scrape_data():
         if category and not connector_metadata[name]["categories_enabled"]:
             return jsonify({"error": f"Source {name} does not support categories"}), 400
 
-        if category and not connectors[name]().category_exists(category):
-            return jsonify({"error": f"Category does not exist for {name}"}), 400
+        # if category and not connectors[name]().category_exists(category):
+        #     return jsonify({"error": f"Category does not exist for {name}"}), 400
+
+    if custom_topics is not None:
+        normalized_topics = normalize_topics(custom_topics)
+        if not normalized_topics:
+            return (
+                jsonify(
+                    {
+                        "error": "Topics must be a non-empty JSON object with non-empty string keys and values"
+                    }
+                ),
+                400,
+            )
+
+        topics_for_processing = normalized_topics
 
     try:
         dataset_id = dataset_manager.save_dataset_info(
-            user_id, dataset_name, default_topic_list
+            user_id, dataset_name, topics_for_processing
         )
 
         dataset_manager.set_dataset_status(
@@ -196,7 +233,7 @@ def scrape_data():
             f"Data is being fetched from {', '.join(source['name'] for source in source_configs)}",
         )
 
-        fetch_and_process_dataset.delay(dataset_id, source_configs, default_topic_list)
+        fetch_and_process_dataset.delay(dataset_id, source_configs, topics_for_processing)
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error": "Failed to queue dataset processing"}), 500

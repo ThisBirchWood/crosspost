@@ -22,6 +22,8 @@ type SourceConfig = {
   category: string;
 };
 
+type TopicMap = Record<string, string>;
+
 const buildEmptySourceConfig = (sourceName = ""): SourceConfig => ({
   sourceName,
   limit: "100",
@@ -44,6 +46,8 @@ const AutoScrapePage = () => {
   const [isLoadingSources, setIsLoadingSources] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [useCustomTopics, setUseCustomTopics] = useState(false);
+  const [customTopicsText, setCustomTopicsText] = useState("");
 
   useEffect(() => {
     axios
@@ -151,6 +155,88 @@ const AutoScrapePage = () => {
       return;
     }
 
+    let normalizedTopics: TopicMap | undefined;
+
+    if (useCustomTopics) {
+      const customTopicsJson = customTopicsText.trim();
+
+      if (!customTopicsJson) {
+        setHasError(true);
+        setReturnMessage(
+          "Custom topics are enabled, so please provide a JSON topic map.",
+        );
+        return;
+      }
+
+      let parsedTopics: unknown;
+      try {
+        parsedTopics = JSON.parse(customTopicsJson);
+      } catch {
+        setHasError(true);
+        setReturnMessage("Custom topic list must be valid JSON.");
+        return;
+      }
+
+      if (
+        !parsedTopics ||
+        Array.isArray(parsedTopics) ||
+        typeof parsedTopics !== "object"
+      ) {
+        setHasError(true);
+        setReturnMessage(
+          "Custom topic list must be a JSON object: {\"Topic\": \"keywords\"}.",
+        );
+        return;
+      }
+
+      const entries = Object.entries(parsedTopics);
+      if (entries.length === 0) {
+        setHasError(true);
+        setReturnMessage("Custom topic list cannot be empty.");
+        return;
+      }
+
+      const hasInvalidTopic = entries.some(
+        ([topicName, keywords]) =>
+          !topicName.trim() ||
+          typeof keywords !== "string" ||
+          !keywords.trim(),
+      );
+
+      if (hasInvalidTopic) {
+        setHasError(true);
+        setReturnMessage(
+          "Every custom topic must have a non-empty name and keyword string.",
+        );
+        return;
+      }
+
+      normalizedTopics = Object.fromEntries(
+        entries.map(([topicName, keywords]) => [
+          topicName.trim(),
+          String(keywords).trim(),
+        ]),
+      );
+    }
+
+    const requestBody: {
+      name: string;
+      sources: Array<{
+        name: string;
+        limit: number;
+        search?: string;
+        category?: string;
+      }>;
+      topics?: TopicMap;
+    } = {
+      name: normalizedDatasetName,
+      sources: normalizedSources,
+    };
+
+    if (normalizedTopics) {
+      requestBody.topics = normalizedTopics;
+    }
+
     try {
       setIsSubmitting(true);
       setHasError(false);
@@ -158,10 +244,7 @@ const AutoScrapePage = () => {
 
       const response = await axios.post(
         `${API_BASE_URL}/datasets/scrape`,
-        {
-          name: normalizedDatasetName,
-          sources: normalizedSources,
-        },
+        requestBody,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -380,6 +463,52 @@ const AutoScrapePage = () => {
                 </button>
               </div>
             )}
+          </div>
+
+          <div style={{ ...styles.card, gridColumn: "auto" }}>
+            <h2 style={{ ...styles.sectionTitle, color: "#24292f" }}>
+              Topic List
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Use the default topic list, or provide your own JSON topic map.
+            </p>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 14,
+                color: "#24292f",
+                marginBottom: 10,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={useCustomTopics}
+                onChange={(event) => setUseCustomTopics(event.target.checked)}
+              />
+              Use custom topic list
+            </label>
+
+            <textarea
+              value={customTopicsText}
+              onChange={(event) => setCustomTopicsText(event.target.value)}
+              disabled={!useCustomTopics}
+              placeholder='{"Politics": "election, policy, government", "Housing": "rent, landlords, tenancy"}'
+              style={{
+                ...styles.input,
+                ...styles.inputFullWidth,
+                minHeight: 170,
+                resize: "vertical",
+                fontFamily:
+                  '"IBM Plex Mono", "Fira Code", "JetBrains Mono", monospace',
+              }}
+            />
+            <p style={styles.subtleBodyText}>
+              Format: JSON object where each key is a topic and each value is a
+              keyword string.
+            </p>
           </div>
         </div>
 
