@@ -66,45 +66,88 @@ const EMPTY_EXPLORER_STATE: ExplorerState = {
   error: "",
 };
 
-const getExplorerRecordIdentity = (record: DatasetRecord) =>
-  JSON.stringify({
-    post_id: record.post_id ?? null,
-    parent_id: record.parent_id ?? null,
-    reply_to: record.reply_to ?? null,
-    author: record.author ?? null,
-    type: record.type ?? null,
-    timestamp: record.timestamp ?? null,
-    dt: record.dt ?? null,
-    title: record.title ?? null,
-    content: record.content ?? null,
-    source: record.source ?? null,
-    topic: record.topic ?? null,
-  });
+const parseJsonLikePayload = (value: string): unknown => {
+  const normalized = value
+    .replace(/\uFEFF/g, "")
+    .replace(/,\s*([}\]])/g, "$1")
+    .replace(/(:\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(\[\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(,\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(:\s*)None\b/g, "$1null")
+    .replace(/(:\s*)True\b/g, "$1true")
+    .replace(/(:\s*)False\b/g, "$1false")
+    .replace(/(\[\s*)None\b/g, "$1null")
+    .replace(/(\[\s*)True\b/g, "$1true")
+    .replace(/(\[\s*)False\b/g, "$1false")
+    .replace(/(,\s*)None\b/g, "$1null")
+    .replace(/(,\s*)True\b/g, "$1true")
+    .replace(/(,\s*)False\b/g, "$1false");
 
-const dedupeExplorerRecords = (records: DatasetRecord[]) => {
-  const uniqueRecords: DatasetRecord[] = [];
-  const seen = new Set<string>();
+  return JSON.parse(normalized);
+};
 
-  for (const record of records) {
-    const identity = getExplorerRecordIdentity(record);
-    if (seen.has(identity)) {
-      continue;
-    }
-
-    seen.add(identity);
-    uniqueRecords.push(record);
+const parseRecordStringPayload = (payload: string): DatasetRecord[] | null => {
+  const trimmed = payload.trim();
+  if (!trimmed) {
+    return [];
   }
 
-  return uniqueRecords;
+  try {
+    return normalizeRecordPayload(parseJsonLikePayload(trimmed));
+  } catch {
+    // Continue with additional fallback formats below.
+  }
+
+  const ndjsonLines = trimmed
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (ndjsonLines.length > 0) {
+    try {
+      return ndjsonLines.map((line) => parseJsonLikePayload(line)) as DatasetRecord[];
+    } catch {
+      // Continue with wrapped JSON extraction.
+    }
+  }
+
+  const bracketStart = trimmed.indexOf("[");
+  const bracketEnd = trimmed.lastIndexOf("]");
+  if (bracketStart !== -1 && bracketEnd > bracketStart) {
+    const candidate = trimmed.slice(bracketStart, bracketEnd + 1);
+    try {
+      return normalizeRecordPayload(parseJsonLikePayload(candidate));
+    } catch {
+      // Continue with object extraction.
+    }
+  }
+
+  const braceStart = trimmed.indexOf("{");
+  const braceEnd = trimmed.lastIndexOf("}");
+  if (braceStart !== -1 && braceEnd > braceStart) {
+    const candidate = trimmed.slice(braceStart, braceEnd + 1);
+    try {
+      return normalizeRecordPayload(parseJsonLikePayload(candidate));
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 };
 
 const normalizeRecordPayload = (payload: unknown): DatasetRecord[] => {
   if (typeof payload === "string") {
-    try {
-      return normalizeRecordPayload(JSON.parse(payload));
-    } catch {
-      throw new Error("Corpus endpoint returned a non-JSON string payload.");
+    const parsed = parseRecordStringPayload(payload);
+    if (parsed) {
+      return parsed;
     }
+
+    const preview = payload.trim().slice(0, 120).replace(/\s+/g, " ");
+    throw new Error(
+      `Corpus endpoint returned a non-JSON string payload.${
+        preview ? ` Response preview: ${preview}` : ""
+      }`,
+    );
   }
 
   if (
@@ -265,9 +308,7 @@ const StatPage = () => {
       },
     );
 
-    const normalizedRecords = dedupeExplorerRecords(
-      normalizeRecordPayload(response.data),
-    );
+    const normalizedRecords = normalizeRecordPayload(response.data);
 
     setAllRecords(normalizedRecords);
     setAllRecordsKey(filterKey);
@@ -288,9 +329,7 @@ const StatPage = () => {
     try {
       const records = await ensureFilteredRecords();
       const context = buildExplorerContext(records);
-      const matched = dedupeExplorerRecords(
-        records.filter((record) => spec.matcher(record, context)),
-      );
+      const matched = records.filter((record) => spec.matcher(record, context));
       matched.sort((a, b) => {
         const aValue = String(a.dt ?? a.date ?? a.timestamp ?? "");
         const bValue = String(b.dt ?? b.date ?? b.timestamp ?? "");
