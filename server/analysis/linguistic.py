@@ -1,17 +1,30 @@
-import pandas as pd
 import re
-
 from collections import Counter
-from itertools import islice
+from dataclasses import dataclass
+
+import pandas as pd
+
+
+@dataclass(frozen=True)
+class NGramConfig:
+    min_token_length: int = 3
+    min_count: int = 2
+    max_results: int = 100
 
 
 class LinguisticAnalysis:
     def __init__(self, word_exclusions: set[str]):
         self.word_exclusions = word_exclusions
+        self.ngram_config = NGramConfig()
 
-    def _tokenize(self, text: str):
-        tokens = re.findall(r"\b[a-z]{3,}\b", text)
-        return [t for t in tokens if t not in self.word_exclusions]
+    def _tokenize(self, text: str, *, include_exclusions: bool = False) -> list[str]:
+        pattern = rf"\b[a-z]{{{self.ngram_config.min_token_length},}}\b"
+        tokens = re.findall(pattern, text)
+
+        if include_exclusions:
+            return tokens
+
+        return [token for token in tokens if token not in self.word_exclusions]
 
     def _clean_text(self, text: str) -> str:
         text = re.sub(r"http\S+", "", text)  # remove URLs
@@ -21,13 +34,24 @@ class LinguisticAnalysis:
         text = re.sub(r"\S+\.(jpg|jpeg|png|webp|gif)", "", text)
         return text
 
+    def _content_texts(self, df: pd.DataFrame) -> pd.Series:
+        return df["content"].dropna().astype(str).apply(self._clean_text).str.lower()
+
+    def _valid_ngram(self, tokens: tuple[str, ...]) -> bool:
+        if any(token in self.word_exclusions for token in tokens):
+            return False
+
+        if len(set(tokens)) == 1:
+            return False
+
+        return True
+
     def word_frequencies(self, df: pd.DataFrame, limit: int = 100) -> list[dict]:
-        texts = df["content"].dropna().astype(str).str.lower()
+        texts = self._content_texts(df)
 
         words = []
         for text in texts:
-            tokens = re.findall(r"\b[a-z]{3,}\b", text)
-            words.extend(w for w in tokens if w not in self.word_exclusions)
+            words.extend(self._tokenize(text))
 
         counts = Counter(words)
 
@@ -40,25 +64,39 @@ class LinguisticAnalysis:
 
         return word_frequencies.to_dict(orient="records")
 
-    def ngrams(self, df: pd.DataFrame, n=2, limit=100):
-        texts = df["content"].dropna().astype(str).apply(self._clean_text).str.lower()
+    def ngrams(self, df: pd.DataFrame, n: int = 2, limit: int | None = None) -> list[dict]:
+        if n < 2:
+            raise ValueError("n must be at least 2")
+
+        texts = self._content_texts(df)
         all_ngrams = []
+        result_limit = limit or self.ngram_config.max_results
 
         for text in texts:
-            tokens = re.findall(r"\b[a-z]{3,}\b", text)
+            tokens = self._tokenize(text, include_exclusions=True)
 
-            # stop word removal causes strange behaviors in ngrams
-            # tokens = [w for w in tokens if w not in self.word_exclusions]
+            if len(tokens) < n:
+                continue
 
-            ngrams = zip(*(islice(tokens, i, None) for i in range(n)))
-            all_ngrams.extend([" ".join(ng) for ng in ngrams])
+            for index in range(len(tokens) - n + 1):
+                ngram_tokens = tuple(tokens[index : index + n])
+                if self._valid_ngram(ngram_tokens):
+                    all_ngrams.append(" ".join(ngram_tokens))
 
         counts = Counter(all_ngrams)
+        filtered_counts = [
+            (ngram, count)
+            for ngram, count in counts.items()
+            if count >= self.ngram_config.min_count
+        ]
+
+        if not filtered_counts:
+            return []
 
         return (
-            pd.DataFrame(counts.items(), columns=["ngram", "count"])
-            .sort_values("count", ascending=False)
-            .head(limit)
+            pd.DataFrame(filtered_counts, columns=["ngram", "count"])
+            .sort_values(["count", "ngram"], ascending=[False, True])
+            .head(result_limit)
             .to_dict(orient="records")
         )
 

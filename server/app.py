@@ -424,7 +424,7 @@ def get_linguistic_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.linguistic(dataset_content, filters)), 200
+        return jsonify(stat_gen.linguistic(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -448,7 +448,7 @@ def get_emotional_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.emotional(dataset_content, filters)), 200
+        return jsonify(stat_gen.emotional(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -472,7 +472,7 @@ def get_summary(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.summary(dataset_content, filters)), 200
+        return jsonify(stat_gen.summary(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -496,7 +496,7 @@ def get_temporal_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.temporal(dataset_content, filters)), 200
+        return jsonify(stat_gen.temporal(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -520,7 +520,7 @@ def get_user_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.user(dataset_content, filters)), 200
+        return jsonify(stat_gen.user(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -544,7 +544,7 @@ def get_cultural_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.cultural(dataset_content, filters)), 200
+        return jsonify(stat_gen.cultural(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
@@ -568,7 +568,7 @@ def get_interaction_analysis(dataset_id):
 
         dataset_content = dataset_manager.get_dataset_content(dataset_id)
         filters = get_request_filters()
-        return jsonify(stat_gen.interactional(dataset_content, filters)), 200
+        return jsonify(stat_gen.interactional(dataset_content, filters, dataset_id=dataset_id)), 200
     except NotAuthorisedException:
         return jsonify({"error": "User is not authorised to access this content"}), 403
     except NonExistentDatasetException:
