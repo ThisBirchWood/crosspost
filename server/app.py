@@ -152,9 +152,9 @@ def get_dataset_sources():
     return jsonify(list_metadata)
 
 
-@app.route("/datasets/scrape", methods=["POST"])
+@app.route("/datasets/fetch", methods=["POST"])
 @jwt_required()
-def scrape_data():
+def fetch_data():
     data = request.get_json()
     connector_metadata = get_connector_metadata()
 

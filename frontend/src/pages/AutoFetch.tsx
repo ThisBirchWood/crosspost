@@ -37,7 +37,7 @@ const supportsSearch = (source?: SourceOption): boolean =>
 const supportsCategories = (source?: SourceOption): boolean =>
   Boolean(source?.categories_enabled ?? source?.categoriesEnabled);
 
-const AutoScrapePage = () => {
+const AutoFetchPage = () => {
   const navigate = useNavigate();
   const [datasetName, setDatasetName] = useState("");
   const [sourceOptions, setSourceOptions] = useState<SourceOption[]>([]);
@@ -106,11 +106,11 @@ const AutoScrapePage = () => {
     );
   };
 
-  const autoScrape = async () => {
+  const autoFetch = async () => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       setHasError(true);
-      setReturnMessage("You must be signed in to auto scrape a dataset.");
+      setReturnMessage("You must be signed in to auto fetch a dataset.");
       return;
     }
 
@@ -243,7 +243,7 @@ const AutoScrapePage = () => {
       setReturnMessage("");
 
       const response = await axios.post(
-        `${API_BASE_URL}/datasets/scrape`,
+        `${API_BASE_URL}/datasets/fetch`,
         requestBody,
         {
           headers: {
@@ -255,7 +255,7 @@ const AutoScrapePage = () => {
       const datasetId = Number(response.data.dataset_id);
 
       setReturnMessage(
-        `Auto scrape queued successfully (dataset #${datasetId}). Redirecting to processing status...`,
+        `Auto fetch queued successfully (dataset #${datasetId}). Redirecting to processing status...`,
       );
 
       setTimeout(() => {
@@ -267,11 +267,11 @@ const AutoScrapePage = () => {
         const message = String(
           requestError.response?.data?.error ||
             requestError.message ||
-            "Auto scrape failed.",
+            "Auto fetch failed.",
         );
-        setReturnMessage(`Auto scrape failed: ${message}`);
+        setReturnMessage(`Auto fetch failed: ${message}`);
       } else {
-        setReturnMessage("Auto scrape failed due to an unexpected error.");
+        setReturnMessage("Auto fetch failed due to an unexpected error.");
       }
     } finally {
       setIsSubmitting(false);
@@ -283,9 +283,9 @@ const AutoScrapePage = () => {
       <div style={styles.containerWide}>
         <div style={{ ...styles.card, ...styles.headerBar }}>
           <div>
-            <h1 style={styles.sectionHeaderTitle}>Auto Scrape Dataset</h1>
+            <h1 style={styles.sectionHeaderTitle}>Auto Fetch Dataset</h1>
             <p style={styles.sectionHeaderSubtitle}>
-              Select sources and scrape settings, then queue processing
+              Select sources and fetch settings, then queue processing
               automatically.
             </p>
             <p
@@ -295,7 +295,7 @@ const AutoScrapePage = () => {
                 color: "#9a6700",
               }}
             >
-              Warning: Scraping more than 250 posts from any single site can
+              Warning: Fetching more than 250 posts from any single site can
               take hours due to rate limits.
             </p>
           </div>
@@ -305,10 +305,10 @@ const AutoScrapePage = () => {
               ...styles.buttonPrimary,
               opacity: isSubmitting || isLoadingSources ? 0.75 : 1,
             }}
-            onClick={autoScrape}
+            onClick={autoFetch}
             disabled={isSubmitting || isLoadingSources}
           >
-            {isSubmitting ? "Queueing..." : "Auto Scrape and Analyze"}
+            {isSubmitting ? "Queueing..." : "Auto Fetch and Analyze"}
           </button>
         </div>
 
@@ -527,4 +527,4 @@ const AutoScrapePage = () => {
   );
 };
 
-export default AutoScrapePage;
+export default AutoFetchPage;

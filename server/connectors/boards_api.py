@@ -11,7 +11,7 @@ from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ForumScraper/1.0)"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ForumFetcher/1.0)"}
 
 
 class BoardsAPI(BaseConnector):
