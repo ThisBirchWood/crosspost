@@ -279,10 +279,40 @@ As a result, there are practical limits on the size of datasets that can be proc
 \subsection{System Architecture}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=1.2\textwidth]{img/architecture.png}
+    \includegraphics[width=1.0\textwidth]{img/architecture.png}
     \caption{System Architecture Diagram}
     \label{fig:architecture}
 \end{figure}
+
+An asynchronous processing queue using Redis and Celery will be implemented to handle long-running NLP tasks without blocking the main Flask API application. This prevents timeouts and allows for proper scaling of computationally intensive operations. The asynchronous queue will also manage retreival of new datasets from social media sites, which itself is time-consuming due to API rate limits and data volume.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/schema.png}
+    \caption{System Schema}
+    \label{fig:schema}
+\end{figure}
+
+\subsection{Client-Server Architecture}
+The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
+
+\subsubsection{Flask API}
+The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
+
+Flask was chosen for its simplicity, familiarity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
+
+\subsubsection{React Frontend}
+React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
+
+
+\subsection{Database vs On-Disk Storage}
+Originally, the system was designed to store \texttt{json} datasets on disk and load them into memory for processing. This was simple and time-efficient for early development and testing. However, as the functionality of the system expanded, it become clear that a more persistent and scalable storage solution was needed.
+
+Storing datasets in a database allows for more efficient querying, filtering, and updating of data without needing to reload entire datasets into memory. However the priamry benefit of using a database is support for \textbf{ multiple users and multiple datasets per user}. 
+
+An additional benefit of using a database was that it allowed the NLP processing to be done once, with the NLP results stored alongside the original data in the database. This meant that the system could avoid redundant NLP processing on the same data, which was a significant performance improvement.
+
+\texttt{PostgreSQL} was chosen as the database solution due to its robustness, support for complex queries, and compatibility with Python through \texttt{psycopg2}. PostgreSQL's support for JSONB fields allows for storage of unstructured NLP outputs, which alternatives like SQLite does not support.
 
 \newpage
 \section{Implementation}
