@@ -123,7 +123,7 @@ While computational methods enable large-scale observation and analysis of onlin
 
 Natural Language Processors will be central to many aspects of the virtual ethnography, such as emotional and topic classification. While these models are strong and have shown results in many areas, they are imperfect and may produce inaccurate or misleading results.
 
-One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity. This could be especially prominent in online Irish communities which often include regional slang, abbreviations or informal grammar. Many NLP models are trained on standardised datasets like research papers or novels, therefore reducing accuracy in informal data.
+One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity.
 
 In addition, the simplification of complex human interactions and emotions into discrete categories like "happy" or "sad" will more than likely overlook some nuance and ambiguity, even if the model is not inherently "wrong". As a result, the outputs of NLP models should be interpreted as indicative patterns rather than definitive representations of user meaning.
 
@@ -274,7 +274,22 @@ The following requirements are derived from the backend architecture, NLP proces
     \item The dataset reset functionality shall preserve data integrity.
 \end{itemize}
 
-\subsection{Data Normalisation}
+\subsection{Feasability Analysis}
+\subsubsection{NLP Limitations}
+Online communities often use sarcasm, irony or context-specific references, all of which will be challenging for NLP models, especially weaker ones, to correctly interpret. In a Cork-specific dataset, this will be especially apparent due to the use of regional slang or informal grammar. 
+
+Therefore, the outputs of the model for any single event should be considered as definitive, but rather as an indicative pattern that is more likely to be correct when aggregated across the entire dataset. For example, while a single comment about a specific topic might be misclassified as positive, the overall sentiment of that topic across thousands of comments is more likely to reflect the true emotional tone of the community.
+
+To account for NLP limitations, the system will:
+\begin{itemize}
+    \item Rely on \textbf{aggregated results} rather than individual classifications.
+    \item Provide \textbf{context for outputs}, such as confidence scores where available.
+    \item Allow \textbf{access to original text} behind each NLP result.
+\end{itemize}
+
+Overall, while NLP provides powerful tools for analysing large datasets, its limitations must be acknowledged and mitigated through careful design and interpretation of results.
+
+\subsubsection{Data Normalisation}
 Different social media platforms will produce data in many different formats. For example, Reddit data will have a much different reply structure to a forum-based platform like Boards.ie where there are no nested replies. Therefore, a core design requirement of the system is to normalise all incoming data into a single unified internal data model. This allows the same analytical functions to be applied across all data sources, regardless of their original structure.
 
 Posts and comments are two different types of user-generated content, however when it comes to ethnographic analysis, they are both just "events" or information that is being shared by a user. From an ethnographic perspective, the distinction between a post and a comment is not particularly important, since they both represent user-generated content that contributes to the community discourse. Therefore, the system will normalise all posts and comments into a single "event" data model, which will allow the same analytical functions to be applied uniformly across all content. This also simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
@@ -282,6 +297,8 @@ Posts and comments are two different types of user-generated content, however wh
 Though separate processing paths are not needed, the system will still retain metadata that indicates whether an event was originally a post or a comment, as well as any relevant structural information (e.g., parent-child relationships in Reddit threads).
 
 \subsection{Ethics}
+
+\subsection{Design Tradeoffs}
 
 
 \newpage
