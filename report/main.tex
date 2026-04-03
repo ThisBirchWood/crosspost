@@ -274,11 +274,11 @@ The following requirements are derived from the backend architecture, NLP proces
     \item The dataset reset functionality shall preserve data integrity.
 \end{itemize}
 
-\subsection{Feasability Analysis}
+\subsection{Feasibility Analysis}
 \subsubsection{NLP Limitations}
 Online communities often use sarcasm, irony or context-specific references, all of which will be challenging for NLP models, especially weaker ones, to correctly interpret. In a Cork-specific dataset, this will be especially apparent due to the use of regional slang or informal grammar. 
 
-Therefore, the outputs of the model for any single event should be considered as definitive, but rather as an indicative pattern that is more likely to be correct when aggregated across the entire dataset. For example, while a single comment about a specific topic might be misclassified as positive, the overall sentiment of that topic across thousands of comments is more likely to reflect the true emotional tone of the community.
+Therefore, the outputs of the model for any single event should not be considered as definitive, but rather as an indicative pattern that is more likely to be correct when aggregated across the entire dataset. For example, while a single comment about a specific topic might be misclassified as positive, the overall sentiment of that topic across thousands of comments is more likely to reflect the true emotional tone of the community.
 
 To account for NLP limitations, the system will:
 \begin{itemize}
@@ -295,6 +295,20 @@ Different social media platforms will produce data in many different formats. Fo
 Posts and comments are two different types of user-generated content, however when it comes to ethnographic analysis, they are both just "events" or information that is being shared by a user. From an ethnographic perspective, the distinction between a post and a comment is not particularly important, since they both represent user-generated content that contributes to the community discourse. Therefore, the system will normalise all posts and comments into a single "event" data model, which will allow the same analytical functions to be applied uniformly across all content. This also simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
 Though separate processing paths are not needed, the system will still retain metadata that indicates whether an event was originally a post or a comment, as well as any relevant structural information (e.g., parent-child relationships in Reddit threads).
+
+\subsubsection{Scalability Constraints}
+This system should be scalable enough to handle large datasets, but there are practical limits to how much data can be processed within reasonable timeframes, especially given the computational demands of NLP models.
+
+To migiate this, the system will:
+\begin{itemize}
+    \item Utilise GPU acceleration where available for NLP inference.
+    \item Pre-compute some analytical results during data ingestion to speed up subsequent queries.
+    \item Store NLP outputs in the database to avoid redundant processing.
+    \item Implement asynchronous processing for long-running tasks.
+\end{itemize}
+
+Overall, while the system is designed to be scalable, it is important to set realistic expectations regarding performance and processing times, especially for very large datasets.
+
 
 \subsection{Ethics}
 
