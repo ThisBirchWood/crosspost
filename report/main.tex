@@ -102,6 +102,11 @@ Cultural markers are the words, phrases, memes, and behaviours that are specific
 
 NLP can carry out many different types of tasks, such as classifying sentences or paragraphs, generating text content, extracting answers from text or even speech recognition in audio. However, even with the advances in NLP models, many challenges and limitations remain. These include understanding ambiguity, cultural context, sarcasm, and humour.
 
+\subsubsection{Why Natural Language Processing?}
+Digital ethnography traditionally relied on manual reading of texts and interviews. These approaches are valuable for deep interpretive analysis, but they do not scale well to the volume of data generated in online communities. A single subreddit might contain hundreds of thousands of posts and comments, far beyond what any single researcher could read and analyse by hand.
+
+NLP techniques can be used to automatically process and analyse large volumes and applying ethnographic methods at scale. For example, NLP can be used to identify common themes and topics in a subreddit, track how these themes evolve over time, and even detect the emotional tone of discussions. This allows researchers to gain insights into the dynamics of online communities that would be impossible to achieve through manual analysis alone.
+
 \subsubsection{Sentiment Analysis}
 \textbf{Sentiment Analysis} involves determining the emotional tone behind a piece of text. It is commonly used to classify text as positive, negative, or neutral. This technique is widely applied in areas such as customer feedback analysis, social media monitoring, and market research. More advanced sentiment analysis models can detect nuanced emotions, such as frustration, satisfaction, or sarcasm, although accurately identifying these emotions remains a challenge.
 
@@ -113,8 +118,19 @@ NLP can carry out many different types of tasks, such as classifying sentences o
 
 This method is often used to organise lots of unstructured data, such as news articles, research papers, or social media posts.
 
-\subsection{Cork Dataset}
+\subsection{Limits of Computation Analysis}
+While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
 
+Natural Language Processors will be central to many aspects of the virtual ethnography, such as emotional and topic classification. While these models are strong and have shown results in many areas, they are imperfect and may produce inaccurate or misleading results.
+
+One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity. This could be especially prominent in online Irish communities which often include regional slang, abbreviations or informal grammar. Many NLP models are trained on standardised datasets like research papers or novels, therefore reducing accuracy in informal data.
+
+In addition, the simplification of complex human interactions and emotions into discrete categories like "happy" or "sad" will more than likely overlook some nuance and ambiguity, even if the model is not inherently "wrong". As a result, the outputs of NLP models should be interpreted as indicative patterns rather than definitive representations of user meaning.
+
+\subsubsection{Computational Constraints}
+The performance and speed of the system will be influenced by the computational resources available during development and execution. While the system will attempt to use GPU acceleration during NLP inference, these resource may not always be available or may not be particularly strong should they exist.
+
+\subsection{Cork Dataset}
 The Cork dataset serves as the foundation for this project, providing a geographically and culturally grounded corpus for analysis. Rather than examining a globally distributed or topic-neutral community, the dataset centres on a single city with Cork, Ireland which allows the system's analytical outputs to be interpreted against a known social and cultural context.
 
 The dataset is drawn from four distinct online platforms, each of which represents a structurally different mode of online community participation:
@@ -132,8 +148,6 @@ Collecting data across multiple platforms also introduces the challenge of norma
 
 \newpage
 \section{Analysis}
-This section describes the background to digital ethnography, why it's used, and the objectives of the project.
-
 
 \subsection{Goals \& Objectives}
 The objective of this project is to provide a tool that can assist social scientists, digital ethnographers, and researchers to observing and interpret online communities and the interactions between them. Rather than replacing the study of digital ethnography or the related fields, this tool aims to aid researchers analyse communities.
@@ -260,19 +274,15 @@ The following requirements are derived from the backend architecture, NLP proces
     \item The dataset reset functionality shall preserve data integrity.
 \end{itemize}
 
-\subsection{Limits of Computation Analysis}
-While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
+\subsection{Data Normalisation}
+Different social media platforms will produce data in many different formats. For example, Reddit data will have a much different reply structure to a forum-based platform like Boards.ie where there are no nested replies. Therefore, a core design requirement of the system is to normalise all incoming data into a single unified internal data model. This allows the same analytical functions to be applied across all data sources, regardless of their original structure.
 
-Natural Language Processors will be central to many aspects of the system, such as emotional and topic classification. While these models are strong and have shown results in many areas, they are imperfect and may produce inaccurate or misleading results.
+Posts and comments are two different types of user-generated content, however when it comes to ethnographic analysis, they are both just "events" or information that is being shared by a user. From an ethnographic perspective, the distinction between a post and a comment is not particularly important, since they both represent user-generated content that contributes to the community discourse. Therefore, the system will normalise all posts and comments into a single "event" data model, which will allow the same analytical functions to be applied uniformly across all content. This also simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
-One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity. This could be especially prominent in online Irish communities which often include regional slang, abbreviations or informal grammar. Many NLP models are trained on standardised datasets like research papers or novels, therefore reducing accuracy in informal data.
+Though separate processing paths are not needed, the system will still retain metadata that indicates whether an event was originally a post or a comment, as well as any relevant structural information (e.g., parent-child relationships in Reddit threads).
 
-In addition, the simplification of complex human interactions and emotions into discrete categories like "happy" or "sad" will inevitably overlook some nuance and ambiguity, even if the model is not inherently "wrong". As a result, the outputs of NLP models should be interpreted as indicative patterns rather than definitive representations of user meaning.
+\subsection{Ethics}
 
-\subsubsection{Computational Constraints}
-The performance and speed of the system will be influenced by the computational resources available during development and execution. While the system will attempt to use GPU acceleration during NLP inference, these resource may not always be available or may not be particularly strong should they exist.
-
-As a result, there are practical limits on the size of datasets that can be processed efficiently. Large datasets may produce long processing times,
 
 \newpage
 \section{Design}
