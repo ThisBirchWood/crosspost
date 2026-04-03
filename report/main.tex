@@ -284,8 +284,6 @@ As a result, there are practical limits on the size of datasets that can be proc
     \label{fig:architecture}
 \end{figure}
 
-An asynchronous processing queue using Redis and Celery will be implemented to handle long-running NLP tasks without blocking the main Flask API application. This prevents timeouts and allows for proper scaling of computationally intensive operations. The asynchronous queue will also manage retreival of new datasets from social media sites, which itself is time-consuming due to API rate limits and data volume.
-
 \begin{figure}[h]
     \centering
     \includegraphics[width=1.0\textwidth]{img/schema.png}
@@ -295,6 +293,8 @@ An asynchronous processing queue using Redis and Celery will be implemented to h
 
 \subsection{Client-Server Architecture}
 The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
+
+The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
 
 \subsubsection{Flask API}
 The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
@@ -313,6 +313,29 @@ Storing datasets in a database allows for more efficient querying, filtering, an
 An additional benefit of using a database was that it allowed the NLP processing to be done once, with the NLP results stored alongside the original data in the database. This meant that the system could avoid redundant NLP processing on the same data, which was a significant performance improvement.
 
 \texttt{PostgreSQL} was chosen as the database solution due to its robustness, support for complex queries, and compatibility with Python through \texttt{psycopg2}. PostgreSQL's support for JSONB fields allows for storage of unstructured NLP outputs, which alternatives like SQLite does not support.
+
+\subsection{Asynchronous Processing}
+The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
+
+When NLP processing is triggered or data is being fetched from social media APIs, a task will be added to the Redis queue. Celery workers will then pop tasks off the Redis queue and process these tasks in the background, which ensures the API to remain responsive to user requests. This approach also allows for better scalability, as additional workers can be added to handle increased load.
+
+Some of the these tasks, like fetching data from social media APIs are very long-running tasks that can take hours to complete. By using asynchronous processing that updates the database with progress updates, users can see the status of their data fetching through the frontend.
+
+\subsection{Docker Deployment}
+Docker Compose will be used to containerise the entire application, including:
+\begin{itemize}
+    \item The Flask backend API
+    \item The React frontend interface
+    \item The PostgreSQL database
+    \item The Redis server for task queuing
+    \item Celery workers for asynchronous processing
+    \item NLP model caching and management
+\end{itemize}
+
+In addition, the source code for the backend and frontend will be mounted as volumes within the containers to allow for live code updates during development, which will speed up the process.
+
+Enviornment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yml}.
+
 
 \newpage
 \section{Implementation}
