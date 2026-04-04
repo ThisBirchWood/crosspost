@@ -174,108 +174,6 @@ Specifically, the system aims to:
 
 Ultimately, the project seeks to demonstrate how computational systems can aid and augment social scientists and digital ethnographers toolkits.
 
-\subsection{Requirements}
-
-The following requirements are derived from the backend architecture, NLP processing pipeline, and the React-based frontend interface.
-
-\subsubsection{Functional Requirements}
-
-\paragraph{Data Ingestion and Preparation}
-\begin{itemize}
-    \item The system shall accept social media data in \texttt{.jsonl} format containing posts and nested comments.
-    \item The system shall validate uploaded files and return structured error responses for invalid formats or malformed data.
-    \item The system shall normalise posts and comments into a unified event-based dataset.
-    \item The system shall give the user the option to automatically fetch datasets from social media sites filtered for specific keywords or categories.
-    \item The system shall provide a loading screen with a progress bar after the dataset is uploaded.
-\end{itemize}
-
-\paragraph{Dataset Management}
-\begin{itemize}
-    \item The system shall utilise Natural Language Processing models to generate average emotions per event.
-    \item The system shall utilise Natural Language Processing models to classify each event into a topic.
-    \item The system shall utilise Natural Language Processing models to identify entities in each event.
-    \item The system shall allow the users to view the raw dataset.
-    \item The system shall return detailed endpoints that return calculated statistics grouped into themes.
-\end{itemize}
-
-\paragraph{Filtering and Search}
-\begin{itemize}
-    \item The system shall support keyword-based filtering across content, author, and optionally title fields.
-    \item The system shall support filtering by start and end date ranges.
-    \item The system shall support filtering by one or more data sources.
-    \item The system shall allow multiple filters to be applied simultaneously.
-    \item The system shall return a filtered dataset reflecting all active filters.
-\end{itemize}
-
-\paragraph{Temporal Analysis}
-\begin{itemize}
-    \item The system shall compute event frequency per day.
-    \item The system shall generate weekday--hour heatmap data representing activity distribution.
-\end{itemize}
-
-\paragraph{Linguistic Analysis}
-\begin{itemize}
-    \item The system shall compute word frequency statistics excluding standard and domain-specific stopwords.
-    \item The system shall extract common bi-grams and tri-grams from textual content.
-    \item The system shall compute lexical diversity metrics for the dataset.
-\end{itemize}
-
-\paragraph{Emotional Analysis}
-\begin{itemize}
-    \item The system shall compute average emotional distribution per topic.
-    \item The system shall compute overall average emotional distribution across the dataset.
-    \item The system shall determine dominant emotion distributions.
-    \item The system shall compute emotional distribution grouped by data source.
-\end{itemize}
-
-\paragraph{User Analysis}
-\begin{itemize}
-    \item The system shall identify top users based on activity.
-    \item The system shall compute per-user activity and behavioural metrics.
-\end{itemize}
-
-\paragraph{Interaction Analysis}
-\begin{itemize}
-    \item The system shall compute average conversation thread depth.
-    \item The system shall identify top interaction pairs between users.
-    \item The system shall generate an interaction graph based on user relationships.
-    \item The system shall compute conversation concentration metrics.
-\end{itemize}
-
-\paragraph{Cultural Analysis}
-\begin{itemize}
-    \item The system shall identify identity-related linguistic markers.
-    \item The system shall detect stance-related linguistic markers.
-    \item The system shall compute average emotional expression per detected entity.
-\end{itemize}
-
-\paragraph{Frontend}
-\begin{itemize}
-    \item The system shall provide a frontend UI to accommodate all of the above functions
-    \item The system shall provide a tab for each endpoint in the frontend
-\end{itemize}
-
-\subsubsection{Non-Functional Requirements}
-
-\paragraph{Performance}
-\begin{itemize}
-    \item The system shall utilise GPU acceleration where available for NLP.
-    \item The system shall utilise existing React libraries for visualisations.
-\end{itemize}
-
-\paragraph{Scalability}
-\begin{itemize}
-    \item The system shall utilise cookies and session tracking for multi-user support.
-    \item NLP models shall be cached to prevent redundant loading.
-\end{itemize}
-
-\paragraph{Reliability and Robustness}
-\begin{itemize}
-    \item The system shall implement structured exception handling.
-    \item The system shall return meaningful JSON error responses for invalid requests.
-    \item The dataset reset functionality shall preserve data integrity.
-\end{itemize}
-
 \subsection{Feasibility Analysis}
 \subsubsection{NLP Limitations}
 Online communities often use sarcasm, irony or context-specific references, all of which will be challenging for NLP models, especially weaker ones, to correctly interpret. In a Cork-specific dataset, this will be especially apparent due to the use of regional slang or informal grammar. 
@@ -380,8 +278,107 @@ Standard security practices will be followed to protect user data and prevent un
     \item Parameterised queries for all database interactions to prevent SQL injection attacks.
 \end{itemize}
 
-\subsection{Design Tradeoffs}
+\subsection{Requirements}
 
+The following requirements are derived from the backend architecture, NLP processing pipeline, and the React-based frontend interface.
+
+\subsubsection{Functional Requirements}
+
+\paragraph{Data Ingestion and Preparation}
+\begin{itemize}
+    \item The system shall accept social media data in \texttt{.jsonl} format containing posts and nested comments.
+    \item The system shall validate uploaded files and return structured error responses for invalid formats or malformed data.
+    \item The system shall normalise posts and comments into a unified event-based dataset.
+    \item The system shall give the user the option to automatically fetch datasets from social media sites filtered for specific keywords or categories.
+    \item The system shall provide a loading screen with a progress bar after the dataset is uploaded.
+\end{itemize}
+
+\paragraph{Dataset Management}
+\begin{itemize}
+    \item The system shall utilise Natural Language Processing models to generate average emotions per event.
+    \item The system shall utilise Natural Language Processing models to classify each event into a topic.
+    \item The system shall utilise Natural Language Processing models to identify entities in each event.
+    \item The system shall allow the users to view the raw dataset.
+    \item The system shall return detailed endpoints that return calculated statistics grouped into themes.
+\end{itemize}
+
+\paragraph{Filtering and Search}
+\begin{itemize}
+    \item The system shall support keyword-based filtering across content, author, and optionally title fields.
+    \item The system shall support filtering by start and end date ranges.
+    \item The system shall support filtering by one or more data sources.
+    \item The system shall allow multiple filters to be applied simultaneously.
+    \item The system shall return a filtered dataset reflecting all active filters.
+\end{itemize}
+
+\paragraph{Temporal Analysis}
+\begin{itemize}
+    \item The system shall compute event frequency per day.
+    \item The system shall generate weekday--hour heatmap data representing activity distribution.
+\end{itemize}
+
+\paragraph{Linguistic Analysis}
+\begin{itemize}
+    \item The system shall compute word frequency statistics excluding standard and domain-specific stopwords.
+    \item The system shall extract common bi-grams and tri-grams from textual content.
+    \item The system shall compute lexical diversity metrics for the dataset.
+\end{itemize}
+
+\paragraph{Emotional Analysis}
+\begin{itemize}
+    \item The system shall compute average emotional distribution per topic.
+    \item The system shall compute overall average emotional distribution across the dataset.
+    \item The system shall determine dominant emotion distributions.
+    \item The system shall compute emotional distribution grouped by data source.
+\end{itemize}
+
+\paragraph{User Analysis}
+\begin{itemize}
+    \item The system shall identify top users based on activity.
+    \item The system shall compute per-user activity and behavioural metrics.
+\end{itemize}
+
+\paragraph{Interaction Analysis}
+\begin{itemize}
+    \item The system shall compute average conversation thread depth.
+    \item The system shall identify top interaction pairs between users.
+    \item The system shall generate an interaction graph based on user relationships.
+    \item The system shall compute conversation concentration metrics.
+\end{itemize}
+
+\paragraph{Cultural Analysis}
+\begin{itemize}
+    \item The system shall identify identity-related linguistic markers.
+    \item The system shall detect stance-related linguistic markers.
+    \item The system shall compute average emotional expression per detected entity.
+\end{itemize}
+
+\paragraph{Frontend}
+\begin{itemize}
+    \item The system shall provide a frontend UI to accommodate all of the above functions
+    \item The system shall provide a tab for each endpoint in the frontend
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+
+\paragraph{Performance}
+\begin{itemize}
+    \item The system shall utilise GPU acceleration where available for NLP.
+    \item The system shall utilise existing React libraries for visualisations.
+\end{itemize}
+
+\paragraph{Scalability}
+\begin{itemize}
+    \item The system shall utilise cookies and session tracking for multi-user support.
+    \item NLP models shall be cached to prevent redundant loading.
+\end{itemize}
+
+\paragraph{Reliability and Robustness}
+\begin{itemize}
+    \item The system shall implement structured exception handling.
+    \item The system shall return meaningful JSON error responses for invalid requests.
+    \item The dataset reset functionality shall preserve data integrity.
+\end{itemize}
 
 \newpage
 \section{Design}
@@ -399,6 +396,25 @@ Standard security practices will be followed to protect user data and prevent un
     \caption{System Schema}
     \label{fig:schema}
 \end{figure}
+
+\subsection{Data Pipeline}
+As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
+
+A unified data model is used to represent all incoming data, regardless of its original source or structure. This ensures that the same pipeline works across YouTube, Reddit and boards.ie data, and can be easily extended to new sources in the future.
+
+
+
+\subsection{Connector Abstraction}
+While the system is designed around a Cork-based dataset, it is intentionally source-agnostic, meaning that additional data sources could be added in the future without changes to the core analytical pipeline.
+
+\textbf{Data Connectors} are components responsible for fetching and normalising data from specific sources. Each connector implements a standard interface for data retrieval, such as:
+\begin{itemize}
+    \item \texttt{get\_new\_posts()} — retrieves raw data from the source, either through API calls or web scraping.
+\end{itemize}
+
+Creating a base interface for what a connector should look like allows for the easy addition of new data sources in the future. For example, if a new social media platform becomes popular, a new connector can be implemented to fetch data from that platform without needing to modify the existing data pipeline or analytical modules.
+
+The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
 
 \subsection{Client-Server Architecture}
 The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
