@@ -1,6 +1,8 @@
-\documentclass{article}
+\documentclass{article}[12pt]
 \usepackage{graphicx}
 \usepackage{setspace}
+\usepackage{hyperref}
+
 \begin{document}
 
 \begin{titlepage}
@@ -39,7 +41,7 @@ There are many beneficiaries of a digital ethnography analytic system: social sc
 
 \subsection{Goals \& Objectives}
 \begin{itemize}
-    \item \textbf{Collect data ethically}: enable users to link/upload text, and interaction data (messages etc) from specified online communities. Potentially and automated method for importing (using APIs or scraping techniques) could be included as well.
+    \item \textbf{Collect data ethically}: enable users to link/upload text, and interaction data (messages etc) from specified online communities. Potentially an automated method for importing (using APIs or scraping techniques) could be included as well.
     \item \textbf{Organise content}: Store gathered material in a structured database with tagging for themes, dates, and sources.
     \item \textbf{Analyse patterns}: Use natural language processing (NLP) to detect frequent keywords, sentiment, and interaction networks.
     \item \textbf{Visualise insights}: Present findings as charts, timelines, and network diagrams to reveal how conversations and topics evolve.
@@ -299,7 +301,9 @@ Though separate processing paths are not needed, the system will still retain me
 \subsubsection{Scalability Constraints}
 This system should be scalable enough to handle large datasets, but there are practical limits to how much data can be processed within reasonable timeframes, especially given the computational demands of NLP models.
 
-To migiate this, the system will:
+Some of the data can be precomputed during the data ingestion phases, such as datetime column derivations and NLP outputs, which can speed up and make queries more efficient. However, the initial processing time of large datasets will still be significant, especially if the dataset contains hundreds of thousands of posts and comments.
+
+To mitigate this, the system will:
 \begin{itemize}
     \item Utilise GPU acceleration where available for NLP inference.
     \item Pre-compute some analytical results during data ingestion to speed up subsequent queries.
@@ -309,8 +313,72 @@ To migiate this, the system will:
 
 Overall, while the system is designed to be scalable, it is important to set realistic expectations regarding performance and processing times, especially for very large datasets.
 
-
 \subsection{Ethics}
+The system will process only publicly available data, and will not attempt to access private or restricted content.
+
+\subsubsection{Automated Data Collection}
+The system will provide an option for users to automatically fetch datasets from social media sites filtered for keywords or categories. Therefore, it's important to ensure that this data collection is done ethically.
+
+The system will:
+\begin{itemize}
+    \item Respect rate limits by implementing an exponential backoff strategy for API requests.
+    \item Only collect data that is publicly available and does not require authentication or violate platform terms of service.
+    \item Provide user-agent headers that identify the system and its purposes
+    \item Allow users the option to upload their own datasets instead of automated collection.
+    \item For websites without an API, the \texttt{robots.txt} file will be examined to ensure compliance with platform guidelines.
+    \item Data volume limits of up to 1000 posts per source will be enforced server-side to prevent excessive data collection.
+\end{itemize}
+
+Some platforms provide APIs that allow for easy and ethical data collection, such as YouTube and Reddit. These APIs have clear guidelines and rate limits that the system will adhere to. 
+
+\paragraph{Reddit (API)}
+Reddit provides a public API that allows for the retrieval of posts, comments, and metadata from subreddits. The system will use the official Reddit API with proper authentication via OAuth2 and access tokens. 
+
+In November 2025, Reddit introduced a new approval process for API access, which requires developers to apply for access and specify their intended use case. While the public unauthenticated endpoints are still accessible, they have far stricter rate limits (100 requests every 10 minutes) compared to authenticated access (100 requests per minute). Therefore, the system shall allow for authenticated access to the Reddit API to speed up data retrival.
+
+Unauthenticated access will still be available as a fallback if client credentials are not provided on the backend, but this will massively slow the data retreival process, and this will still only fetch public posts and comments.
+
+From reddit, the system will collect posts, comments and all replies to comments, as well as metadata such as the author name and timestamp.
+
+\paragraph{Boards.ie (Web Scraping)}
+Boards.ie is an Irish discussion forum with no public API, so the system will use web scraping instead. The platforms \texttt{robots.txt} will be used to ensure compliance with the site's guidelines for automated access. The boards.ie \texttt{robots.txt} file contains the following information:
+
+\begin{verbatim}
+Sitemap: https://www.boards.ie/sitemapindex.xml
+User-agent: *
+Disallow: /entry/
+Disallow: /messages/
+Disallow: /profile/comments/
+Disallow: /profile/discussions/
+Disallow: /search/
+Disallow: /sso/
+Disallow: /sso
+\end{verbatim}
+
+Public discussion threads are allowed to be automatically crawled, while user profiles, private messages, and authentication endpoints are not allowed. The system will respect these boundaries and will not attempt to access any restricted path.
+
+\paragraph{YouTube (Data API v3)}
+YouTube is supported via the official YouTube Data API v3, provided by Google. The API exposes structured endpoints for querying videos, comments, channels, and playlists, making it well-suited for collecting public discourse around specific topics or keywords.
+
+Authentication is handled through an API key issued via the Google Cloud Console. The API enforces a quota system rather than a traditional rate limit: each project is allocated 10,000 quota units per day by default, with different operations consuming different amounts.
+
+In addition, comment retreival can be disabled by the video uploader, so the system will handle this case by skipping videos where comments are not accessible.
+
+\subsubsection{Data Storage \& Retention}
+All data fetched from social media sites are stored locally in a PostgreSQL database. The system will not share or expose any of this data to third parties beyond the users of this application. Raw API responses are discarded once the relevant information is extracted. 
+
+All datasets are associated with one and only one user account, and the users themselves are responsible for uploading or fetching the data, analysing the data, and deleting the data when they are done. The system will not retain any data beyond what is necessary for the end-user to carry out their analysis, and users will have the option to delete their datasets at any time.
+
+The system will not store any personally identifiable information beyond what is necessary for the analysis, which includes only usernames and timestamps. The system will not attempt to de-anonymise content creators or link data across platforms.
+
+\subsubsection{User Security}
+Standard security practices will be followed to protect user data and prevent unauthorized access. This includes:
+\begin{itemize}
+    \item The hashing of all user passwords and no storage of plaintext passwords.
+    \item The use of JWTs for session management, with secure signing and an expiration time of 24 hours.
+    \item Access control on all analysis API endpoints to ensure that end-users can only access their own datasets and results.
+    \item Parameterised queries for all database interactions to prevent SQL injection attacks.
+\end{itemize}
 
 \subsection{Design Tradeoffs}
 
