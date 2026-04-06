@@ -488,14 +488,25 @@ The \texttt{events} table in PostgreSQL contains the following fields:
     \item \texttt{emotion\_anger}, \texttt{emotion\_disgust}, \texttt{emotion\_fear}, \texttt{emotion\_joy}, \texttt{emotion\_sadness}: emotion scores assigned to the event by the NLP model.
 \end{itemize}
 
+\subsubsection{Data Retrieval}
+The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
+
 \subsection{Automatic Data Collection}
+Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
+
+However, this approach is time consuming and since this system is designed to aid researchers rather than burden them, the system includes functionality to automatically fetch data from social media platforms. This allows users to easily obtain datasets without needing to manually collect and format data themselves, which is especially beneficial for researchers who may not have technical expertise in data collection.
+
+The initial system will contain connectors for:
+\begin{itemize}
+    \item \textbf{Reddit} — using the official Reddit API to fetch posts and comments from specified subreddits or filtered by keywords.
+    \item \textbf{YouTube} — using the YouTube Data API v3 to fetch video comments based on search queries.
+    \item \textbf{Boards.ie} — using web scraping techniques to collect posts and comments from the Cork section of the Boards.ie forum.
+\end{itemize}
+
 \subsubsection{Connector Abstractions}
 While the system is designed around a Cork-based dataset, it is intentionally source-agnostic, meaning that additional data sources for data ingestion could be added in the future without changes to the core analytical pipeline.
 
-\textbf{Data Connectors} are components responsible for fetching and normalising data from specific sources. Each connector implements a standard interface for data retrieval, such as:
-\begin{itemize}
-    \item \texttt{get\_new\_posts()} — retrieves raw data from the source, either through API calls or web scraping.
-\end{itemize}
+\textbf{Data Connectors} are components responsible for fetching and normalising data from specific sources. Each connector implements a standard interface for data retrieval.
 
 Creating a base interface for what a connector should look like allows for the easy addition of new data sources in the future. For example, if a new social media platform becomes popular, a new connector can be implemented to fetch data from that platform without needing to modify the existing data pipeline or analytical modules.
 
