@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 \usepackage{setspace}
 \usepackage{hyperref}
+\usepackage{fvextra}
 
 \begin{document}
 
@@ -418,6 +419,21 @@ The system will support two methods of data ingestion:
 
 Originally, only file upload was supported, but the goal of the platform is to aid researchers with ethnograpic analysis, and many researchers will not have the technical expertise to fetch data from social media APIs or scrape websites. Therefore, the system was designed to support automated fetching of data from social media platforms, which allows users to easily obtain datasets without needing to manually collect and format data themselves.
 
+In addition to social media posts, the system will allow users to upload a list of topics that they want to track in the dataset. This allows the system to generate custom topic analysis based on user-defined topics, which can be more relevant and insightful for specific research questions. For example, a researcher studying discussions around local politics in Cork might upload a list of political parties, politicians, and policy issues as topics to track.
+
+Below is a snippet of what a custom topic list might look like in \texttt{.json} format:
+\begin{Verbatim}[breaklines=true]
+{
+    "Public Transport": "buses, bus routes, bus eireann, public transport, late buses, bus delays, trains, commuting without a car, transport infrastructure in Cork",
+    "Traffic": "traffic jams, congestion, rush hour, cars backed up, gridlock, driving in Cork, road delays",
+    "Parking": "parking spaces, parking fines, clamping, pay parking, parking permits, finding parking in the city",
+    "Cycling": "cycling in Cork, bike lanes, cyclists, cycle safety, bikes on roads, cycling infrastructure"
+}
+\end{Verbatim}
+
+If a custom topic list is not provided by the user, the system will use a pre-defined generalised topic list that is designed to capture common themes across a wide range of online communities.
+
+\subsubsection{Data Normalisation}
 Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object. Both objects will have a common set of fields, such as:
 \begin{itemize}
     \item \texttt{id} - a unique identifier for the post or comment.
@@ -431,11 +447,6 @@ Each method of ingestion will format the raw data into a standardised structure,
 \end{itemize}
 
 The decision to normalise posts and comments into a single "event" data model allows the same analytical functions to be applied uniformly across all content, regardless of whether it was originally a post or a comment. This simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
-
-
-
-\subsubsection{Data Normalisation}
-
 
 
 
