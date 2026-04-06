@@ -433,8 +433,10 @@ Below is a snippet of what a custom topic list might look like in \texttt{.json}
 
 If a custom topic list is not provided by the user, the system will use a pre-defined generalised topic list that is designed to capture common themes across a wide range of online communities.
 
+Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object.
+
 \subsubsection{Data Normalisation}
-Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object. Both objects will have a common set of fields, such as:
+After a dataset is ingested, the system will normalise all posts and nested comments into a single unified "event" data model. This means that both posts and comments will be represented as the same type of object, with a common set of fields that capture the relevant information for analysis. The fields in this unified data model will include:
 \begin{itemize}
     \item \texttt{id} - a unique identifier for the post or comment.
     \item \texttt{content} — the text content of the post or comment.
@@ -448,10 +450,47 @@ Each method of ingestion will format the raw data into a standardised structure,
 
 The decision to normalise posts and comments into a single "event" data model allows the same analytical functions to be applied uniformly across all content, regardless of whether it was originally a post or a comment. This simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
+As part of this normalisation process, the dataset is also \textbf{flattened}, so rather than comments being nested within their parent posts as they are in the raw source data, all events are stored as a flat sequence of records. The relationships between posts and comments are preserved through the \texttt{parent\_id} and \texttt{reply\_to} fields. This allows for more efficient querying and analysis of the data, as well as simplifying the data model.
+
+Overall, the data normalisation process unifies the structure of the dataset, and flattens the data into a format that makes analysis more efficient and easier.
 
 
-\subsection{Connector Abstraction}
-While the system is designed around a Cork-based dataset, it is intentionally source-agnostic, meaning that additional data sources could be added in the future without changes to the core analytical pipeline.
+\subsubsection{Data Enrichment}
+After normalisation, the dataset is enriched with additional derived fields and NLP outputs. This includes:
+\begin{itemize}
+    \item \textbf{Datetime Derivations}: Fields such as day of week, hour of day, and week of year are derived from the raw timestamp and stored alongside the event, so they do not need to be recomputed on every query.
+    \item \textbf{Emotion Classification}: Each event is run through an NLP model that assigns an emotional label to the text content, such as joy, anger, or sadness.
+    \item \textbf{Topic Classification}: Each event is classified into its most relevant topic using an NLP model, based on either the user-provided topic list or the system default.
+    \item \textbf{Named Entity Recognition}: Each event is processed to identify any named entities mentioned in the text, such as people, places, or organisations, which are stored as a list associated with the event.
+\end{itemize}
+
+NLP processing allows for much richer analysis of the dataset, as it provides additional layers of information beyond just the raw text content. After enrichment, the dataset is ready to be stored in the database and made available for analysis through the API endpoints.
+
+\subsubsection{Data Storage}
+The enriched dataset is stored in a PostgreSQL database, with a schema similar to the unified data model defined in the normalisation section, with additional fields for the derived data, NLP outputs, and user ownership. Each dataset is associated with a specific user account, and the system supports multiple datasets per user.
+
+The \texttt{events} table in PostgreSQL contains the following fields:
+\begin{itemize}
+    \item \texttt{id}: a unique identifier for the event.
+    \item \texttt{dataset\_id}: a foreign key referencing the dataset this event belongs to. If the dataset is deleted.
+    \item \texttt{post\_id}: the original identifier of the post or comment as it appeared on the source platform.
+    \item \texttt{type}: whether the event is a post or a comment.
+    \item \texttt{author}: the username of the content creator.
+    \item \texttt{content}: the text content of the event.
+    \item \texttt{timestamp}: the Unix epoch time at which the content was created.
+    \item \texttt{date}, \texttt{dt}, \texttt{hour}, \texttt{weekday}: datetime fields derived from the timestamp at ingestion time.
+    \item \texttt{title}: the title of the post, if the event is a post. Null for comments.
+    \item \texttt{parent\_id}: for comments, the identifier of the post it belongs to. Null for posts.
+    \item \texttt{reply\_to}: for comments, the identifier of the comment it directly replies to. Null if the comment is a direct reply to a post.
+    \item \texttt{source}: the platform from which the content was retrieved.
+    \item \texttt{topic}, \texttt{topic\_confidence}: the topic assigned to the event by the NLP model, along with a confidence score.
+    \item \texttt{ner\_entities}: a list of named entities identified in the content, stored as a \texttt{JSONB} field.
+    \item \texttt{emotion\_anger}, \texttt{emotion\_disgust}, \texttt{emotion\_fear}, \texttt{emotion\_joy}, \texttt{emotion\_sadness}: emotion scores assigned to the event by the NLP model.
+\end{itemize}
+
+\subsection{Automatic Data Collection}
+\subsubsection{Connector Abstractions}
+While the system is designed around a Cork-based dataset, it is intentionally source-agnostic, meaning that additional data sources for data ingestion could be added in the future without changes to the core analytical pipeline.
 
 \textbf{Data Connectors} are components responsible for fetching and normalising data from specific sources. Each connector implements a standard interface for data retrieval, such as:
 \begin{itemize}
@@ -461,6 +500,9 @@ While the system is designed around a Cork-based dataset, it is intentionally so
 Creating a base interface for what a connector should look like allows for the easy addition of new data sources in the future. For example, if a new social media platform becomes popular, a new connector can be implemented to fetch data from that platform without needing to modify the existing data pipeline or analytical modules.
 
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
+
+\subsection{Ethnographic Analysis}
+
 
 \subsection{Client-Server Architecture}
 The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
