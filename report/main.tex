@@ -409,6 +409,23 @@ The following requirements are derived from the backend architecture, NLP proces
     \label{fig:schema}
 \end{figure}
 
+\subsection{Ethnographic Analysis}
+Ethnographic analysis can be carried out from many different perspectives, such as the perspective of a single user or the community as a whole. The system is designed to support both of these perspectives, as well as the ability to zoom in and out between them. For example, a researcher might want to look at the overall emotional tone of a community, but then zoom in to see how a specific user contributes to that tone.
+
+The system is designed to support multiple types of analysis, such as:
+\begin{itemize}
+    \item \textbf{Temporal Analysis}: looking at when a community is active and how that activity changes over time.
+    \item \textbf{Linguistic Analysis}: looking at the words and phrases that are commonly used in a community, and how they relate to identity and culture.
+    \item \textbf{Emotional Analysis}: looking at the emotional tone of a community, and how it varies across different topics or users.
+    \item \textbf{User Analysis}: looking at the behaviour and activity of individual users, and how they contribute to the community.
+    \item \textbf{Interaction Analysis}: looking at how users interact with each other, such as who replies to whom and how conversations develop.
+    \item \textbf{Cultural Analysis}: looking at the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references.
+\end{itemize}
+
+Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
+
+
+
 \subsection{Data Pipeline}
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
 
@@ -515,9 +532,6 @@ While the system is designed around a Cork-based dataset, it is intentionally so
 Creating a base interface for what a connector should look like allows for the easy addition of new data sources in the future. For example, if a new social media platform becomes popular, a new connector can be implemented to fetch data from that platform without needing to modify the existing data pipeline or analytical modules.
 
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
-
-\subsection{Ethnographic Analysis}
-
 
 \subsection{Client-Server Architecture}
 The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
