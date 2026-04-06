@@ -60,19 +60,18 @@ A defining feature of this project is its focus on a geographically grounded dat
 
 \newpage
 \section{Background}
-This section describes what digital ethnography is, how it stems from traditional ethnography and why it is useful.
 
-\subsection{Digital Ethnography}
+\subsection{What is Digital Ethnography?}
 Digital Ethnography is the study of cultures and interactions in various online spaces, such as forums, posts and video comments. The goal is not only to describe the high-level statistics such as number of posts and posts per day, but also analyse people's behaviour at an interactional and cultural level, delving into common phrases, interactions patterns and common topics and entities.
 
 There are multiple methods to carry out digital ethnography, such as online participant observation through automated or manual methods, digital interviews via text or video or tracing digital footprints. 
 
 Compared to traditional ethnography, digital ethnography is usually faster and more cost-effective due to the availability of large swathes of data across social media sites such as Reddit, YouTube, and Facebook and lack of need to travel. Traditional ethnography often relied on in-person interviews and in-person observation of communities
 
-\subsection{Traditional Ethnography}
+\subsubsection{Traditional Ethnography}
 Ethnography originated in the late nineteenth and early twentieth centuries as a method for understanding cultures through long-term fieldwork. The goal was not just to describe behaviour, but to show how people made sense of that world. Over time, ethnography grew beyond anthropology into sociology, media studies, education, and human computer interaction, becoming a broadly used qualitative research approach. Traditional ethnography was closely tied to physical locations: villages, workplaces or towns. However, as communication technologies developed and social life increasingly took place through technological mediums, it was no longer tied to a physical place. Researchers questioned whether social interactions could still be studied properly if they were no longer tied to physical places.
 
-\subsection{Transition to Digital Spaces}
+\subsubsection{Transition to Digital Spaces}
 The rise of the internet in the late twentieth century massively changed social interaction. Online forums, emails, SMS and social media platforms became central to human communication. All types of groups and identities were constructed. As a result, ethnographic methods were adapted to study these emerging digital environments. Early work in this area was referred to as "virtual ethnography" or "digital ethnography", where online spaces began to mixed and intertwine with traditional cultural spaces.
 
 Digital ethnography gives us new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. This transitions requires flexibility, since researchers can no longer rely solely on face-to-face interactions.
@@ -81,6 +80,14 @@ Digital ethnography gives us new challenges to overcome in comparison to traditi
 There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interest. Each type of community fosters different forms of interaction, participation, and identity construction.
 
 Participation within these communities is usually not evenly distributed. The majority of users are passive consumers (lurkers), a smaller percentage contribute occasionally, and a very small core group produces most of the content. This uneven contribution structure has significant implications for digital ethnography, as visible discourse may disproportionately reflect the perspectives of highly active members rather than the broader community. This is particularly evident in some reputation-based systems such as Reddit, which allows for the opinions of a few to rise above the rest.
+
+Examples of digital spaces include:
+\begin{itemize}
+    \item \textbf{Social media platforms} (e.g., Facebook, Twitter, Instagram) where users create profiles, share content, and interact with others.
+    \item \textbf{Online forums and communities} (e.g., Reddit, Boards.ie) where users engage in threaded discussions around specific topics or interests.
+    \item \textbf{Video platforms} (e.g., YouTube) where users share and comment on video content, often fostering communities around specific channels or topics.
+    \item \textbf{Messaging apps} (e.g., WhatsApp, Discord) where users engage in private or group conversations, often with a more informal and intimate tone.
+\end{itemize}
 
 \subsection{Digital Ethnography Metrics}
 This section describes common keywords and metrics use to measure and quantify online communities using digital ethnography.
@@ -401,6 +408,34 @@ The following requirements are derived from the backend architecture, NLP proces
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
 
 A unified data model is used to represent all incoming data, regardless of its original source or structure. This ensures that the same pipeline works across YouTube, Reddit and boards.ie data, and can be easily extended to new sources in the future.
+
+\subsubsection{Data Ingestion}
+The system will support two methods of data ingestion:
+\begin{itemize}
+    \item \textbf{File Upload}: Users can upload datasets in a specified \texttt{.jsonl} format, which contains posts and nested comments.
+    \item \textbf{Automated Fetching}: Users can trigger the system to automatically fetch data from supported social media platforms using specified keywords or filters.
+\end{itemize}
+
+Originally, only file upload was supported, but the goal of the platform is to aid researchers with ethnograpic analysis, and many researchers will not have the technical expertise to fetch data from social media APIs or scrape websites. Therefore, the system was designed to support automated fetching of data from social media platforms, which allows users to easily obtain datasets without needing to manually collect and format data themselves.
+
+Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object. Both objects will have a common set of fields, such as:
+\begin{itemize}
+    \item \texttt{id} - a unique identifier for the post or comment.
+    \item \texttt{content} — the text content of the post or comment.
+    \item \texttt{author} — the username of the content creator.
+    \item \texttt{timestamp} — the date and time when the content was created
+    \item \texttt{source} — the original platform from which the content was retrieved (e.g., Reddit, YouTube, Boards.ie).
+    \item \texttt{type} — a field indicating whether the event is a "post" or a "comment".
+    \item \texttt{parent\_id} — for comments, this field will reference the original id of the post it's commenting on.
+    \item \texttt{reply\_to} - for comments, this field will reference the original id of the comment it's replying to. If the comment is a direct reply to a post, this field will be null.
+\end{itemize}
+
+The decision to normalise posts and comments into a single "event" data model allows the same analytical functions to be applied uniformly across all content, regardless of whether it was originally a post or a comment. This simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
+
+
+
+\subsubsection{Data Normalisation}
+
 
 
 
