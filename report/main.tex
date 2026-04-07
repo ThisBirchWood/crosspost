@@ -444,10 +444,12 @@ The system will follow a client-server architecture, with a Flask-based backend 
 
 The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
 
-\subsubsection{Flask API}
+\subsubsection{API Design}
 The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
 
 Flask was chosen for its simplicity, familiarity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
+
+The API is separated into three separate groups, \textbf{authentication}, \textbf{dataset management} and \textbf{analysis}. 
 
 \subsubsection{React Frontend}
 React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
@@ -678,11 +680,21 @@ Creating a base interface for what a connector should look like allows for the e
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
 
 \subsection{Asynchronous Processing}
-The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
+The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. In addition, fetching large datasets from sites like Reddit and YouTube takes a lot of time, due to the sequential nature of data fetching and severe rate limits on even authenticated Reddit accounts. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
 
-When NLP processing is triggered or data is being fetched from social media APIs, a task will be added to the Redis queue. Celery workers will then pop tasks off the Redis queue and process these tasks in the background, which ensures the API to remain responsive to user requests. This approach also allows for better scalability, as additional workers can be added to handle increased load.
+\subsubsection{Dataset Enrichment}
+A non-normalised dataset will be passed into Celery along with the dataset id and the user id of the dataset owner. At this point, the program is running separately to the main Flask thread. The program then calls on the \textbf{Normalisation \& Enrichment Module} to:
+\begin{itemize}
+    \item Flatten the dataset from posts with nested comments to unified event data model.
+    \item Add derived timestamp columns to aid with temporal analysis
+    \item Add topic, emotional and entity NLP analysis as columns
+\end{itemize}
 
-Some of the these tasks, like fetching data from social media APIs are very long-running tasks that can take hours to complete. By using asynchronous processing that updates the database with progress updates, users can see the status of their data fetching through the frontend.
+\subsubsection{Data Fetching}
+If the user triggers a data auto-fetch from any given social media site, a task will be added to the Redis queue. Celery workers will then pop tasks off the Redis queue and process these tasks in the background, which ensures the API to remain responsive to user requests. The specific data connectors are called and the data fetching begins. Once the data has been fetched from all social media sites, NLP processing begins and we are at the same stage as before.
+
+Asynchronous processing is especially important for automatic data-fetching, as particularly large datasets can take hours to fetch.
+
 
 \subsection{Design Tradeoffs}
 \subsubsection{Database vs On-Disk Storage}
@@ -695,6 +707,26 @@ An additional benefit of using a database was that it allowed the NLP processing
 \texttt{PostgreSQL} was chosen as the database solution due to its robustness, support for complex queries, and compatibility with Python through \texttt{psycopg2}. PostgreSQL's support for JSONB fields allows for storage of unstructured NLP outputs, which alternatives like SQLite does not support.
 
 \subsubsection{Unified Data Model vs Split Data Model}
+The choice between a \textbf{Unified Data Model} and a \textbf{Split Data Model} led to many swaps in design for the API. 
+
+\paragraph{The Case for a Unified Data Model}
+\begin{itemize}
+    \item \textbf{Simpler Schema}: One \texttt{events} table rather than split comments and posts tables
+    \item \textbf{Simpler Pipeline}: The same pipeline works for both types
+    \item \textbf{Differentiation Possible}: Through the \texttt{type} column, we can still differentiate between a post and a comment, though more awkwardly.
+\end{itemize}
+
+But it led to a simplification of some of the content, for example a post title is very different from the comment content. Reply chains must be reconstructed using the \texttt{reply\_to} and \texttt{parent\_id} fields and some fields, like \texttt{reply\_to} will be null depending on the data source. For example, boards.ie does not support nested replies.
+
+\paragraph{The Case for a Split Data Model}
+\begin{itemize}
+    \item \textbf{Per-Type Analysis}: A post has different attributes to a comment, extending the analysis for post-specific metrics (like title sentiment, title-to-post length ratio) is easier later down the line.
+    \item \textbf{Accurate Reply Relationship}: Reply relationships are naturally represented, comments have a foreign key to posts, no reconstruction needed.
+\end{itemize}
+
+However each analytical query would either need to be post or comment specific, or require a table merge later in the pipeline. For ethnographic analysis, the distinction between a post and a comment is minimal. From a research point of view a post and a comment are both just a user saying something at a point in time, and treating them uniformly reflects that.
+
+The decision to \textbf{stick with a unified data model was made} since the downsides of a Unified Model could be mitigated through reconstruction of reply chains using specific fields, and being able to differentiate between a post and a comment using a type field. Largely, in ethnography, a post and a comment are both just a user saying something at a point in time, and even in cases where they might need to be treated differently (reply-chains, interactions graphs), that distinction can still be made.
 
 \subsection{Deployment}
 Docker Compose is used to containerise the entire application, including:
@@ -713,6 +745,7 @@ Enviornment variables, such as database credentials and social media API keys, w
 
 \newpage
 \section{Implementation}
+\subsection{}
 
 \newpage
 \section{Evaluation}
