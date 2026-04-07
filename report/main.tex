@@ -132,6 +132,11 @@ NLP techniques can be used to automatically process and analyse large volumes an
 
 This method is often used to organise lots of unstructured data, such as news articles, research papers, or social media posts.
 
+\subsubsection{Stop Words}
+\textbf{Stop Words} are common words that are often filtered out in NLP tasks because they carry little meaningful information. Examples of stop words include "the", "is", "in", "and", etc. Removing stop words can help improve the performance of NLP models by reducing noise and focusing on more informative words. However, the choice of stop words can vary depending on the context and the specific task at hand.
+
+For example, in a Cork-specific dataset, words like "ah", or "grand" might be considered stop words, as they are commonly used in everyday speech but do not carry significant meaning for analysis.
+
 \subsection{Limits of Computation Analysis}
 While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
 
@@ -409,7 +414,23 @@ The following requirements are derived from the backend architecture, NLP proces
     \label{fig:schema}
 \end{figure}
 
+\subsection{Client-Server Architecture}
+The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
+
+The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
+
+\subsubsection{Flask API}
+The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
+
+Flask was chosen for its simplicity, familiarity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
+
+\subsubsection{React Frontend}
+React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
+
+
 \subsection{Ethnographic Analysis}
+The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
+
 Ethnographic analysis can be carried out from many different perspectives, such as the perspective of a single user or the community as a whole. The system is designed to support both of these perspectives, as well as the ability to zoom in and out between them. For example, a researcher might want to look at the overall emotional tone of a community, but then zoom in to see how a specific user contributes to that tone.
 
 The system is designed to support multiple types of analysis, such as:
@@ -424,7 +445,71 @@ The system is designed to support multiple types of analysis, such as:
 
 Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
 
+\subsubsection{Temporal Analysis}
+Temporal analysis allows researchers to understand what a community is talking about over time, and how the emotional tone of the community changes over time. For example, a researcher might want to see how discussions around a specific topic evolve over time, or how the emotional tone of a community changes in response to external events.
 
+However a major limitation of the data captured for this system, whether it's the Cork dataset, or any automatically fetched dataset, it will only stretch at most a few weeks back in time. This is because the system is designed to fetch only the most recent posts and comments from social media platforms, which means that it will not capture historical data beyond a certain point. Therefore, while temporal analysis can still be carried out on the dataset, it will be limited to a relatively short timeframe.
+
+In this system, temporal analysis will be limited to:
+\begin{itemize}
+    \item Event frequency per day.
+    \item Weekday--hour heatmap data representing activity distribution.
+\end{itemize}
+
+\textbf{Average reply time per emotion} was considered as a potential temporal analysis metric, but was eventually excluded due to inconsistent and statistically insignificant results that yielded no meaningful analytical insight. 
+
+\subsubsection{Linguistic Analysis}
+Linguistic analysis allows researchers to understand the language and words used in a community. For example, a researcher might want to see what words are most commonly used in a community, or how the language used in a community relates to identity and culture.
+
+In this system, linguistic analysis will include:
+\begin{itemize}
+    \item Word frequency statistics excluding standard and domain-specific stopwords.
+    \item Common bi-grams and tri-grams from textual content.
+    \item Lexical diversity metrics for the dataset.
+\end{itemize}
+
+Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. 
+
+In addition to standard stop words, the system also excludes link tokens such as "www", "http", and "https" from the word frequency analysis, as social media users will often include links in their posts and comments, and these tokens can become quite common and skew the word frequency results without adding meaningful insight.
+
+\subsubsection{User Analysis}
+User analysis allows researchers to understand the behaviour and activity of individual users within a community. For example, a researcher might want to see who the most active users are in a community, or how different users contribute to the overall emotional tone of the community.
+
+In this system, user analysis will include:
+\begin{itemize}
+    \item Identification of top users based on activity.
+    \item Per-user activity such as:
+    \begin{itemize}
+        \item Total number of events (posts and comments).
+        \item Average emotion distribution across their events.
+        \item Average topic distribution across their events.
+        \item Comment-to-post ratio.
+        \item Vocabulary information such as top words used and lexical diversity.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Interactional Analysis}
+Instead of per-user analysis, interactional analysis looks at the interactions between users, such as who replies to who and who is contributing the most to the conversations. 
+
+In this system, interactional analysis will include:
+\begin{itemize}
+    \item Average conversation thread depth.
+    \item Top interaction pairs between users.
+    \item An interaction graph based on user relationships.
+    \item Conversation concentration metrics such as who is contributing the most to the conversations and how much of the conversation is dominated by a small number of users.
+\end{itemize}
+
+For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
+
+\subsubsection{Emotional Analysis}
+Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
+
+In this system, emotional analysis will include:
+\begin{itemize}
+    \item Average emotional by topic.
+    \item Overall average emotional distribution across the dataset.
+    \item Dominant emotion distributions, which are the most common overall 
+\end{itemize}
 
 \subsection{Data Pipeline}
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
@@ -532,20 +617,6 @@ While the system is designed around a Cork-based dataset, it is intentionally so
 Creating a base interface for what a connector should look like allows for the easy addition of new data sources in the future. For example, if a new social media platform becomes popular, a new connector can be implemented to fetch data from that platform without needing to modify the existing data pipeline or analytical modules.
 
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
-
-\subsection{Client-Server Architecture}
-The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
-
-The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
-
-\subsubsection{Flask API}
-The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
-
-Flask was chosen for its simplicity, familiarity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
-
-\subsubsection{React Frontend}
-React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
-
 
 \subsection{Database vs On-Disk Storage}
 Originally, the system was designed to store \texttt{json} datasets on disk and load them into memory for processing. This was simple and time-efficient for early development and testing. However, as the functionality of the system expanded, it become clear that a more persistent and scalable storage solution was needed.
