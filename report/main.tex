@@ -602,6 +602,8 @@ In this system, user analysis will include:
     \end{itemize}
 \end{itemize}
 
+Initially the user endpoint contained the interactional statistics as well, as a case could be made for the user analysis and interaction analysis being combined, however a distinction can be made between individual user analysis and user analysis on a larger, community-level scale focused on interactions. This allows the user endpoint to stay focused on singular user analysis while still using NLP outputs like emotions and topics.
+
 Identifying top users allows us to see the most active and prolific posters in a community, which might often be site-specific bots that comment on every post or deleted users, which often show up as simply "[Deleted User]" and can aggregate together in statistics . An example might be a User Moderator bot on Reddit, seen below.
 
 \begin{figure}[h]
@@ -618,13 +620,14 @@ Instead of per-user analysis, interactional analysis looks at the interactions b
 
 In this system, interactional analysis will include:
 \begin{itemize}
-    \item Average conversation thread depth.
     \item Top interaction pairs between users.
     \item An interaction graph based on user relationships.
     \item Conversation concentration metrics such as who is contributing the most to the conversations and how much of the conversation is dominated by a small number of users.
 \end{itemize}
 
 For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
+
+\textbf{Average reply chain depth} was considered as a metric, however forum-based social media sites, such as boards.ie, do not have a way to reply to comments in the same way that Reddit does, therefore the concept of "reply chains" doesn't apply cleanly in the same way. One possible solution is to infer reply relationships from explicit user mentions embedded in content of the post, but this is not a reliable method.
 
 \subsubsection{Emotional Analysis}
 Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
@@ -636,6 +639,10 @@ In this system, emotional analysis will include:
     \item Dominant emotion distributions for each event
     \item Average emotion by data source
 \end{itemize}
+
+It is emphasised that emotional analysis is inaccurate on an individual post level as the models cannot fully capture the nuance of human interaction and slang. Warnings will be presented to the user in the frontend that AI outputs can possible be misleading on an individual scale, and accuracy only increases with more posts. Even then it will not be perfect.
+
+In an ideal world, the models are accurate enough to capture general emotions on a macro-scale.
 
 \subsubsection{Cultural Analysis}
 Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
@@ -670,7 +677,15 @@ Creating a base interface for what a connector should look like allows for the e
 
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
 
-\subsection{Database vs On-Disk Storage}
+\subsection{Asynchronous Processing}
+The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
+
+When NLP processing is triggered or data is being fetched from social media APIs, a task will be added to the Redis queue. Celery workers will then pop tasks off the Redis queue and process these tasks in the background, which ensures the API to remain responsive to user requests. This approach also allows for better scalability, as additional workers can be added to handle increased load.
+
+Some of the these tasks, like fetching data from social media APIs are very long-running tasks that can take hours to complete. By using asynchronous processing that updates the database with progress updates, users can see the status of their data fetching through the frontend.
+
+\subsection{Design Tradeoffs}
+\subsubsection{Database vs On-Disk Storage}
 Originally, the system was designed to store \texttt{json} datasets on disk and load them into memory for processing. This was simple and time-efficient for early development and testing. However, as the functionality of the system expanded, it become clear that a more persistent and scalable storage solution was needed.
 
 Storing datasets in a database allows for more efficient querying, filtering, and updating of data without needing to reload entire datasets into memory. However the priamry benefit of using a database is support for \textbf{ multiple users and multiple datasets per user}. 
@@ -679,27 +694,21 @@ An additional benefit of using a database was that it allowed the NLP processing
 
 \texttt{PostgreSQL} was chosen as the database solution due to its robustness, support for complex queries, and compatibility with Python through \texttt{psycopg2}. PostgreSQL's support for JSONB fields allows for storage of unstructured NLP outputs, which alternatives like SQLite does not support.
 
-\subsection{Asynchronous Processing}
-The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
+\subsubsection{Unified Data Model vs Split Data Model}
 
-When NLP processing is triggered or data is being fetched from social media APIs, a task will be added to the Redis queue. Celery workers will then pop tasks off the Redis queue and process these tasks in the background, which ensures the API to remain responsive to user requests. This approach also allows for better scalability, as additional workers can be added to handle increased load.
-
-Some of the these tasks, like fetching data from social media APIs are very long-running tasks that can take hours to complete. By using asynchronous processing that updates the database with progress updates, users can see the status of their data fetching through the frontend.
-
-\subsection{Docker Deployment}
-Docker Compose will be used to containerise the entire application, including:
+\subsection{Deployment}
+Docker Compose is used to containerise the entire application, including:
 \begin{itemize}
     \item The Flask backend API
     \item The React frontend interface
     \item The PostgreSQL database
     \item The Redis server for task queuing
     \item Celery workers for asynchronous processing
-    \item NLP model caching and management
 \end{itemize}
 
-In addition, the source code for the backend and frontend will be mounted as volumes within the containers to allow for live code updates during development, which will speed up the process.
+During development, the source code for the backend and frontend will be mounted as volumes within the containers to allow for live code updates during development, which will speed up the process.
 
-Enviornment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yml}.
+Enviornment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yaml}.
 
 
 \newpage
