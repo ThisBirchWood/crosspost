@@ -88,6 +88,15 @@ export default function UserModal({
                   </div>
                 </div>
               ) : null}
+
+              {userData.dominant_topic ? (
+                <div style={styles.topUserItem}>
+                  <div style={styles.topUserName}>Most Common Topic</div>
+                  <div style={styles.topUserMeta}>
+                    {userData.dominant_topic.topic} ({userData.dominant_topic.count} events)
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </DialogPanel>

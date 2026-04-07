@@ -34,6 +34,11 @@ type Vocab = {
   top_words: FrequencyWord[];
 };
 
+type DominantTopic = {
+  topic: string;
+  count: number;
+};
+
 type User = {
   author: string;
   post: number;
@@ -41,6 +46,7 @@ type User = {
   comment_post_ratio: number;
   comment_share: number;
   avg_emotions?: Record<string, number>;
+  dominant_topic?: DominantTopic | null;
   vocab?: Vocab | null;
 };
 
@@ -202,6 +208,7 @@ type FilterResponse = {
 
 export type {
   TopUser,
+  DominantTopic,
   Vocab,
   User,
   InteractionGraph,
