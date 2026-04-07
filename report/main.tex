@@ -101,9 +101,9 @@ This section describes common keywords and metrics use to measure and quantify o
 Sentiment Analysis involves capturing the emotions associated with a specific post, topic or entity. This type of analysis can be as simple as classifying a post as "positive" or "negative", or classifying a post into a set of pre-existing emotions such as anger, joy or sadness.
 
 \subsubsection{Active vs Passive Participation}
-Not everyone in an online community participates in the same way. Some users post regularly, leave comments, and interact with others, while many more simply read content without ever contributing anything themselves. Some might only contribute occasionally.
+Not everyone in an online community participates in the same way. Some users post regularly and leave comments while others might simply read content without ever contributing anything themselves. Some might only contribute occasionally.
 
-This distinction between active and passive participation (passive users are often referred to as "lurkers") is an important one in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is. 
+This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is. 
 
 \subsubsection{Temporal Activity Patterns}
 Looking at when a community is active can reveal quite a lot about its nature and membership. A subreddit that peaks at 2am UTC might have a mostly American userbase, while one that is consistently active across all hours could suggest a more globally distributed community. Beyond timezones, temporal patterns can also capture things like how a community responds to external events, like a sudden spike in posting activity often corresponds to something newsworthy happening that is relevant to the community.
@@ -284,7 +284,7 @@ All data fetched from social media sites are stored locally in a PostgreSQL data
 
 All datasets are associated with one and only one user account, and the users themselves are responsible for uploading or fetching the data, analysing the data, and deleting the data when they are done. The system will not retain any data beyond what is necessary for the end-user to carry out their analysis, and users will have the option to delete their datasets at any time.
 
-The system will not store any personally identifiable information beyond what is necessary for the analysis, which includes only usernames and timestamps. The system will not attempt to de-anonymise content creators or link data across platforms.
+The system will not store any personally identifiable information except for what is necessary for the analysis, which includes only usernames and timestamps. The system will not attempt to de-anonymise content creators or link data across platforms.
 
 \subsubsection{User Security}
 Standard security practices will be followed to protect user data and prevent unauthorized access. This includes:
@@ -445,6 +445,8 @@ The system is designed to support multiple types of analysis, such as:
 
 Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
 
+For each type of analysis that involves analysing the content of the posts themselves, they will be split into tokens and stop words will be stripped from them, which makes analysis easier.
+
 \subsubsection{Temporal Analysis}
 Temporal analysis allows researchers to understand what a community is talking about over time, and how the emotional tone of the community changes over time. For example, a researcher might want to see how discussions around a specific topic evolve over time, or how the emotional tone of a community changes in response to external events.
 
@@ -461,12 +463,16 @@ In this system, temporal analysis will be limited to:
 \subsubsection{Linguistic Analysis}
 Linguistic analysis allows researchers to understand the language and words used in a community. For example, a researcher might want to see what words are most commonly used in a community, or how the language used in a community relates to identity and culture.
 
+Splitting each 
+
 In this system, linguistic analysis will include:
 \begin{itemize}
     \item Word frequency statistics excluding standard and domain-specific stopwords.
     \item Common bi-grams and tri-grams from textual content.
     \item Lexical diversity metrics for the dataset.
 \end{itemize}
+
+The word frequencies and n-gram metrics were chosen because they can provide insights into the language and phrases used commonly in an online community, which is important for ethnographic analysis and understanding a community fully. Lexical diversity metrics such as the total number of unique tokens versus the total number of tokens can show if a specific culture often repeats phrases (like memes, slang etc.) or if they often have structured, serious discussion without repeating themeselves.
 
 Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. 
 
@@ -488,6 +494,17 @@ In this system, user analysis will include:
     \end{itemize}
 \end{itemize}
 
+Identifying top users allows us to see the most active and prolific posters in a community, which might often be site-specific bots that comment on every post or deleted users, which often show up as simply "[Deleted User]" and can aggregate together in statistics . An example might be a User Moderator bot on Reddit, seen below.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/reddit_bot.png}
+    \caption{An AutoModerator Bot on r/politics}
+    \label{fig:bot}
+\end{figure}
+
+While it's impossible to filter out all of these bots, deleted users can simply be filtered out using an exclusion list. 
+
 \subsubsection{Interactional Analysis}
 Instead of per-user analysis, interactional analysis looks at the interactions between users, such as who replies to who and who is contributing the most to the conversations. 
 
@@ -508,8 +525,12 @@ In this system, emotional analysis will include:
 \begin{itemize}
     \item Average emotional by topic.
     \item Overall average emotional distribution across the dataset.
-    \item Dominant emotion distributions, which are the most common overall 
+    \item Dominant emotion distributions for each event
+    \item Average emotion by data source
 \end{itemize}
+
+\subsubsection{Cultural Analysis}
+Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
 
 \subsection{Data Pipeline}
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
@@ -570,7 +591,7 @@ After normalisation, the dataset is enriched with additional derived fields and 
     \item \textbf{Named Entity Recognition}: Each event is processed to identify any named entities mentioned in the text, such as people, places, or organisations, which are stored as a list associated with the event.
 \end{itemize}
 
-NLP processing allows for much richer analysis of the dataset, as it provides additional layers of information beyond just the raw text content. After enrichment, the dataset is ready to be stored in the database and made available for analysis through the API endpoints.
+NLP processing lets us perform much richer analysis of the dataset, as it provides additional layers of information beyond just the raw text content. After enrichment, the dataset is ready to be stored in the database and made available for analysis through the API endpoints.
 
 \subsubsection{Data Storage}
 The enriched dataset is stored in a PostgreSQL database, with a schema similar to the unified data model defined in the normalisation section, with additional fields for the derived data, NLP outputs, and user ownership. Each dataset is associated with a specific user account, and the system supports multiple datasets per user.
