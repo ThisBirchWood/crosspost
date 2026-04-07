@@ -67,6 +67,12 @@ class CulturalAnalysis:
 
     def get_stance_markers(self, df: pd.DataFrame) -> dict[str, Any]:
         s = df[self.content_col].fillna("").astype(str)
+        emotion_exclusions = {"emotion_neutral", "emotion_surprise"}
+        emotion_cols = [
+            c
+            for c in df.columns
+            if c.startswith("emotion_") and c not in emotion_exclusions
+        ]
 
         hedge_pattern = re.compile(
             r"\b(maybe|perhaps|possibly|probably|likely|seems|seem|i think|i feel|i guess|kind of|sort of|somewhat)\b"
@@ -88,7 +94,7 @@ class CulturalAnalysis:
             0, 1
         )
 
-        return {
+        result = {
             "hedge_total": int(hedge_counts.sum()),
             "certainty_total": int(certainty_counts.sum()),
             "deontic_total": int(deontic_counts.sum()),
@@ -106,6 +112,32 @@ class CulturalAnalysis:
                 1000 * perm_counts.sum() / token_counts.sum(), 3
             ),
         }
+
+        if emotion_cols:
+            emo = df[emotion_cols].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+
+            result["hedge_emotion_avg"] = (
+                emo.loc[hedge_counts > 0].mean()
+                if (hedge_counts > 0).any()
+                else pd.Series(0.0, index=emotion_cols)
+            ).to_dict()
+            result["certainty_emotion_avg"] = (
+                emo.loc[certainty_counts > 0].mean()
+                if (certainty_counts > 0).any()
+                else pd.Series(0.0, index=emotion_cols)
+            ).to_dict()
+            result["deontic_emotion_avg"] = (
+                emo.loc[deontic_counts > 0].mean()
+                if (deontic_counts > 0).any()
+                else pd.Series(0.0, index=emotion_cols)
+            ).to_dict()
+            result["permission_emotion_avg"] = (
+                emo.loc[perm_counts > 0].mean()
+                if (perm_counts > 0).any()
+                else pd.Series(0.0, index=emotion_cols)
+            ).to_dict()
+
+        return result
 
     def get_avg_emotions_per_entity(
         self, df: pd.DataFrame, top_n: int = 25, min_posts: int = 10

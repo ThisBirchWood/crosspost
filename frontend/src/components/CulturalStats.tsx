@@ -39,6 +39,21 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
     return `${dominantLabel} (${(dominant[1] * 100).toFixed(1)}%)`;
   };
 
+  const stanceSublabel = (
+    per1kTokens: number | undefined,
+    emotionAvg: Record<string, number> | undefined,
+  ) => {
+    const rateLabel =
+      typeof per1kTokens === "number"
+        ? `${per1kTokens.toFixed(1)} per 1k words`
+        : "Word frequency";
+    const emotionLabel = topEmotion(emotionAvg);
+
+    return emotionLabel === "—"
+      ? rateLabel
+      : `${rateLabel} • Avg mood: ${emotionLabel}`;
+  };
+
   return (
     <div style={styles.page}>
       <div style={{ ...styles.container, ...styles.grid }}>
@@ -107,41 +122,37 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
         <Card
           label="Hedging Words"
           value={stance?.hedge_total?.toLocaleString() ?? "—"}
-          sublabel={
-            typeof stance?.hedge_per_1k_tokens === "number"
-              ? `${stance.hedge_per_1k_tokens.toFixed(1)} per 1k words`
-              : "Word frequency"
-          }
+          sublabel={stanceSublabel(
+            stance?.hedge_per_1k_tokens,
+            stance?.hedge_emotion_avg,
+          )}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Certainty Words"
           value={stance?.certainty_total?.toLocaleString() ?? "—"}
-          sublabel={
-            typeof stance?.certainty_per_1k_tokens === "number"
-              ? `${stance.certainty_per_1k_tokens.toFixed(1)} per 1k words`
-              : "Word frequency"
-          }
+          sublabel={stanceSublabel(
+            stance?.certainty_per_1k_tokens,
+            stance?.certainty_emotion_avg,
+          )}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Need/Should Words"
           value={stance?.deontic_total?.toLocaleString() ?? "—"}
-          sublabel={
-            typeof stance?.deontic_per_1k_tokens === "number"
-              ? `${stance.deontic_per_1k_tokens.toFixed(1)} per 1k words`
-              : "Word frequency"
-          }
+          sublabel={stanceSublabel(
+            stance?.deontic_per_1k_tokens,
+            stance?.deontic_emotion_avg,
+          )}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Permission Words"
           value={stance?.permission_total?.toLocaleString() ?? "—"}
-          sublabel={
-            typeof stance?.permission_per_1k_tokens === "number"
-              ? `${stance.permission_per_1k_tokens.toFixed(1)} per 1k words`
-              : "Word frequency"
-          }
+          sublabel={stanceSublabel(
+            stance?.permission_per_1k_tokens,
+            stance?.permission_emotion_avg,
+          )}
           style={{ gridColumn: "span 3" }}
         />
 

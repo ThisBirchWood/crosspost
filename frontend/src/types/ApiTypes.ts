@@ -168,6 +168,10 @@ type StanceMarkers = {
   certainty_per_1k_tokens: number;
   deontic_per_1k_tokens: number;
   permission_per_1k_tokens: number;
+  hedge_emotion_avg?: Record<string, number>;
+  certainty_emotion_avg?: Record<string, number>;
+  deontic_emotion_avg?: Record<string, number>;
+  permission_emotion_avg?: Record<string, number>;
 };
 
 type EntityEmotionAggregate = {
