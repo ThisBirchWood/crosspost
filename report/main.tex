@@ -111,6 +111,19 @@ Looking at when a community is active can reveal quite a lot about its nature an
 \subsubsection{Cultural Markers}
 Cultural markers are the words, phrases, memes, and behaviours that are specific to a particular community and signal that someone is a member of it. These might include in-jokes, niche slang, recurring references, or even particular ways of formatting posts. In the context of digital ethnography, identifying these markers is useful because they reveal how communities build a shared identity and distinguish themselves from outsiders.
 
+Some patterns, such as usage of words like "we, us, our, ourselves", where posts are referring to themselves as a community might have different sentiment to posts where words like "they, them, their, themselves" are used. These are known as "identity markers" and they can be used to identify how welcoming a community might be to outsiders.
+
+\subsubsection{Stance Markers}
+Stance Markers refer to the usage of different phrasing patterns which can reveal the speakers attitude towards topics. There are different kinds of these phrasings, such as hedge, certainty, deontic and permission patterns.
+
+\textbf{Hedge Patterns} are usually phrases that contain words like "maybe, possibly, probably, i think, i feel" and generally mean that someone is unsure or suspicious about something.
+
+\textbf{Certainty Patterns} contain phrases like "definitely, certainly, clearly, obviously" and as the name suggests, imply certainty or assuredness.
+
+\textbf{Deontic Patterns} contains phrases that imply obligation, such as "must, should, need, have to". In the context of online communities, these patterns are often used to assert authority or to reinforce communal norms and "unwritten rules."
+
+\textbf{Permission Patterns} refer to phrases where someone is asking permision, like "can, allowed, ok, permitted". These patterns could serve as an indicator of a user's status within an online community.
+
 \subsection{Natural Language Processing}
 \textbf{Natural Language Processing} is a branch of artificial intelligence that allows machines to interpret, analyse and generate human language. The aim of NLP models is not only to understand single words individually, but to be able to understand the context of those words in a broader paragraph or story.
 
@@ -163,7 +176,7 @@ The dataset is drawn from four distinct online platforms, each of which represen
 
 Reddit's hierarchical comment threading enables deep conversational analysis and reply-chain metrics, whereas YouTube comments are largely flat and unthreaded. Boards.ie occupies a middle ground, with linear threads but a more intimate community character. Taken together, the four sources offer variation in interaction structure, community age, demographic composition, and linguistic register, all of which are factors that the system's analytical modules are designed to detect and compare.
 
-Collecting data across multiple platforms also introduces the challenge of normalisation. Posts, comments, and metadata fields differ in schema and semantics across sources. A core design requirement of the system is the normalisation of these inputs into a unified event-based internal representation, allowing the same analytical pipeline to operate uniformly regardless of the source.
+Due to data being collected across multiple platforms, they must be normalised into a single data model. Posts, comments, and metadata fields differ in schema and semantics across sources. A core design requirement of the system is the normalisation of these inputs into a unified event-based internal representation, allowing the same analytical pipeline to operate uniformly regardless of the source.
 
 \newpage
 \section{Analysis}
@@ -427,111 +440,6 @@ Flask was chosen for its simplicity, familiarity and speed of development. It al
 \subsubsection{React Frontend}
 React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
 
-
-\subsection{Ethnographic Analysis}
-The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
-
-Ethnographic analysis can be carried out from many different perspectives, such as the perspective of a single user or the community as a whole. The system is designed to support both of these perspectives, as well as the ability to zoom in and out between them. For example, a researcher might want to look at the overall emotional tone of a community, but then zoom in to see how a specific user contributes to that tone.
-
-The system is designed to support multiple types of analysis, such as:
-\begin{itemize}
-    \item \textbf{Temporal Analysis}: looking at when a community is active and how that activity changes over time.
-    \item \textbf{Linguistic Analysis}: looking at the words and phrases that are commonly used in a community, and how they relate to identity and culture.
-    \item \textbf{Emotional Analysis}: looking at the emotional tone of a community, and how it varies across different topics or users.
-    \item \textbf{User Analysis}: looking at the behaviour and activity of individual users, and how they contribute to the community.
-    \item \textbf{Interaction Analysis}: looking at how users interact with each other, such as who replies to whom and how conversations develop.
-    \item \textbf{Cultural Analysis}: looking at the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references.
-\end{itemize}
-
-Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
-
-For each type of analysis that involves analysing the content of the posts themselves, they will be split into tokens and stop words will be stripped from them, which makes analysis easier.
-
-\subsubsection{Temporal Analysis}
-Temporal analysis allows researchers to understand what a community is talking about over time, and how the emotional tone of the community changes over time. For example, a researcher might want to see how discussions around a specific topic evolve over time, or how the emotional tone of a community changes in response to external events.
-
-However a major limitation of the data captured for this system, whether it's the Cork dataset, or any automatically fetched dataset, it will only stretch at most a few weeks back in time. This is because the system is designed to fetch only the most recent posts and comments from social media platforms, which means that it will not capture historical data beyond a certain point. Therefore, while temporal analysis can still be carried out on the dataset, it will be limited to a relatively short timeframe.
-
-In this system, temporal analysis will be limited to:
-\begin{itemize}
-    \item Event frequency per day.
-    \item Weekday--hour heatmap data representing activity distribution.
-\end{itemize}
-
-\textbf{Average reply time per emotion} was considered as a potential temporal analysis metric, but was eventually excluded due to inconsistent and statistically insignificant results that yielded no meaningful analytical insight. 
-
-\subsubsection{Linguistic Analysis}
-Linguistic analysis allows researchers to understand the language and words used in a community. For example, a researcher might want to see what words are most commonly used in a community, or how the language used in a community relates to identity and culture.
-
-Splitting each 
-
-In this system, linguistic analysis will include:
-\begin{itemize}
-    \item Word frequency statistics excluding standard and domain-specific stopwords.
-    \item Common bi-grams and tri-grams from textual content.
-    \item Lexical diversity metrics for the dataset.
-\end{itemize}
-
-The word frequencies and n-gram metrics were chosen because they can provide insights into the language and phrases used commonly in an online community, which is important for ethnographic analysis and understanding a community fully. Lexical diversity metrics such as the total number of unique tokens versus the total number of tokens can show if a specific culture often repeats phrases (like memes, slang etc.) or if they often have structured, serious discussion without repeating themeselves.
-
-Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. 
-
-In addition to standard stop words, the system also excludes link tokens such as "www", "http", and "https" from the word frequency analysis, as social media users will often include links in their posts and comments, and these tokens can become quite common and skew the word frequency results without adding meaningful insight.
-
-\subsubsection{User Analysis}
-User analysis allows researchers to understand the behaviour and activity of individual users within a community. For example, a researcher might want to see who the most active users are in a community, or how different users contribute to the overall emotional tone of the community.
-
-In this system, user analysis will include:
-\begin{itemize}
-    \item Identification of top users based on activity.
-    \item Per-user activity such as:
-    \begin{itemize}
-        \item Total number of events (posts and comments).
-        \item Average emotion distribution across their events.
-        \item Average topic distribution across their events.
-        \item Comment-to-post ratio.
-        \item Vocabulary information such as top words used and lexical diversity.
-    \end{itemize}
-\end{itemize}
-
-Identifying top users allows us to see the most active and prolific posters in a community, which might often be site-specific bots that comment on every post or deleted users, which often show up as simply "[Deleted User]" and can aggregate together in statistics . An example might be a User Moderator bot on Reddit, seen below.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.75\textwidth]{img/reddit_bot.png}
-    \caption{An AutoModerator Bot on r/politics}
-    \label{fig:bot}
-\end{figure}
-
-While it's impossible to filter out all of these bots, deleted users can simply be filtered out using an exclusion list. 
-
-\subsubsection{Interactional Analysis}
-Instead of per-user analysis, interactional analysis looks at the interactions between users, such as who replies to who and who is contributing the most to the conversations. 
-
-In this system, interactional analysis will include:
-\begin{itemize}
-    \item Average conversation thread depth.
-    \item Top interaction pairs between users.
-    \item An interaction graph based on user relationships.
-    \item Conversation concentration metrics such as who is contributing the most to the conversations and how much of the conversation is dominated by a small number of users.
-\end{itemize}
-
-For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
-
-\subsubsection{Emotional Analysis}
-Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
-
-In this system, emotional analysis will include:
-\begin{itemize}
-    \item Average emotional by topic.
-    \item Overall average emotional distribution across the dataset.
-    \item Dominant emotion distributions for each event
-    \item Average emotion by data source
-\end{itemize}
-
-\subsubsection{Cultural Analysis}
-Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
-
 \subsection{Data Pipeline}
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
 
@@ -617,6 +525,117 @@ The \texttt{events} table in PostgreSQL contains the following fields:
 
 \subsubsection{Data Retrieval}
 The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
+
+\subsection{Ethnographic Analysis}
+The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
+
+Ethnographic analysis can be carried out from many different perspectives, such as the perspective of a single user or the community as a whole. The system is designed to support both of these perspectives, as well as the ability to zoom in and out between them. For example, a researcher might want to look at the overall emotional tone of a community, but then zoom in to see how a specific user contributes to that tone.
+
+The system is designed to support multiple types of analysis, such as:
+\begin{itemize}
+    \item \textbf{Temporal Analysis}: looking at when a community is active and how that activity changes over time.
+    \item \textbf{Linguistic Analysis}: looking at the words and phrases that are commonly used in a community, and how they relate to identity and culture.
+    \item \textbf{Emotional Analysis}: looking at the emotional tone of a community, and how it varies across different topics or users.
+    \item \textbf{User Analysis}: looking at the behaviour and activity of individual users, and how they contribute to the community.
+    \item \textbf{Interaction Analysis}: looking at how users interact with each other, such as who replies to whom and how conversations develop.
+    \item \textbf{Cultural Analysis}: looking at the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references.
+\end{itemize}
+
+Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
+
+For each type of analysis that involves analysing the content of the posts themselves, they will be split into tokens and stop words will be stripped from them, which makes analysis easier.
+
+\subsubsection{Temporal Analysis}
+Temporal analysis allows researchers to understand what a community is talking about over time, and how the emotional tone of the community changes over time. For example, a researcher might want to see how discussions around a specific topic evolve over time, or how the emotional tone of a community changes in response to external events.
+
+However a major limitation of the data captured for this system, whether it's the Cork dataset, or any automatically fetched dataset, it will only stretch at most a few weeks back in time. This is because the system is designed to fetch only the most recent posts and comments from social media platforms, which means that it will not capture historical data beyond a certain point. Therefore, while temporal analysis can still be carried out on the dataset, it will be limited to a relatively short timeframe.
+
+In this system, temporal analysis will be limited to:
+\begin{itemize}
+    \item Event frequency per day.
+    \item Weekday--hour heatmap data representing activity distribution.
+\end{itemize}
+
+\textbf{Average reply time per emotion} was considered as a potential temporal analysis metric, but was eventually excluded due to inconsistent and statistically insignificant results that yielded no meaningful analytical insight. 
+
+\subsubsection{Linguistic Analysis}
+Linguistic analysis allows researchers to understand the language and words used in a community. For example, a researcher might want to see what words are most commonly used in a community, or how the language used in a community relates to identity and culture.
+
+In this system, linguistic analysis will include:
+\begin{itemize}
+    \item Word frequency statistics excluding standard and domain-specific stopwords.
+    \item Common bi-grams and tri-grams from textual content.
+    \item Lexical diversity metrics for the dataset.
+\end{itemize}
+
+The word frequencies and n-gram metrics were chosen because they can provide insights into the language and phrases used commonly in an online community, which is important for ethnographic analysis and understanding a community fully. Lexical diversity metrics such as the total number of unique tokens versus the total number of tokens can show if a specific culture often repeats phrases (like memes, slang etc.) or if they often have structured, serious discussion without repeating themeselves.
+
+Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. 
+
+In addition to standard stop words, the system also excludes link tokens such as "www", "http", and "https" from the word frequency analysis, as social media users will often include links in their posts and comments, and these tokens can become quite common and skew the word frequency results without adding meaningful insight.
+
+\subsubsection{User Analysis}
+User analysis allows researchers to understand the behaviour and activity of individual users within a community. For example, a researcher might want to see who the most active users are in a community, or how different users contribute to the overall emotional tone of the community.
+
+In this system, user analysis will include:
+\begin{itemize}
+    \item Identification of top users based on activity.
+    \item Per-user activity such as:
+    \begin{itemize}
+        \item Total number of events (posts and comments).
+        \item Average emotion distribution across their events.
+        \item Average topic distribution across their events.
+        \item Comment-to-post ratio.
+        \item Vocabulary information such as top words used and lexical diversity.
+    \end{itemize}
+\end{itemize}
+
+Identifying top users allows us to see the most active and prolific posters in a community, which might often be site-specific bots that comment on every post or deleted users, which often show up as simply "[Deleted User]" and can aggregate together in statistics . An example might be a User Moderator bot on Reddit, seen below.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/reddit_bot.png}
+    \caption{An AutoModerator Bot on r/politics}
+    \label{fig:bot}
+\end{figure}
+
+While it's impossible to filter out all of these bots, deleted users can simply be filtered out using an exclusion list. 
+
+\subsubsection{Interactional Analysis}
+Instead of per-user analysis, interactional analysis looks at the interactions between users, such as who replies to who and who is contributing the most to the conversations. 
+
+In this system, interactional analysis will include:
+\begin{itemize}
+    \item Average conversation thread depth.
+    \item Top interaction pairs between users.
+    \item An interaction graph based on user relationships.
+    \item Conversation concentration metrics such as who is contributing the most to the conversations and how much of the conversation is dominated by a small number of users.
+\end{itemize}
+
+For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
+
+\subsubsection{Emotional Analysis}
+Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
+
+In this system, emotional analysis will include:
+\begin{itemize}
+    \item Average emotional by topic.
+    \item Overall average emotional distribution across the dataset.
+    \item Dominant emotion distributions for each event
+    \item Average emotion by data source
+\end{itemize}
+
+\subsubsection{Cultural Analysis}
+Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
+
+In this system, cultural analysis will include:
+\begin{itemize}
+    \item In-Group vs Out-Group phrasing 
+    \item Average emotion for in-group vs out-group phrasing
+    \item Stance Markers
+    \item Average emotions per stance marker type
+    \item Average emotions per entity
+\end{itemize}
 
 \subsection{Automatic Data Collection}
 Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
