@@ -1,10 +1,12 @@
-\documentclass{article}[12pt]
+\documentclass{article}
 \usepackage{graphicx}
 \usepackage{setspace}
 \usepackage{hyperref}
 \usepackage{fvextra}
 
 \begin{document}
+
+\bibliographystyle{plain}
 
 \begin{titlepage}
     \centering
@@ -658,6 +660,12 @@ In this system, cultural analysis will include:
     \item Average emotions per entity
 \end{itemize}
 
+\subsection{Frontend Design}
+The frontend is built with React and TypeScript, and the analysis sections are structured around a tabbed dashboard interface where each tab corresponds to a distinct analytical perspective: temporal, linguistic, emotional, user, and interaction analysis. This organisation mirrors the shape of the backend API and makes it straightforward for a researcher to navigate between different lenses on the same dataset without losing context.
+
+React was chosen for its efficient rendering model and the breadth of its visualisation ecosystem
+
+
 \subsection{Automatic Data Collection}
 Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
 
@@ -745,12 +753,51 @@ Enviornment variables, such as database credentials and social media API keys, w
 
 \newpage
 \section{Implementation}
-\subsection{}
+In the previous chapter, the architecture of the web-based ethnography tool was
+outlined. In this chapter, the details on how this was implemented will be
+discussed.
+
+\subsection{Overview}
+In the initial stages, the project was a small Python script that would fetch data from Reddit and aggregate simple statistics such as number of posts and a number of comments. Some early features like search and subreddit specific searches were added through hard-coded variables. The Reddit Connector code was extracted into it's own \texttt{RedditConnector} module, though the connector abstraction had not yet been formalised.
+
+As this was going to be a web-based tool, the Flask server was then setup. A rudimentary sentiment analysis endpoint was added as an initial test using the VADER Sentiment Python module. An endpoint to fetch from Reddit was added but temporarily scratched. Eventually more analysis endpoints were added, creating the many different analytical perspectives that are available in the final system, such as linguistic analysis and user analysis. 
+
+At this stage, datasets were simply files stored on the machine and loaded into memory globally, which made early development and testing easier, but as the project progressed, the database was added to allow multiple datasets and users. While this was happening, further infrastructure was added to support multiple users, and to fix long-standing issues such as the blocking nature of NLP and data fetching, which was solved through the addition of Redis and Celery for asynchronous processing. Multiple user support was added through the addition of user accounts, with authentication and dataset ownership endpoints.
+
+A very basic frontend was created with React, which was just a simple interface to call the API endpoints and display some basic summary stats such as number of posts, number of comments, and average sentiment. After the initial analysis endpoints were created and the API was fully functional, the frontend was expanded to include the full tabbed interface with visualisations for each analytical perspective.
+
+\subsection{Project Tooling}
+The project was developed using the following tools and libraries:
+\begin{itemize}
+    \item \textbf{Python 3.13} for the backend API and data processing.
+    \item \textbf{Flask} for the web server and API development.
+    \item \textbf{BeautifulSoup} and \textbf{Requests} for web scraping (used in the Boards.ie connector).
+    \item \textbf{google-api-python-client} for interacting with the YouTube Data API.
+    \item \textbf{PostgreSQL} for the database.
+    \item \textbf{Redis} and \textbf{Celery} for asynchronous task processing.
+    \item \textbf{React} and \textbf{TypeScript} for the frontend interface.
+    \item \textbf{Docker} and \textbf{Docker Compose} for containerisation and deployment.
+    \item \textbf{Pandas} for data manipulation and analysis.
+    \item \textbf{NLTK} for basic stop word lists and tokenisation.
+    \item \textbf{Transformers} for NLP models used in emotion classification, topic classification, and named entity recognition.
+    \item \textbf{react-chartjs-2} and \textbf{react-wordcloud} for data visualisation in the frontend.
+\end{itemize}
+
+The project was developed using Git for version control, with a branching strategy that included feature branches for new functionality and a main branch for stable code. Regular commits were made to document the development process and conventional commit messages were used to indicate the type of changes made. Occasionally, text bodies were included in commit messages to provide justification for design decisions or to explain changes that couldn't be easily understood from the diff alone.
+
+\subsection{Social Media Connectors}
+The first connectors implemented were the Reddit and Boards.ie connectors, as these were the original data sources for the Cork dataset. The YouTube connector was added later to improve diversity of data sources. In addition, the decision was made to only fetch new posts and fetch a fixed number of posts, rather than fetching the top posts of all time, which are usually full of memes and jokes that would skew the dataset and not be relevant for ethnographic analysis. In addition the temporal analysis would be skewed if we fetched top posts of all time, as the most popular posts are often from years ago, which would not be relevant for understanding the current state of the community.
+
+\subsubsection{Reddit Connector}
+The initial implementation of the Reddit connector was a simple class that simply used the \texttt{requests} library to fetch data directly from the Reddit API. The online Reddit API documentation was used as a reference for the implementation of the connector \cite{reddit_api}
+
 
 \newpage
 \section{Evaluation}
 
 \newpage
 \section{Conclusions}
+
+\bibliography{references}
 
 \end{document}
