@@ -542,6 +542,23 @@ The \texttt{events} table in PostgreSQL contains the following fields:
 \subsubsection{Data Retrieval}
 The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
 
+\subsection{Natural Language Processing}
+The system will utilise pre-trained NLP models to perform emotion classification, topic classification, and named entity recognition on the text content of each event. These NLP outputs will be stored in the database alongside the raw content, allowing for efficient retrieval and analysis without needing to re-run the models on every query.
+
+These will be implemented in a separate module that will be called during the data enrichment phase of the pipeline. The specific models used for each task will be selected based on their performance and suitability for the type of text data being analysed. This module will be called by the Celery worker during the data enrichment phase, and the outputs will be stored in the database for later retrieval.
+
+\subsubsection{Emotional Classification}
+Emotional Classification will be the bedrock of the ethnographic analysis, as it provides insight into the emotions of a community and how they relate to different topics and users. As mentioned in the feasibility analysis, the outputs of the emotion classification model should be interpreted as indicative patterns rather than definitive representations of user meaning, due to the limitations of NLP models.
+
+Usage of simple VADER-based models is usually too-simplistic for the type of text data being analysed. Classifying posts into positive, negative and neutral categories is not nuanced enough to truly capture the emotional tone of a community. Therefore, the system will use a more complex model that can classify text into a wider range of emotions, which will allow for richer analysis of the emotions of the community.
+
+\subsubsection{Topic Classification}
+
+
+\subsubsection{Named Entity Recognition}
+
+
+
 \subsection{Ethnographic Analysis}
 The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
 
@@ -771,7 +788,7 @@ The project was developed using the following tools and libraries:
 \begin{itemize}
     \item \textbf{Python 3.13} for the backend API and data processing.
     \item \textbf{Flask} for the web server and API development.
-    \item \textbf{BeautifulSoup} and \textbf{Requests} for web scraping (used in the Boards.ie connector).
+    \item \textbf{BeautifulSoup} and \textbf{Requests} for web scraping and HTTP requests.
     \item \textbf{google-api-python-client} for interacting with the YouTube Data API.
     \item \textbf{PostgreSQL} for the database.
     \item \textbf{Redis} and \textbf{Celery} for asynchronous task processing.
@@ -788,9 +805,62 @@ The project was developed using Git for version control, with a branching strate
 \subsection{Social Media Connectors}
 The first connectors implemented were the Reddit and Boards.ie connectors, as these were the original data sources for the Cork dataset. The YouTube connector was added later to improve diversity of data sources. In addition, the decision was made to only fetch new posts and fetch a fixed number of posts, rather than fetching the top posts of all time, which are usually full of memes and jokes that would skew the dataset and not be relevant for ethnographic analysis. In addition the temporal analysis would be skewed if we fetched top posts of all time, as the most popular posts are often from years ago, which would not be relevant for understanding the current state of the community.
 
-\subsubsection{Reddit Connector}
-The initial implementation of the Reddit connector was a simple class that simply used the \texttt{requests} library to fetch data directly from the Reddit API. The online Reddit API documentation was used as a reference for the implementation of the connector \cite{reddit_api}
+\subsubsection{Data Transfer Objects}
+Data Transfers Objects are simple classes that represent the data structure of a post or comment as it is retrieved from the source platform. They are used to encapsulate the raw data and provide a consistent interface for the rest of the system to interact with, regardless of the source platform.
 
+These are later replaced by the unified "event" data model during the normalisation process, but they are a useful abstraction for the connectors to work with. Two DTOs are defined: \texttt{PostDTO} and \texttt{CommentDTO}, which represent the structure of a post and a comment respectively as they are retrieved from the source platform. The \texttt{PostDTO} will contain a list of \texttt{CommentDTO} objects.
+
+\subsubsection{Reddit Connector}
+The initial implementation of the Reddit connector was a simple class that simply used the \texttt{requests} library to fetch data directly from the Reddit API. The online Reddit API documentation was used as a reference for the implementation of the connector \cite{reddit_api}. It uses the \texttt{reddit.com/r/\{subreddit\}/new} endpoint to fetch the most recent posts from a specified subreddit, and the \texttt{reddit.com/r/\{subreddit\}/{post\_id}/comments} endpoint to fetch comments for each post.
+
+It primary method implemented is of this signature:
+\begin{Verbatim}[breaklines=true]
+def get_new_posts_by_search(self, search: str, category: str, limit: int) -> list[Post]:
+\end{Verbatim}
+
+The \texttt{reddit.com/r/\{subreddit\}/new} has a default limit of 100 posts per request, therefore \textbf{pagination} was implemented to allow fetching of more than 100 posts, which is necessary for Reddit datasets of larger than 100 posts. The connector will keep fetching posts until it reaches the specified number of posts to fetch, or until there are no more posts available.
+
+The "after" parameter is a post id and tells the API to fetch posts that come after that specific post id in the subreddit, which allows for pagination through the posts. The connector keeps track of the last post id fetched and uses it to fetch the next batch of posts until the desired number of posts is reached or there are no more posts available.
+
+It became apparent that when unauthenticated, the Reddit API has severe rate limits that make fetching large datasets take hours, therefore the connector was updated to support authentication using Reddit API client credentials, which are provided through environment variables. This was done using the \texttt{requests\_oauthlib} library, which provides a convenient way to handle OAuth2 authentication with the Reddit API. With authentication, the rate limits are increased, allowing for faster data fetching.
+
+\subsubsection{YouTube Connector}
+The YouTube connector was the simplest out of the three initial connectors, as YouTube provides an official API that is well-documented compared to the Reddit API. The Python library \texttt{google-api-python-client} was used to interact with the YouTube Data API. It provides simple methods like \texttt{youtube.search().list()} to search for videos based on keywords, and \texttt{youtube.commentThreads().list()} to fetch comments for a specific video.
+
+Like the Reddit Connector, it implements the \texttt{get\_new\_posts\_by\_search} method, which searches for videos based on a query and then fetches comments for those videos. As the Google API library handles comment fetching and pagination internally, the implementation was straightforward and did not require manual handling of pagination or rate limits.
+
+\subsubsection{Boards.ie Connector}
+The Boards.ie connector was the most complex connector to implement, as Boards.ie does not provide an official API for data retrieval, which meant web scraping techniques were utilised to fetch data from the site. The \texttt{requests} library was used to make HTTP requests to the Boards.ie website, and the \texttt{BeautifulSoup} library was used to parse the HTML content and extract the relevant data.
+
+Inspect element was used to poke around the structure of the Boards.ie website and find the relevant HTML elements that contain the post and comment data. \texttt{BeautifulSoup} was then used to extract the correct data from the \texttt{.Message.userContent} tag and the \texttt{.PageTitle} tag, which contain the content and title of the posts. Each comment lived in an \texttt{ItemComment} class. Each of these were collected and iterated through to create the list of \texttt{PostDTO} and \texttt{CommentDTO} objects that represent the data retrieved from the site.
+
+As not all comments on a thread are on one page, pagination was implemented by looking for the "Next" button on the page and following the link to the next page of comments until there are no more pages left. This allows for fetching of all comments for a given post, even if they span multiple pages.
+
+A \texttt{ThreadPoolExecutor} was used to fetch posts in parallel, which improved the performance of the connector significantly, as fetching posts sequentially was very slow due to the need to fetch comments for each post, which often spanned multiple pages. Though there was diminishing returns after a certain number of threads, possibly due to site blocking or internet connection limits. Initially 20 threads were used, but this was later reduced to 10 threads to avoid potential issues with site blocking and to improve ethical considerations around web scraping.
+
+\subsubsection{Connecter Plugin System}
+The connector plugin system was implemented to allow for easy addition of new data sources in the future. This would require simply implemented a new connector class and dropping it into the connectors directory, without needing to modify any existing code. This was achieved through the use of Python's \texttt{importlib} library, which allows for dynamic importing of modules at runtime.
+
+To achieve this, the base class \texttt{BaseConnector} was defined, which allows a standard interface for all connectors to implement. Each connector implements the \texttt{get\_new\_posts\_by\_search} method, which takes in a search query, a category (which is the subreddit for Reddit, or the category for Boards.ie), and a limit on the number of posts to fetch. The method returns a list of \texttt{PostDTO} objects that represent the data retrieved from the source platform.
+
+In addition, some metadata is required for each connector, such as the source name, search support and category support, which are defined as class variables in each connector. This is required as some connectors may not support search or categories, for example YouTube does not support categories in the same sense that Reddit might.
+
+\subsection{Data Pipeline}
+
+\subsubsection{Data Enrichment}
+The data enrichment process is responsible for taking the raw data retrieved from the connectors and transforming it into a format that is suitable for analysis. This involves several steps, including normalisation, NLP processing, and storage in the database.
+ 
+Initially enrichment was done synchronously in the main Flask thread, and was alongside the ethnographic analysis upon every request rather than being done once at the point of data ingestion. However once NLP processing was added, it was no longer feasible to do this synchronously in the main thread. 
+
+\subsection{Ethnographic Statistics}
+This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
+
+
+
+
+\subsection{Flask API}
+
+\subsection{React Frontend}
 
 \newpage
 \section{Evaluation}
