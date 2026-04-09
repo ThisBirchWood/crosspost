@@ -505,14 +505,11 @@ As part of this normalisation process, the dataset is also \textbf{flattened}, s
 
 Overall, the data normalisation process unifies the structure of the dataset, and flattens the data into a format that makes analysis more efficient and easier.
 
-
 \subsubsection{Data Enrichment}
 After normalisation, the dataset is enriched with additional derived fields and NLP outputs. This includes:
 \begin{itemize}
     \item \textbf{Datetime Derivations}: Fields such as day of week, hour of day, and week of year are derived from the raw timestamp and stored alongside the event, so they do not need to be recomputed on every query.
-    \item \textbf{Emotion Classification}: Each event is run through an NLP model that assigns an emotional label to the text content, such as joy, anger, or sadness.
-    \item \textbf{Topic Classification}: Each event is classified into its most relevant topic using an NLP model, based on either the user-provided topic list or the system default.
-    \item \textbf{Named Entity Recognition}: Each event is processed to identify any named entities mentioned in the text, such as people, places, or organisations, which are stored as a list associated with the event.
+    \item \textbf{NLP Analysis}: The text content of each event is processed through NLP models to generate outputs such as emotion classification, topic classification, and named entity recognition.
 \end{itemize}
 
 NLP processing lets us perform much richer analysis of the dataset, as it provides additional layers of information beyond just the raw text content. After enrichment, the dataset is ready to be stored in the database and made available for analysis through the API endpoints.
@@ -535,7 +532,7 @@ The \texttt{events} table in PostgreSQL contains the following fields:
     \item \texttt{reply\_to}: for comments, the identifier of the comment it directly replies to. Null if the comment is a direct reply to a post.
     \item \texttt{source}: the platform from which the content was retrieved.
     \item \texttt{topic}, \texttt{topic\_confidence}: the topic assigned to the event by the NLP model, along with a confidence score.
-    \item \texttt{ner\_entities}: a list of named entities identified in the content, stored as a \texttt{JSONB} field.
+    \item \texttt{ner\_entities}: a list of named entities identified in the content.
     \item \texttt{emotion\_anger}, \texttt{emotion\_disgust}, \texttt{emotion\_fear}, \texttt{emotion\_joy}, \texttt{emotion\_sadness}: emotion scores assigned to the event by the NLP model.
 \end{itemize}
 
@@ -553,11 +550,12 @@ Emotional Classification will be the bedrock of the ethnographic analysis, as it
 Usage of simple VADER-based models is usually too-simplistic for the type of text data being analysed. Classifying posts into positive, negative and neutral categories is not nuanced enough to truly capture the emotional tone of a community. Therefore, the system will use a more complex model that can classify text into a wider range of emotions, which will allow for richer analysis of the emotions of the community.
 
 \subsubsection{Topic Classification}
+Topic classification will allow the system to classify specific posts into specific topics, which can be used to understand what a community is talking about, and in conjunction with emotional classification, how they feel about these topics as well. The system will support both a generalised topic classification model that can classify posts into a set of pre-defined general topics, as well as a custom topic classification model that can classify posts into user-defined topics based on a list of topics and descriptions provided by the user.
 
+Initially, the system would have extract common themes and topics from the dataset by extracting common keywords and phrases, and then use these to generate a topic list. However, this approach was noisy and topics were often singular random words that did not have any overlap with each other, making topic classification less insightful. Therefore, specified or pre-defined topic lists will instead be used.
 
 \subsubsection{Named Entity Recognition}
-
-
+Named Entity Recognition allows the system to identify specific entities mentioned in the text, like people, places and organisations. In combination with emotional classification, we can see the general sentiment around specific places and people in a community, which can be very insightful for ethnographic analysis. For example, in a Cork-specific dataset, we might see that the city centre is often mentioned with negative emotions due to traffic and parking issues, while local parks are mentioned with positive emotions.
 
 \subsection{Ethnographic Analysis}
 The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
@@ -845,12 +843,112 @@ To achieve this, the base class \texttt{BaseConnector} was defined, which allows
 
 In addition, some metadata is required for each connector, such as the source name, search support and category support, which are defined as class variables in each connector. This is required as some connectors may not support search or categories, for example YouTube does not support categories in the same sense that Reddit might.
 
+\subsection{Database Configuration}
+A PostgreSQL Docker container was set up to serve as the database for the system. This allows for persistent storage of datasets, as well as support for multiple users and multiple datasets per user. The implemented schema passed into the Docker container by mounting the \texttt{schema.sql} file as a volume, which allows for easy updates to the database schema during development. The database contains three main tables:
+\begin{itemize}
+    \item \textbf{users}: contains user information such as username, email and password hash.
+    \item \textbf{datasets}: contains dataset information such as dataset name, description and owner (foreign key to users table).
+    \item \textbf{events}: contains the main data for the posts and comments.
+\end{itemize}
+
+\subsubsection{Low-Level Connector}
+A low-level \texttt{PostgreConnector} module was implemented to handle the raw SQL queries for interacting with the database. It connects to the Docker container using environment variables for the database credentials, which are passed into the container through the \texttt{docker-compose.yaml} file. The connector provides methods for executing queries with parameters and supports rollback in the case of errors.
+
+ Two main methods of the connector are:
+\begin{itemize}
+    \item \texttt{def execute(self, query, params=None, fetch=False) -> list}
+    \item \texttt{def execute\_batch(self, query, values) -> list}
+\end{itemize}
+
+This module provides a simple interface for executing SQL queries. It's used by higher level modules to interact with the database without needing to worry about the details of database connections and query execution.
+
+\subsubsection{Dataset Manager}
+The dataset manager is a higher-level module that provides an interface for managing datasets in the database. It uses the low-level \texttt{PostgreConnector} to execute SQL queries, but provides more specific methods for dataset management, such as creating a new dataset, fetching a dataset by id, and updating a dataset metadata. Dependency injection is used to pass an instance of the \texttt{PostgreConnector}.
+
+The \texttt{DatasetManager} class is responsible for all database interactions relating to datasets, and draws a deliberate distinction between two categories of data:
+\begin{itemize}
+    \item \textbf{Dataset metadata} (the \texttt{datasets} table) refers to the metadata about a dataset like its name, owner, topic configuration, and processing status. Methods such as \texttt{save\_dataset\_info()}, \texttt{get\_dataset\_info()}, and \texttt{set\_dataset\_status()} operate on this layer.
+    \item \textbf{Dataset content} (the \texttt{events} table) refers to the enriched event rows produced by the pipeline. \texttt{save\_dataset\_content()} performs a batch insert of the full enriched DataFrame, with NER entities serialised to JSONB via \texttt{psycopg2}'s \texttt{Json} wrapper, and emotion scores stored as flat numeric columns to allow direct SQL aggregation without requiring JSON parsing at query time.
+\end{itemize}
+
+\texttt{authorize\_user\_dataset()} enforces ownership by comparing the dataset's \texttt{user\_id} against the requesting user before any operation is performed, returning \texttt{False} rather than raising an exception so that the calling route handler can respond with an appropriate HTTP error.
+
+NER output is stored as JSONB rather than in relational columns, as the number of extracted entities per post is arbitrary and varies between posts. Storing this into a fixed column structure would have been awkward and required a schema redesign.
+
+This module is a simple interface to deal with datasets in the database, and abstracts away the details of SQL queries and database interactions from the rest of the application. It is used by the API endpoints to manage datasets and their content.
+
+\subsubsection{Authentication Manager}
+The authentication manager is another higher-level module that provides an interface for managing user authentication in the database. It also uses the low-level \texttt{PostgreConnector} to execute SQL queries, but provides more specific methods for authentication management, such as creating a new user, fetching a user by id, and authenticating a user. It handles password hashing using the \texttt{bcrypt} library, which provides a secure way to hash and verify passwords. Similar to the dataset manager, dependency injection is used to pass an instance of the \texttt{PostgreConnector}.
+
+The most important authentication methods implemented are as follows:
+\begin{itemize}
+    \item \texttt{register\_user(username: str, email: str, password: str) -> None}: Registers a new user, hashes their password, checks for duplicate usernames or emails, and stores the user in the database.
+    \item \texttt{authenticate\_user(username: str, password: str) -> None | dict}: Authenticates a user by verifying the provided password against the stored hash, returning user information if successful or \texttt{None} if authentication fails.
+    \item \texttt{get\_user\_by\_id(user\_id: int) -> None | dict}: Fetches a user's information from the database based on their user ID, returning a dictionary of user details if found or \texttt{None} if no such user exists.
+\end{itemize}
+
+Defensive programming is used in the authentication manager to handle edge cases like duplicate usernames or emails, an example of this is in the \texttt{register\_user()} method, shown below:
+
+\begin{Verbatim}[breaklines=true]
+def register_user(self, username, email, password):
+    hashed_password = self.bcrypt.generate_password_hash(password).decode("utf-8")
+
+    if len(username) < 3:
+        raise ValueError("Username must be longer than 3 characters")
+
+    if not EMAIL_REGEX.match(email):
+        raise ValueError("Please enter a valid email address")
+
+    if self.get_user_by_email(email):
+        raise ValueError("Email already registered")
+
+    if self.get_user_by_username(username):
+        raise ValueError("Username already taken")
+
+    self._save_user(username, email, hashed_password)
+\end{Verbatim}
+
+This module is a simple interface that the higher level Flask API can call for easy management of user authentication and registration.
+
 \subsection{Data Pipeline}
+The data pipeline began with the data connectors mentioned in the previous section, which are responsible for fetching raw data from the source platforms. However they were not initially included as part of the data pipeline, as the initial system was designed to only support manual dataset uploads. The data connectors were used to fetch data for the Cork dataset, which was then uploaded automatically through the API. Once the automatic data fetching functionality was added, the connectors were integrated into the data pipeline.
 
 \subsubsection{Data Enrichment}
 The data enrichment process is responsible for taking the raw data retrieved from the connectors and transforming it into a format that is suitable for analysis. This involves several steps, including normalisation, NLP processing, and storage in the database.
- 
-Initially enrichment was done synchronously in the main Flask thread, and was alongside the ethnographic analysis upon every request rather than being done once at the point of data ingestion. However once NLP processing was added, it was no longer feasible to do this synchronously in the main thread. 
+
+Data Normalisation was intended to be a separate step in the data pipeline, but it was later combined with the enrichment processe as normalisation is a very small part of the process and can be done in a few lines of code, therefore it was combined with data enrichment. In normalisation, the list of \texttt{Post} objects retrieved from the connectors is flattened into a unified list of "events", which is a Pandas DataFrame that contains both posts and comments in a single table. The structure of the comments expansion method is as follows:
+\begin{itemize}
+    \item The method receives a DataFrame \texttt{df} where each row represents a post, and the \texttt{comments} column contains a list of comment dictionaries.
+    \item The \texttt{comments} column is exploded using \texttt{pandas.DataFrame.explode()}, so that each comment occupies its own row, paired with the \texttt{id} of its parent post.
+    \item Rows where the comment value is not a dictionary are filtered out, discarding any \texttt{None} or malformed entries that may have resulted from posts with no comments.
+    \item \texttt{pd.json\_normalize()} is applied to the remaining comment dictionaries, flattening them into a structured DataFrame with one column per field.
+    \item The original DataFrame is stripped of its \texttt{comments} column to form \texttt{posts\_df}, and a \texttt{type} column is added with the value \texttt{"post"}, along with a \texttt{parent\_id} column set to \texttt{None}, as posts have no parent.
+    \item The comments DataFrame is similarly tagged with \texttt{type = "comment"}, and its \texttt{parent\_id} is populated from the \texttt{post\_id} field, establishing the relationship back to the originating post.
+    \item Both DataFrames are concatenated using \texttt{pd.concat()}, and the now-redundant \texttt{post\_id} column is dropped, yielding a single unified events table containing both posts and comments with a consistent schema.
+\end{itemize}
+
+The \texttt{enrich()} method is the primary method for dataset enrichment in the module, and provides two main functionalities:
+\begin{itemize}
+    \item \textbf{Column Derivation}: This involves adding new columns to the dataset that are derived from existing data, such as timestamp parsing to extract date and time components.
+    \item \textbf{NLP Analysis}: NLP analysis is performed on the dataset to add new columns that contains NLP outputs. The NLP performed includes emotion classification, topic classification, and named entity recognition.
+\end{itemize}
+
+Column derivation is a process of combining or altering existing columns to create new columns useful to analysis. The original dataset contains a timestamp column that might need to be parsed into a datetime format, and then new columns can be derived from this, such as the date, time, weekday, hour of the event, which is needed for temporal analysis like heatmaps. Datetime parsing on it's own is not usually intensive, but multiplied across thousands of posts and comments, it can add up, therefore it's calculated before analysis.
+
+\subsubsection{Data Storage}
+Once the dataset is enriched, it is ready for storage. Datasets are stored in a PostgreSQL database. The dataset manager is used to handle the storage of datasets in the database, and it provides a simple interface for saving the enriched dataset content. The enriched dataset is stored in the \texttt{events} table, with each row representing an event (either a post or a comment).
+
+One issue arose using dependency injection for the dataset manager. Since from the data enrichment stage onwards, the data pipeline runs on a separate Celery worker process, therefore dependency injection of non-serialisable objects like \texttt{PostgresConnector} or \texttt{DatasetManager} does not work, as these objects cannot be passed through the Redis queue. To solve this, the \texttt{PostgresConnector} and \texttt{DatasetManager} are instantiated within the Celery worker process itself, rather than being passed in from the Flask API. While this introduces some tight coupling and possible synchronisation issues, these are not issues at this scale of project since both the Celery worker and database module use single-threaded connections to the database, but it's worth noting that this could be an issue if the project scaled up and had multiple Celery workers in parallel.
+
+\subsection{NLP Module}
+The NLP module is responsible for adding new columns to the dataset that contain the NLP outputs, three types of NLP analysis are performed: emotion classification, topic classification, and named entity recognition. It is instantiated once per dataset during the enrichment phase and runs on the provided Pandas DataFrame.
+
+\subsubsection{Emotion Classification}
+For emotional classification, initially a pre-trained VADER sentiment analysis model was used, which provides a very simple way to classify text into positive, negative, and neutral emotions. Though for ethnographic analysis, a more complex emotional model that can capture more nuance is needed, therefore the VADER model was later replaced with a fine-tuned transformer-based model that can classify text into a wider range of emotions. 
+
+GoEMOTION \cite{demszky2020goemotions} was considered as a potential model for emotional classification, as it is extremely nuanced and can capture a wide range of emotions, however it had over 27 emotion classes, which was too many for the purposes of this project, as it would have been difficult to visualise and analyse such a large number of emotion classes. 
+
+A middle ground was found with the "Emotion English DistilRoBERTa-base" model from HuggingFace \cite{hartmann2022emotionenglish}, which is a fine-tuned transformer-based model that can classify text into 6 emotion classes: anger, disgust, fear, joy, sadness, and surprise. This model provides a good balance between nuance and simplicity for the purposes of ethnographic analysis.
 
 \subsection{Ethnographic Statistics}
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
