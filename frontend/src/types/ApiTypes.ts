@@ -34,6 +34,11 @@ type Vocab = {
   top_words: FrequencyWord[];
 };
 
+type DominantTopic = {
+  topic: string;
+  count: number;
+};
+
 type User = {
   author: string;
   post: number;
@@ -41,6 +46,7 @@ type User = {
   comment_post_ratio: number;
   comment_share: number;
   avg_emotions?: Record<string, number>;
+  dominant_topic?: DominantTopic | null;
   vocab?: Vocab | null;
 };
 
@@ -162,6 +168,10 @@ type StanceMarkers = {
   certainty_per_1k_tokens: number;
   deontic_per_1k_tokens: number;
   permission_per_1k_tokens: number;
+  hedge_emotion_avg?: Record<string, number>;
+  certainty_emotion_avg?: Record<string, number>;
+  deontic_emotion_avg?: Record<string, number>;
+  permission_emotion_avg?: Record<string, number>;
 };
 
 type EntityEmotionAggregate = {
@@ -202,6 +212,7 @@ type FilterResponse = {
 
 export type {
   TopUser,
+  DominantTopic,
   Vocab,
   User,
   InteractionGraph,

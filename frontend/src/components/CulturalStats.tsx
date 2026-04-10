@@ -59,6 +59,21 @@ const CulturalStats = ({ data, onExplore }: CulturalStatsProps) => {
     return `${dominantLabel} (${(dominant[1] * 100).toFixed(1)}%)`;
   };
 
+  const stanceSublabel = (
+    per1kTokens: number | undefined,
+    emotionAvg: Record<string, number> | undefined,
+  ) => {
+    const rateLabel =
+      typeof per1kTokens === "number"
+        ? `${per1kTokens.toFixed(1)} per 1k words`
+        : "Word frequency";
+    const emotionLabel = topEmotion(emotionAvg);
+
+    return emotionLabel === "—"
+      ? rateLabel
+      : `${rateLabel} • Avg mood: ${emotionLabel}`;
+  };
+
   return (
     <div style={styles.page}>
       <div style={{ ...styles.container, ...styles.grid }}>

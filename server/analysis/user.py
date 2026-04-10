@@ -71,6 +71,7 @@ class UserAnalysis:
         per_user = df.groupby(["author", "type"]).size().unstack(fill_value=0)
 
         emotion_cols = [col for col in df.columns if col.startswith("emotion_")]
+        dominant_topic_by_author = {}
 
         avg_emotions_by_author = {}
         if emotion_cols:
@@ -79,6 +80,31 @@ class UserAnalysis:
                 author: {emotion: float(score) for emotion, score in row.items()}
                 for author, row in avg_emotions.iterrows()
             }
+
+        if "topic" in df.columns:
+            topic_df = df[
+                df["topic"].notna()
+                & (df["topic"] != "")
+                & (df["topic"] != "Misc")
+            ]
+            if not topic_df.empty:
+                topic_counts = (
+                    topic_df.groupby(["author", "topic"])
+                    .size()
+                    .reset_index(name="count")
+                    .sort_values(
+                        ["author", "count", "topic"],
+                        ascending=[True, False, True],
+                    )
+                    .drop_duplicates(subset=["author"])
+                )
+                dominant_topic_by_author = {
+                    row["author"]: {
+                        "topic": row["topic"],
+                        "count": int(row["count"]),
+                    }
+                    for _, row in topic_counts.iterrows()
+                }
 
         # ensure columns always exist
         for col in ("post", "comment"):
@@ -109,6 +135,7 @@ class UserAnalysis:
                     "comment_post_ratio": float(row.get("comment_post_ratio", 0)),
                     "comment_share": float(row.get("comment_share", 0)),
                     "avg_emotions": avg_emotions_by_author.get(author, {}),
+                    "dominant_topic": dominant_topic_by_author.get(author),
                     "vocab": vocab_by_author.get(
                         author,
                         {

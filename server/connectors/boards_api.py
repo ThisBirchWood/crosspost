@@ -11,8 +11,7 @@ from server.connectors.base import BaseConnector
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ForumFetcher/1.0)"}
-
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; Digital-Ethnography-Aid/1.0)"}
 
 class BoardsAPI(BaseConnector):
     source_name: str = "boards.ie"
@@ -88,7 +87,7 @@ class BoardsAPI(BaseConnector):
             post = self._parse_thread(html, post_url)
             return post
 
-        with ThreadPoolExecutor(max_workers=30) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(fetch_and_parse, url): url for url in urls}
 
             for i, future in enumerate(as_completed(futures)):
