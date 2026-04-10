@@ -948,7 +948,9 @@ For emotional classification, initially a pre-trained VADER sentiment analysis m
 
 GoEMOTION \cite{demszky2020goemotions} was considered as a potential model for emotional classification, as it is extremely nuanced and can capture a wide range of emotions, however it had over 27 emotion classes, which was too many for the purposes of this project, as it would have been difficult to visualise and analyse such a large number of emotion classes. 
 
-A middle ground was found with the "Emotion English DistilRoBERTa-base" model from HuggingFace \cite{hartmann2022emotionenglish}, which is a fine-tuned transformer-based model that can classify text into 6 emotion classes: anger, disgust, fear, joy, sadness, and surprise. This model provides a good balance between nuance and simplicity for the purposes of ethnographic analysis.
+A middle ground was found with the "Emotion English DistilRoBERTa-base" model from HuggingFace \cite{hartmann2022emotionenglish}, which is a fine-tuned transformer-based model that can classify text into 6 emotion classes: anger, disgust, fear, joy, sadness, neutral and surprise.
+
+As the project progressed and more posts were classified, the "surprise" and "neutral" emotions were found to be dominating the dataset, which made it difficult to analyse the other emotions. This could possible be because the model is not fine-tuned for internet slang, and usage of exclamation marks and emojis, which are common in social media posts, may be classified as "surprise" or "neutral" rather than the intended emotion. Therefore, the "surprise" and "neutral" emotion classes were removed from the dataset, and the confidence numbers were re-normalised to the remaining 5 emotions.
 
 \subsection{Ethnographic Statistics}
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
