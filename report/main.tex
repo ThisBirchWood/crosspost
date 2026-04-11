@@ -461,6 +461,13 @@ As this project is focused on the collection and analysis of online community da
 
 A unified data model is used to represent all incoming data, regardless of its original source or structure. This ensures that the same pipeline works across YouTube, Reddit and boards.ie data, and can be easily extended to new sources in the future.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/pipeline.png}
+    \caption{Data Pipeline Diagram}
+    \label{fig:pipeline}
+\end{figure}
+
 \subsubsection{Data Ingestion}
 The system will support two methods of data ingestion:
 \begin{itemize}
@@ -951,6 +958,24 @@ GoEMOTION \cite{demszky2020goemotions} was considered as a potential model for e
 A middle ground was found with the "Emotion English DistilRoBERTa-base" model from HuggingFace \cite{hartmann2022emotionenglish}, which is a fine-tuned transformer-based model that can classify text into 6 emotion classes: anger, disgust, fear, joy, sadness, neutral and surprise.
 
 As the project progressed and more posts were classified, the "surprise" and "neutral" emotions were found to be dominating the dataset, which made it difficult to analyse the other emotions. This could possible be because the model is not fine-tuned for internet slang, and usage of exclamation marks and emojis, which are common in social media posts, may be classified as "surprise" or "neutral" rather than the intended emotion. Therefore, the "surprise" and "neutral" emotion classes were removed from the dataset, and the confidence numbers were re-normalised to the remaining 5 emotions.
+
+\subsubsection{Topic Classification}
+For topic classification, a zero-shot classification approach was used, which allows for classification of text into arbitrary topic classes without needing to fine-tune a model for each specific set of topics. Initially, attempts were made to automatically generate topic classes based on the most common words in the dataset using TF-IDF, but this led to generic and strange classes that weren't useful for analysis. Therefore, it was decided that a topic list would be provided manually, either by the user or using a generic list of broad common topics. 
+
+Initially, the "all-mpnet-base-v2" \cite{all_mpnet_base_v2} was used as the base model for the zero-shot classification, which is a general-purpose sentence embedding model. While this worked well and produced good results, it was slow to run interference on large datasets, and would often take hours to classify a dataset of over 60,000 posts and comments.
+
+The choice between this model and a weaker model that was faster to run inference on was a difficult one, as the stronger model produced better results, but the performance was a significant issue. 
+
+After testing multiple models, the "MiniLM-L6-v2 " \cite{minilm_l6_v2} was chosen as the base model for zero-shot classification, which is a smaller and faster sentence embedding model. While it may not produce quite as good results as the larger model, it still produces good results and is much faster to run inference on, which makes it more practical for use in this project.
+
+To produce the results, the topic list is embedded and cached using the sentence embedding model, and then each post is embedded and compared to the topic embeddings using cosine similarity to produce a relevance score for each topic. The topic with the highest relevance score is then assigned to the post as its topic classification, along with the model confidence score for that classification to allow end-users to see how confident the model is in that classification.
+
+\subsubsection{Entity Recognition}
+
+
+
+\subsubsection{Optimization}
+
 
 \subsection{Ethnographic Statistics}
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
