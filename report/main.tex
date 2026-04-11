@@ -524,25 +524,6 @@ NLP processing lets us perform much richer analysis of the dataset, as it provid
 \subsubsection{Data Storage}
 The enriched dataset is stored in a PostgreSQL database, with a schema similar to the unified data model defined in the normalisation section, with additional fields for the derived data, NLP outputs, and user ownership. Each dataset is associated with a specific user account, and the system supports multiple datasets per user.
 
-The \texttt{events} table in PostgreSQL contains the following fields:
-\begin{itemize}
-    \item \texttt{id}: a unique identifier for the event.
-    \item \texttt{dataset\_id}: a foreign key referencing the dataset this event belongs to. If the dataset is deleted.
-    \item \texttt{post\_id}: the original identifier of the post or comment as it appeared on the source platform.
-    \item \texttt{type}: whether the event is a post or a comment.
-    \item \texttt{author}: the username of the content creator.
-    \item \texttt{content}: the text content of the event.
-    \item \texttt{timestamp}: the Unix epoch time at which the content was created.
-    \item \texttt{date}, \texttt{dt}, \texttt{hour}, \texttt{weekday}: datetime fields derived from the timestamp at ingestion time.
-    \item \texttt{title}: the title of the post, if the event is a post. Null for comments.
-    \item \texttt{parent\_id}: for comments, the identifier of the post it belongs to. Null for posts.
-    \item \texttt{reply\_to}: for comments, the identifier of the comment it directly replies to. Null if the comment is a direct reply to a post.
-    \item \texttt{source}: the platform from which the content was retrieved.
-    \item \texttt{topic}, \texttt{topic\_confidence}: the topic assigned to the event by the NLP model, along with a confidence score.
-    \item \texttt{ner\_entities}: a list of named entities identified in the content.
-    \item \texttt{emotion\_anger}, \texttt{emotion\_disgust}, \texttt{emotion\_fear}, \texttt{emotion\_joy}, \texttt{emotion\_sadness}: emotion scores assigned to the event by the NLP model.
-\end{itemize}
-
 \subsubsection{Data Retrieval}
 The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
 
@@ -964,21 +945,52 @@ For topic classification, a zero-shot classification approach was used, which al
 
 Initially, the "all-mpnet-base-v2" \cite{all_mpnet_base_v2} was used as the base model for the zero-shot classification, which is a general-purpose sentence embedding model. While this worked well and produced good results, it was slow to run interference on large datasets, and would often take hours to classify a dataset of over 60,000 posts and comments.
 
-The choice between this model and a weaker model that was faster to run inference on was a difficult one, as the stronger model produced better results, but the performance was a significant issue. 
-
-After testing multiple models, the "MiniLM-L6-v2 " \cite{minilm_l6_v2} was chosen as the base model for zero-shot classification, which is a smaller and faster sentence embedding model. While it may not produce quite as good results as the larger model, it still produces good results and is much faster to run inference on, which makes it more practical for use in this project.
-
-To produce the results, the topic list is embedded and cached using the sentence embedding model, and then each post is embedded and compared to the topic embeddings using cosine similarity to produce a relevance score for each topic. The topic with the highest relevance score is then assigned to the post as its topic classification, along with the model confidence score for that classification to allow end-users to see how confident the model is in that classification.
+Eventually, the "MiniLM-L6-v2 " \cite{minilm_l6_v2} was chosen as the base model for zero-shot classification, which is a smaller and faster sentence embedding model. While it may not produce quite as good results as the larger model, it still produces good results and is much faster to run inference on, which makes it more practical for use in this project.
 
 \subsubsection{Entity Recognition}
+At this point, the NLP pipeline was taking a long time to run on large datasets (such as the Cork dataset), therefore any NER (Named Entity Recognition) model that was added needed to be small and fast to run interference on large datasets. The "dslim/bert-base-NER" model from HuggingFace \cite{dslim_bert_base_ner} was chosen as it is a fine-tuned BERT model that can perform named entity recognition, and is relatively small and fast compared to other NER models.
 
+This model outputs a list of entities for each post, and each entity has a type, which are:
+\begin{itemize}
+    \item \textbf{PER}: Person
+    \item \textbf{ORG}: Organisation
+    \item \textbf{LOC}: Location
+    \item \textbf{MISC}: Miscellaneous
+\end{itemize}
 
+Since the model outputs have a variable length, they arestored in the database as a \texttt{JSONB} field, which allows for flexible storage of the variable number of entities per post.
 
 \subsubsection{Optimization}
+Many issues arose with the performance of the NLP module, as running inference on large datasets can take a long time, especially when using transformer-based models. To optimize the performance of the NLP module, several techniques were used:
+\begin{itemize}
+    \item \textbf{Batch Processing}: Instead of running inference on each post individually, posts are processed in batches.
+    \item \textbf{Model Caching}: Models are loaded once and cached in memory, rather than being loaded from disk for each inference.
+    \item \textbf{Batch Size Backoff}: If the model runs out of memory during inference, the batch size is automatically reduced and the inference is retried until it succeeds.
+\end{itemize}
 
+An example of the batch size backoff implementation is shown below:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/nlp_backoff.png}
+    \caption{Batch Size Backoff Implementation}
+    \label{fig:nlp_backoff}
+\end{figure}
 
 \subsection{Ethnographic Statistics}
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
+
+\subsubsection{Temporal Analysis}
+Three statistics are implemented for temporal analysis:
+\begin{itemize}
+    \item \textbf{Posts Per Day}: A simple count of the number of posts and comments per day, which can be visualised as a line chart or bar chart to show trends over time.
+    \item \textbf{Time Heatmap}: A heatmap of posts and comments by hour of the day and day of the week, which can show patterns in when users are most active.
+    \item \textbf{Average }
+\end{itemize}
+
+
+
+\subsubsection{StatGen Class}
 
 
 
