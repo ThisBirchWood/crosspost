@@ -115,6 +115,7 @@ This section describes common keywords and metrics use to measure and quantify o
 Sentiment Analysis involves capturing the emotions associated with a specific post, topic or entity. This type of analysis can be as simple as classifying a post as "positive" or "negative", or classifying a post into a set of pre-existing emotions such as anger, joy or sadness.
 
 \subsubsection{Active vs Passive Participation}
+\label{sec:passive_participation}
 Not everyone in an online community participates in the same way. Some users post regularly and leave comments while others might simply read content without ever contributing anything themselves. Some might only contribute occasionally.
 
 This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is. 
@@ -123,11 +124,13 @@ This distinction between active and passive participation (passive users are oft
 Looking at when a community is active can reveal quite a lot about its nature and membership. A subreddit that peaks at 2am UTC might have a mostly American userbase, while one that is consistently active across all hours could suggest a more globally distributed community. Beyond timezones, temporal patterns can also capture things like how a community responds to external events, like a sudden spike in posting activity often corresponds to something newsworthy happening that is relevant to the community.
 
 \subsubsection{Cultural Markers}
+\label{sec:cultural_markers}
 Cultural markers are the words, phrases, memes, and behaviours that are specific to a particular community and signal that someone is a member of it. These might include in-jokes, niche slang, recurring references, or even particular ways of formatting posts. In the context of digital ethnography, identifying these markers is useful because they reveal how communities build a shared identity and distinguish themselves from outsiders.
 
 Some patterns, such as usage of words like "we, us, our, ourselves", where posts are referring to themselves as a community might have different sentiment to posts where words like "they, them, their, themselves" are used. These are known as "identity markers" and they can be used to identify how welcoming a community might be to outsiders.
 
 \subsubsection{Stance Markers}
+\label{sec:stance_markers}
 Stance Markers refer to the usage of different phrasing patterns which can reveal the speakers attitude towards topics. There are different kinds of these phrasings, such as hedge, certainty, deontic and permission patterns.
 
 \textbf{Hedge Patterns} are usually phrases that contain words like "maybe, possibly, probably, i think, i feel" and generally mean that someone is unsure or suspicious about something.
@@ -599,14 +602,7 @@ User analysis allows researchers to understand the behaviour and activity of ind
 In this system, user analysis will include:
 \begin{itemize}
     \item Identification of top users based on activity.
-    \item Per-user activity such as:
-    \begin{itemize}
-        \item Total number of events (posts and comments).
-        \item Average emotion distribution across their events.
-        \item Average topic distribution across their events.
-        \item Comment-to-post ratio.
-        \item Vocabulary information such as top words used and lexical diversity.
-    \end{itemize}
+    \item Per-user activity.
 \end{itemize}
 
 Initially the user endpoint contained the interactional statistics as well, as a case could be made for the user analysis and interaction analysis being combined, however a distinction can be made between individual user analysis and user analysis on a larger, community-level scale focused on interactions. This allows the user endpoint to stay focused on singular user analysis while still using NLP outputs like emotions and topics.
@@ -662,6 +658,8 @@ In this system, cultural analysis will include:
     \item Average emotions per stance marker type
     \item Average emotions per entity
 \end{itemize}
+
+These metrics were chosen because they can provide insights into the cultural markers and identity signals that are present in an online community, further described in Section \ref{sec:cultural_markers} and \ref{sec:stance_markers}.
 
 \subsection{Frontend Design}
 The frontend is built with React and TypeScript, and the analysis sections are structured around a tabbed dashboard interface where each tab corresponds to a distinct analytical perspective: temporal, linguistic, emotional, user, and interaction analysis. This organisation mirrors the shape of the backend API and makes it straightforward for a researcher to navigate between different lenses on the same dataset without losing context.
@@ -968,7 +966,7 @@ Many issues arose with the performance of the NLP module, as running inference o
     \item \textbf{Batch Size Backoff}: If the model runs out of memory during inference, the batch size is automatically reduced and the inference is retried until it succeeds.
 \end{itemize}
 
-An example of the batch size backoff implementation is shown below:
+An example of the batch size backoff implementation is shown in figure \ref{fig:nlp_backoff}.
 
 \begin{figure}
     \centering
@@ -981,18 +979,104 @@ An example of the batch size backoff implementation is shown below:
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
 
 \subsubsection{Temporal Analysis}
-Three statistics are implemented for temporal analysis:
+Two statistics are implemented for temporal analysis:
 \begin{itemize}
     \item \textbf{Posts Per Day}: A simple count of the number of posts and comments per day, which can be visualised as a line chart or bar chart to show trends over time.
     \item \textbf{Time Heatmap}: A heatmap of posts and comments by hour of the day and day of the week, which can show patterns in when users are most active.
-    \item \textbf{Average }
 \end{itemize}
 
+Both of these statistics are implemented using Pandas queries to aggregate the data by the relevant time periods, and lists of dictionaries are returned to the API for visualisation in the frontend.
 
+\subsubsection{Linguistic Analysis}
+Linguistic analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Word Frequency}: A count of the most common words used in the dataset, which can be visualised as a word cloud or bar chart.
+    \item \textbf{N-grams}: A count of the most common n-grams (sequences of n words) used in the dataset, which can also be visualised as a word cloud or bar chart.
+    \item \textbf{Lexical Diversity}: A measure of the diversity of the language used in the dataset, calculated as the ratio of unique words to total words.
+\end{itemize}
+
+Both word frequency and n-grams are calculated using the \texttt{collections.Counter} class, which provides a convenient way to count the occurrences of words and n-grams in the dataset. N-Grams take in a number \texttt{n} as a parameter, which specifies the length of the n-grams to calculate. For example, if \texttt{n} = 2, the most common two word phrases will be returned.
+
+Lexical diversity is calculated using a simple formula that divides the number of unique words by the total number of words in the dataset.
+
+This class requires a word exclusion list to be provided, which is a list of common words that should be excluded from the analysis, such as stop words and common words that are not relevant for analysis. These are passed in from the higher level StatGen class.
+
+\subsubsection{User Analysis}
+User analysis returns two major statistics:
+\begin{itemize}
+    \item \textbf{Top Users}: A count of the most active users in the dataset, which can be visualised as a bar chart or table.
+    \item \textbf{Per User Analysis}: A breakdown of statistics for each user, such as the number of posts and comments, average sentiment, and most common words used by that user. Each user will be analysed as follows:
+    \begin{itemize}
+        \item Total number of events (posts and comments).
+        \item Average emotion distribution across their events.
+        \item Average topic distribution across their events.
+        \item Comment-to-post ratio.
+        \item Vocabulary information such as top words used and lexical diversity.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Interactional Analysis}
+Interactional analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Interaction Graph}: A graph of interactions between users, where nodes represent users and edges represent interactions.
+    \item \textbf{Top Interaction Pairs}: A count of the most common pairs of users that interact with each other, which can be visualised as a bar chart or table.
+    \item \textbf{Conversation Concentration}: A measure of how concentrated conversations are around certain users.
+\end{itemize}
+
+The conversation concentration statistic shows the inequality of contributions in conversations, described in Section-\ref{sec:passive_participation}. It identifies the total number of unique commenters, calculates what share of all comments are produced by the most active top 10\% of authors, and measures how many authors only ever commented once. Put together, these metrics reveal the degree to which a community's conversation is driven by a small core of prolific contributors versus being broadly distributed. The metrics returned are:
+\begin{itemize}
+    \item \textbf{Total Commenting Users}: The total number of unique users who commented in the dataset.
+    \item \textbf{Top 10\% Comment Share}: The percentage of all comments that were produced by the top 10\% most active commenters.
+    \item \textbf{Top 10\% Author Count}: The number of unique users that make up the top 10\% most active commenters.
+    \item \textbf{One-Time Commenters}: The percentage of users that only commented once in the dataset.
+\end{itemize}
+
+The interaction graph creates an index of post ids to authors to ensure fast and proper link when iterating over the dataset. In addition, issues arose with the distinction between someone replying to a post as a comment, and someone replying to a comment. The fix involved checking both \texttt{parent\_id} and \texttt{reply\_to} fields instead of just \texttt{reply\_to}.
+
+\subsubsection{Emotional Analysis}
+Emotional analysis includes four statistics:
+\begin{itemize}
+    \item \textbf{Average Emotion By Topic}: A breakdown of the average emotion scores for each topic.
+    \item \textbf{Overall Emotional Average}: A breakdown of the average emotion scores for the entire dataset.
+    \item \textbf{Dominant Emotion Distribution}: The distribution of dominant emotions per event in the dataset.
+    \item \textbf{Average Emotion By Source}: A breakdown of the average emotion scores for each source platform.
+\end{itemize}
+
+Throughout development, the "surprise" and "neutral" emotion classes were in data pipeline, however they were removed from the emotional analysis as they were dominating the dataset and skewing the results.
+
+\subsubsection{Cultural Analysis}
+Cultural analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Identity Markers}: Statistics regarding in-group vs out-group markers, how common each are and average emotions with each, visualised as KPIs.
+    \item \textbf{Stance Markers}: Returns hedge, certainty, deontic and permissive markers, how common each are and average emotions with each, visualised as KPIs.
+    \item \textbf{Average Emotions Per Entity}: A breakdown of the average emotion scores for each named entity type (person, organisation, location, miscellaneous).
+\end{itemize}
+
+For stance and identity markers, the Python module \texttt{re} was used to find certain words in a post along with the counts of each. \texttt{re} was used instead of a more complex NLP approach as the goal is simply to find certain words quickly, whereas a more complex approach would be far slower.
+
+With the identity markers, in-group markers such as "we", "us", "our" were counted, as well as out-group markers such as "they", "them", "their". For stance markers, hedge markers such as "maybe", "possibly", "might" were counted, as well as certainty markers such as "definitely", "certainly", "undoubtedly", deontic markers such as "should", "must", "ought to", and permissive markers such as "can", "could", "may". An example of the implementation for stance markers can be seen in figure \ref{fig:stance_markers}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/stance_markers.png}
+    \caption{Finding Stance Markers with Regular Expressions}
+    \label{fig:stance_markers}
+\end{figure}
 
 \subsubsection{StatGen Class}
+The \texttt{StatGen} (Statistics Generator) class is a higher level module that aggregates all of the different statistics into a single class that is called by the API endpoints to generate the statistics.
 
+Initially, all statistics were implemented within this class, however as the class grew larger and larger, it was refactored to delegate the different categories of statistics to separate classes, listed in the sections above. The class directly instantiates these analysis classes. Dependency injection of the analysis classes was considered for looser coupling, but since they were split purely for organisational and neatness purposes, extra decoupling complexity wasn't needed.
 
+Beyond improving the quality of the code, the other main function of this class is to provide a single centralised area to manage staistical filtering. Each statistical method of the class will take in a dictionary of filters as a parameter, then the private method \texttt{\_prepare\_filtered\_df} will apply the filters to the dataset and return the filtered dataset. Four types of filters are supported:
+\begin{itemize}
+    \item \texttt{start\_date}: A date string that filters the dataset to only include events after the specified date.
+    \item \texttt{end\_date}: A date string that filters the dataset to only include events before the specified date.
+    \item \texttt{source}: A string that filters the dataset to only include events
+    \item \texttt{search\_query}: A string that filters the dataset to only include events that contain the search query in their content.
+\end{itemize}
+
+Initially, stateful filtering was implemented where the filters would be stored within the \texttt{StatGen} object and are applied to all subsequent methods. The filters were applied once and could then be reset. This worked during initial stages when only one dataset was being tested, however with multiple datasets, this stateful filtering applied to other datasets (even and caused confusion
 
 
 \subsection{Flask API}
