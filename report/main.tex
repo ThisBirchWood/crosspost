@@ -1142,8 +1142,93 @@ Each route handler wraps its logic in a \texttt{try/except} block that catches t
 
 A bare \texttt{Exception} try-catch handles anything unexpected and returns a generic \texttt{500}, while printing a full traceback to the server log via \texttt{traceback.format\_exc()} for debugging. Error messages returned to the client are deliberately vague for unexpected errors, to avoid leaking implementation details.
 
-
 \subsection{React Frontend}
+The frontend is a single-page application built with React and Typescript. It communicates with the Flask backend over a REST API using Axios, and JWT tokens are attached to every authenticated request using an Axios default header. 
+
+React Router is used for client-side routing, and the main pages of the application are:
+\begin{itemize}
+    \item \textbf{Login Page}: A simple login form that allows users to login and register for an account.
+    \item \textbf{Datasets Page}: A page that lists all of the user's datasets, and allows them to create new datasets through file upload or automated fetching.
+    \item \textbf{Dataset Status Page}: A page that shows the status of a dataset, including the progress of the data pipeline and any errors that may have occurred.
+    \item \textbf{Dataset Edit Page}: A page that allows users to rename or delete a dataset.
+    \item \textbf{Dataset Upload Page}: A page that allows users to upload a dataset through a file upload form.
+    \item \textbf{Dataset Auto-Fetch Page}: A page that allows users to create a dataset through automated data fetching, by selecting sources and providing search queries and limits.
+    \item \textbf{Dataset Analysis Page}: A page that shows all of the ethnographic statistics for a dataset, with various visualisations such as line charts, bar charts and heatmaps.
+\end{itemize}
+
+\subsubsection{Layouts}
+\paragraph{Main Layout}
+The main layout of the application is a React component that includes a header with the application name, a navigation bar with links to the Datasets page, and a sign out button that clears the JWT token from local storage. The main layout also includes a container for the main content of each page, which is rendered using React Router's \texttt{Outlet} component.
+
+When logged out, instead of showing the datasets and logout button, it simply shows a sign in button. The navigation bar can be seen in Figure \ref{fig:nav_bar}. The main layout is used for all pages. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/navbar.png}
+    \caption{Navigation Bar in the Main Layout}
+    \label{fig:nav_bar}
+\end{figure}
+
+\paragraph{Analysis Layout}
+The analysis layout is a React component that is used for all of the analysis pages. It still uses the Main Layout, however it adds an extra navigation bar that lets users switch between the different types of analysis, such as temporal analysis or linguistic analysis. This allows the code for navigation to be written once and used across all analysis pages, instead of in each analysis page separately. It also simplifies the URL structure, as all analysis pages have the same base URL of \texttt{/dataset/<id>/analysis}, and the type of analysis is determined by an injected React component.
+
+In addition to an extra navigation bar, it also contains a filter component that allows users to apply filters such as search queries and date filters to the dataset, which are passed in as parameters to the API endpoints to filter the statistics. This allows users to easily filter the dataset and see how the statistics change based on the filters. The analysis layout can be seen in Figure \ref{fig:analysis_layout}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/analysis_bar.png}
+    \caption{Analysis Layout with Navigation and Filter Components}
+    \label{fig:analysis_layout}
+\end{figure}
+
+\subsubsection{Analysis Page}
+The Analysis page fires six API requests in parallel to fetch the six categories of statistics (temporal, linguistic, user, interactional, emotional and cultural), and each category is rendered in a separate section on the page with its own visualisation. The API requests are fired when the page loads, and also whenever the filters are updated. This allows the API calls to be centralised into a single component, such that any change in the filters will automatically update all of the statistics on the page. Appying filters re-fetches all six endpoints with new query parameters.
+
+The majority of statistics are displayed using a custom KPI component that shows the name of the statistic, the value, and a secondary label for other information. An example of this can be seen in Figure \ref{fig:kpi_card}. The statistics that are not displayed as KPIs, such as the temporal analysis line chart and heatmap, will be discussed in the next sections.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/kpi_card.png}
+    \caption{Custom KPI Component for Displaying Statistics}
+    \label{fig:kpi_card}
+\end{figure}
+
+\paragraph{Summary}
+The summary section contains basic KPI cards such as total posts, total users, comments per post, lurker ratio, time range and sources. Beyond KPIs it also contains a word cloud of the most common words in the dataset, which is generated using the \texttt{react-wordcloud} library. The word cloud provides a visual representation of the most common words in the dataset, with the size of each word corresponding to its frequency.
+
+A heatmap is included in the Summary section (taken from the temporal analysis endpoint) that shows the distribution of posts and comments by hour of the day and day of the week. This allows users to quickly see when users are most active in the dataset. The heatmap is generated using the \texttt{nivo} library, which provides a convenient way to create a heatmap visualization in React.
+
+An example of the heatmap can be seen in Figure \ref{fig:heatmap}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/heatmap.png}
+    \caption{Heatmap of Posts and Comments by Hour and Day in the Cork Dataset}
+    \label{fig:heatmap}
+\end{figure}
+
+\paragraph{Emotional}
+The emotional analysis section contains KPI cards for the average emotion scores for each emotion class, as well as slightly adjusted KPI cards for showing the emotions per topic, as they include secondary and tertiary labels that show the model confidence for that emotion and the number of posts that were classified with that emotion.
+
+\paragraph{Users}
+The users analysis section contains an interactive interaction graph that shows the replies and chains between users, this was done with the \texttt{react-force-graph} library, which provides a convenient way to create an interactive graph visualization in React. The nodes of the graph represent users, and the edges represent interactions between users (such as replies). The graph filters out edges with less than two interactions and removes deleted-user nodes (like "[Deleted User]") to remove noise.
+
+An example of the interaction graph can be seen in Figure \ref{fig:interaction_graph}.
+
+The rest of the statistics in the users section are displayed as KPI cards.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/interaction_graph.png}
+    \caption{Interaction Graph Showing User Interactions in the Cork Dataset}
+    \label{fig:interaction_graph}
+\end{figure}
+
+\paragraph{Interactional}
+The interactional analysis section contains KPI cards for the conversation concentration metrics, as well as a bar chart showing the top interaction pairs, which is generated using the \texttt{nivo} library. A pie chart is used to show the inequality of contributions in conversations, with the share of comments from the top 10\% most active commenters shown in one color, and the share of comments from the rest of the commenters shown in another color.
+
+\subsubsection{Corpus Explorer}
+The corpus explorer is a feature that allows users to explore the raw data of the dataset. It is implemented as a table that shows all of the posts and comments in the dataset, along with their metadata such as author, timestamp, and topic.
 
 \newpage
 \section{Evaluation}
