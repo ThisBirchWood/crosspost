@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import StatsStyling from "../styles/stats_styling";
@@ -8,6 +8,7 @@ import UserStats from "../components/UserStats";
 import LinguisticStats from "../components/LinguisticStats";
 import InteractionalStats from "../components/InteractionalStats";
 import CulturalStats from "../components/CulturalStats";
+import CorpusExplorer from "../components/CorpusExplorer";
 
 import {
   type SummaryResponse,
@@ -19,10 +20,15 @@ import {
   type InteractionAnalysisResponse,
   type CulturalAnalysisResponse,
 } from "../types/ApiTypes";
+import {
+  buildExplorerContext,
+  type CorpusExplorerSpec,
+  type DatasetRecord,
+} from "../utils/corpusExplorer";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const styles = StatsStyling;
-const DELETED_USERS = ["[deleted]"];
+const DELETED_USERS = ["[deleted]", "automoderator"];
 
 const isDeletedUser = (value: string | null | undefined) =>
   DELETED_USERS.includes((value ?? "").trim().toLowerCase());
@@ -38,6 +44,194 @@ type ActiveView =
 type UserStatsMeta = {
   totalUsers: number;
   mostCommentHeavyUser: { author: string; commentShare: number } | null;
+};
+
+type ExplorerState = {
+  open: boolean;
+  title: string;
+  description: string;
+  emptyMessage: string;
+  records: DatasetRecord[];
+  loading: boolean;
+  error: string;
+};
+
+const EMPTY_EXPLORER_STATE: ExplorerState = {
+  open: false,
+  title: "Corpus Explorer",
+  description: "",
+  emptyMessage: "No records found.",
+  records: [],
+  loading: false,
+  error: "",
+};
+
+const createExplorerState = (
+  spec: CorpusExplorerSpec,
+  patch: Partial<ExplorerState> = {},
+): ExplorerState => ({
+  open: true,
+  title: spec.title,
+  description: spec.description,
+  emptyMessage: spec.emptyMessage ?? "No matching records found.",
+  records: [],
+  loading: false,
+  error: "",
+  ...patch,
+});
+
+const compareRecordsByNewest = (a: DatasetRecord, b: DatasetRecord) => {
+  const aValue = String(a.dt ?? a.date ?? a.timestamp ?? "");
+  const bValue = String(b.dt ?? b.date ?? b.timestamp ?? "");
+  return bValue.localeCompare(aValue);
+};
+
+const parseJsonLikePayload = (value: string): unknown => {
+  const normalized = value
+    .replace(/\uFEFF/g, "")
+    .replace(/,\s*([}\]])/g, "$1")
+    .replace(/(:\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(\[\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(,\s*)(NaN|Infinity|-Infinity)\b/g, "$1null")
+    .replace(/(:\s*)None\b/g, "$1null")
+    .replace(/(:\s*)True\b/g, "$1true")
+    .replace(/(:\s*)False\b/g, "$1false")
+    .replace(/(\[\s*)None\b/g, "$1null")
+    .replace(/(\[\s*)True\b/g, "$1true")
+    .replace(/(\[\s*)False\b/g, "$1false")
+    .replace(/(,\s*)None\b/g, "$1null")
+    .replace(/(,\s*)True\b/g, "$1true")
+    .replace(/(,\s*)False\b/g, "$1false");
+
+  return JSON.parse(normalized);
+};
+
+const tryParseRecords = (value: string) => {
+  try {
+    return normalizeRecordPayload(parseJsonLikePayload(value));
+  } catch {
+    return null;
+  }
+};
+
+const parseRecordStringPayload = (payload: string): DatasetRecord[] | null => {
+  const trimmed = payload.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const direct = tryParseRecords(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const ndjsonLines = trimmed
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (ndjsonLines.length > 0) {
+    try {
+      return ndjsonLines.map((line) => parseJsonLikePayload(line)) as DatasetRecord[];
+    } catch {
+    }
+  }
+
+  const bracketStart = trimmed.indexOf("[");
+  const bracketEnd = trimmed.lastIndexOf("]");
+  if (bracketStart !== -1 && bracketEnd > bracketStart) {
+    const parsed = tryParseRecords(trimmed.slice(bracketStart, bracketEnd + 1));
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  const braceStart = trimmed.indexOf("{");
+  const braceEnd = trimmed.lastIndexOf("}");
+  if (braceStart !== -1 && braceEnd > braceStart) {
+    const parsed = tryParseRecords(trimmed.slice(braceStart, braceEnd + 1));
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const normalizeRecordPayload = (payload: unknown): DatasetRecord[] => {
+  if (typeof payload === "string") {
+    const parsed = parseRecordStringPayload(payload);
+    if (parsed) {
+      return parsed;
+    }
+
+    const preview = payload.trim().slice(0, 120).replace(/\s+/g, " ");
+    throw new Error(
+      `Corpus endpoint returned a non-JSON string payload.${
+        preview ? ` Response preview: ${preview}` : ""
+      }`,
+    );
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "error" in payload &&
+    typeof (payload as { error?: unknown }).error === "string"
+  ) {
+    throw new Error((payload as { error: string }).error);
+  }
+
+  if (Array.isArray(payload)) {
+    return payload as DatasetRecord[];
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    Array.isArray((payload as { data?: unknown }).data)
+  ) {
+    return (payload as { data: DatasetRecord[] }).data;
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "records" in payload &&
+    Array.isArray((payload as { records?: unknown }).records)
+  ) {
+    return (payload as { records: DatasetRecord[] }).records;
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "rows" in payload &&
+    Array.isArray((payload as { rows?: unknown }).rows)
+  ) {
+    return (payload as { rows: DatasetRecord[] }).rows;
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "result" in payload &&
+    Array.isArray((payload as { result?: unknown }).result)
+  ) {
+    return (payload as { result: DatasetRecord[] }).result;
+  }
+
+  if (payload && typeof payload === "object") {
+    const values = Object.values(payload);
+    if (values.length === 1 && Array.isArray(values[0])) {
+      return values[0] as DatasetRecord[];
+    }
+    if (values.every((value) => value && typeof value === "object")) {
+      return values as DatasetRecord[];
+    }
+  }
+
+  throw new Error("Corpus endpoint returned an unexpected payload.");
 };
 
 const StatPage = () => {
@@ -61,6 +255,12 @@ const StatPage = () => {
     totalUsers: 0,
     mostCommentHeavyUser: null,
   });
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
+  const [allRecords, setAllRecords] = useState<DatasetRecord[] | null>(null);
+  const [allRecordsKey, setAllRecordsKey] = useState("");
+  const [explorerState, setExplorerState] = useState<ExplorerState>(
+    EMPTY_EXPLORER_STATE,
+  );
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const beforeDateRef = useRef<HTMLInputElement>(null);
@@ -104,6 +304,59 @@ const StatPage = () => {
     };
   };
 
+  const getFilterKey = (params: Record<string, string>) =>
+    JSON.stringify(Object.entries(params).sort(([a], [b]) => a.localeCompare(b)));
+
+  const ensureFilteredRecords = async () => {
+    if (!datasetId) {
+      throw new Error("Missing dataset id.");
+    }
+
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) {
+      throw new Error("You must be signed in to load corpus records.");
+    }
+
+    const filterKey = getFilterKey(appliedFilters);
+    if (allRecords && allRecordsKey === filterKey) {
+      return allRecords;
+    }
+
+    const response = await axios.get<unknown>(
+      `${API_BASE_URL}/dataset/${datasetId}/all`,
+      {
+        params: appliedFilters,
+        headers: authHeaders,
+      },
+    );
+
+    const normalizedRecords = normalizeRecordPayload(response.data);
+
+    setAllRecords(normalizedRecords);
+    setAllRecordsKey(filterKey);
+    return normalizedRecords;
+  };
+
+  const openExplorer = async (spec: CorpusExplorerSpec) => {
+    setExplorerState(createExplorerState(spec, { loading: true }));
+
+    try {
+      const records = await ensureFilteredRecords();
+      const context = buildExplorerContext(records);
+      const matched = records
+        .filter((record) => spec.matcher(record, context))
+        .sort(compareRecordsByNewest);
+
+      setExplorerState(createExplorerState(spec, { records: matched }));
+    } catch (e) {
+      setExplorerState(
+        createExplorerState(spec, {
+          error: `Failed to load corpus records: ${String(e)}`,
+        }),
+      );
+    }
+  };
+
   const getStats = (params: Record<string, string> = {}) => {
     if (!datasetId) {
       setError("Missing dataset id. Open /dataset/<id>/stats.");
@@ -118,22 +371,20 @@ const StatPage = () => {
 
     setError("");
     setLoading(true);
+    setAppliedFilters(params);
+    setAllRecords(null);
+    setAllRecordsKey("");
+    setExplorerState((current) => ({ ...current, open: false }));
 
     Promise.all([
-      axios.get<TimeAnalysisResponse>(
-        `${API_BASE_URL}/dataset/${datasetId}/temporal`,
-        {
-          params,
-          headers: authHeaders,
-        },
-      ),
-      axios.get<UserEndpointResponse>(
-        `${API_BASE_URL}/dataset/${datasetId}/user`,
-        {
-          params,
-          headers: authHeaders,
-        },
-      ),
+      axios.get<TimeAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/temporal`, {
+        params,
+        headers: authHeaders,
+      }),
+      axios.get<UserEndpointResponse>(`${API_BASE_URL}/dataset/${datasetId}/user`, {
+        params,
+        headers: authHeaders,
+      }),
       axios.get<LinguisticAnalysisResponse>(
         `${API_BASE_URL}/dataset/${datasetId}/linguistic`,
         {
@@ -141,13 +392,10 @@ const StatPage = () => {
           headers: authHeaders,
         },
       ),
-      axios.get<EmotionalAnalysisResponse>(
-        `${API_BASE_URL}/dataset/${datasetId}/emotional`,
-        {
-          params,
-          headers: authHeaders,
-        },
-      ),
+      axios.get<EmotionalAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/emotional`, {
+        params,
+        headers: authHeaders,
+      }),
       axios.get<InteractionAnalysisResponse>(
         `${API_BASE_URL}/dataset/${datasetId}/interactional`,
         {
@@ -155,20 +403,14 @@ const StatPage = () => {
           headers: authHeaders,
         },
       ),
-      axios.get<SummaryResponse>(
-        `${API_BASE_URL}/dataset/${datasetId}/summary`,
-        {
-          params,
-          headers: authHeaders,
-        },
-      ),
-      axios.get<CulturalAnalysisResponse>(
-        `${API_BASE_URL}/dataset/${datasetId}/cultural`,
-        {
-          params,
-          headers: authHeaders,
-        },
-      ),
+      axios.get<SummaryResponse>(`${API_BASE_URL}/dataset/${datasetId}/summary`, {
+        params,
+        headers: authHeaders,
+      }),
+      axios.get<CulturalAnalysisResponse>(`${API_BASE_URL}/dataset/${datasetId}/cultural`, {
+        params,
+        headers: authHeaders,
+      }),
     ])
       .then(
         ([
@@ -182,8 +424,7 @@ const StatPage = () => {
         ]) => {
           const usersList = userRes.data.users ?? [];
           const topUsersList = userRes.data.top_users ?? [];
-          const interactionGraphRaw =
-            interactionRes.data?.interaction_graph ?? {};
+          const interactionGraphRaw = interactionRes.data?.interaction_graph ?? {};
           const topPairsRaw = interactionRes.data?.top_interaction_pairs ?? [];
 
           const filteredUsers: typeof usersList = [];
@@ -194,18 +435,14 @@ const StatPage = () => {
 
           const filteredTopUsers: typeof topUsersList = [];
           for (const user of topUsersList) {
-              if (isDeletedUser(user.author)) continue;
-              filteredTopUsers.push(user);
+            if (isDeletedUser(user.author)) continue;
+            filteredTopUsers.push(user);
           }
 
-          let mostCommentHeavyUser: UserStatsMeta["mostCommentHeavyUser"] =
-            null;
+          let mostCommentHeavyUser: UserStatsMeta["mostCommentHeavyUser"] = null;
           for (const user of filteredUsers) {
             const currentShare = user.comment_share ?? 0;
-            if (
-              !mostCommentHeavyUser ||
-              currentShare > mostCommentHeavyUser.commentShare
-            ) {
+            if (!mostCommentHeavyUser || currentShare > mostCommentHeavyUser.commentShare) {
               mostCommentHeavyUser = {
                 author: user.author,
                 commentShare: currentShare,
@@ -221,8 +458,7 @@ const StatPage = () => {
             }
           }
 
-          const filteredInteractionGraph: Record<string, Record<string, number>> =
-            {};
+          const filteredInteractionGraph: Record<string, Record<string, number>> = {};
           for (const [source, targets] of Object.entries(interactionGraphRaw)) {
             if (isDeletedUser(source)) {
               continue;
@@ -279,7 +515,7 @@ const StatPage = () => {
           setSummary(filteredSummary || null);
         },
       )
-      .catch((e) => setError("Failed to load statistics: " + String(e)))
+      .catch((e) => setError(`Failed to load statistics: ${String(e)}`))
       .finally(() => setLoading(false));
   };
 
@@ -302,6 +538,9 @@ const StatPage = () => {
 
   useEffect(() => {
     setError("");
+    setAllRecords(null);
+    setAllRecordsKey("");
+    setExplorerState(EMPTY_EXPLORER_STATE);
     if (!datasetId) {
       setError("Missing dataset id. Open /dataset/<id>/stats.");
       return;
@@ -398,9 +637,7 @@ const StatPage = () => {
         <button
           onClick={() => setActiveView("summary")}
           style={
-            activeView === "summary"
-              ? styles.buttonPrimary
-              : styles.buttonSecondary
+            activeView === "summary" ? styles.buttonPrimary : styles.buttonSecondary
           }
         >
           Summary
@@ -418,11 +655,7 @@ const StatPage = () => {
 
         <button
           onClick={() => setActiveView("user")}
-          style={
-            activeView === "user"
-              ? styles.buttonPrimary
-              : styles.buttonSecondary
-          }
+          style={activeView === "user" ? styles.buttonPrimary : styles.buttonSecondary}
         >
           Users
         </button>
@@ -449,9 +682,7 @@ const StatPage = () => {
         <button
           onClick={() => setActiveView("cultural")}
           style={
-            activeView === "cultural"
-              ? styles.buttonPrimary
-              : styles.buttonSecondary
+            activeView === "cultural" ? styles.buttonPrimary : styles.buttonSecondary
           }
         >
           Cultural
@@ -464,11 +695,12 @@ const StatPage = () => {
           timeData={timeData}
           linguisticData={linguisticData}
           summary={summary}
+          onExplore={openExplorer}
         />
       )}
 
       {activeView === "emotional" && emotionalData && (
-        <EmotionalStats emotionalData={emotionalData} />
+        <EmotionalStats emotionalData={emotionalData} onExplore={openExplorer} />
       )}
 
       {activeView === "emotional" && !emotionalData && (
@@ -483,6 +715,7 @@ const StatPage = () => {
           interactionGraph={interactionData.interaction_graph}
           totalUsers={userStatsMeta.totalUsers}
           mostCommentHeavyUser={userStatsMeta.mostCommentHeavyUser}
+          onExplore={openExplorer}
         />
       )}
 
@@ -493,7 +726,7 @@ const StatPage = () => {
       )}
 
       {activeView === "linguistic" && linguisticData && (
-        <LinguisticStats data={linguisticData} />
+        <LinguisticStats data={linguisticData} onExplore={openExplorer} />
       )}
 
       {activeView === "linguistic" && !linguisticData && (
@@ -513,7 +746,7 @@ const StatPage = () => {
       )}
 
       {activeView === "cultural" && culturalData && (
-        <CulturalStats data={culturalData} />
+        <CulturalStats data={culturalData} onExplore={openExplorer} />
       )}
 
       {activeView === "cultural" && !culturalData && (
@@ -521,6 +754,17 @@ const StatPage = () => {
           No cultural data available.
         </div>
       )}
+
+      <CorpusExplorer
+        open={explorerState.open}
+        onClose={() => setExplorerState((current) => ({ ...current, open: false }))}
+        title={explorerState.title}
+        description={explorerState.description}
+        records={explorerState.records}
+        loading={explorerState.loading}
+        error={explorerState.error}
+        emptyMessage={explorerState.emptyMessage}
+      />
     </div>
   );
 };

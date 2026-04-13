@@ -5,6 +5,12 @@ import { type TopUser, type InteractionGraph } from "../types/ApiTypes";
 
 import StatsStyling from "../styles/stats_styling";
 import Card from "./Card";
+import {
+  buildReplyPairSpec,
+  toText,
+  buildUserSpec,
+  type CorpusExplorerSpec,
+} from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
 
@@ -14,7 +20,7 @@ type GraphLink = {
   value: number;
 };
 
-function ApiToGraphData(apiData: InteractionGraph) {
+function toGraphData(apiData: InteractionGraph) {
   const links: GraphLink[] = [];
   const connectedNodeIds = new Set<string>();
 
@@ -39,6 +45,7 @@ type UserStatsProps = {
   interactionGraph: InteractionGraph;
   totalUsers: number;
   mostCommentHeavyUser: { author: string; commentShare: number } | null;
+  onExplore: (spec: CorpusExplorerSpec) => void;
 };
 
 const UserStats = ({
@@ -46,9 +53,10 @@ const UserStats = ({
   interactionGraph,
   totalUsers,
   mostCommentHeavyUser,
+  onExplore,
 }: UserStatsProps) => {
   const graphData = useMemo(
-    () => ApiToGraphData(interactionGraph),
+    () => toGraphData(interactionGraph),
     [interactionGraph],
   );
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
@@ -87,9 +95,9 @@ const UserStats = ({
     null,
   );
 
-  const mostActiveUser = topUsers.find(
-    (u) => u.author !== "[deleted]",
-  );
+  const mostActiveUser = topUsers.find((u) => u.author !== "[deleted]");
+  const strongestLinkSource = strongestLink ? toText(strongestLink.source) : "";
+  const strongestLinkTarget = strongestLink ? toText(strongestLink.target) : "";
 
   return (
     <div style={styles.page}>
@@ -114,11 +122,21 @@ const UserStats = ({
         />
         <Card
           label="Most Active User"
-          value={mostActiveUser?.author ?? "—"}
+          value={mostActiveUser?.author ?? "-"}
           sublabel={
             mostActiveUser
               ? `${mostActiveUser.count.toLocaleString()} events`
               : "No user activity found"
+          }
+          rightSlot={
+            mostActiveUser ? (
+              <button
+                onClick={() => onExplore(buildUserSpec(mostActiveUser.author))}
+                style={styles.buttonSecondary}
+              >
+                Explore
+              </button>
+            ) : null
           }
           style={{ gridColumn: "span 3" }}
         />
@@ -126,24 +144,46 @@ const UserStats = ({
         <Card
           label="Strongest User Link"
           value={
-            strongestLink
-              ? `${strongestLink.source} -> ${strongestLink.target}`
-              : "—"
+            strongestLinkSource && strongestLinkTarget
+              ? `${strongestLinkSource} -> ${strongestLinkTarget}`
+              : "-"
           }
           sublabel={
             strongestLink
               ? `${strongestLink.value.toLocaleString()} replies`
               : "No graph links after filtering"
           }
+          rightSlot={
+            strongestLinkSource && strongestLinkTarget ? (
+              <button
+                onClick={() =>
+                  onExplore(buildReplyPairSpec(strongestLinkSource, strongestLinkTarget))
+                }
+                style={styles.buttonSecondary}
+              >
+                Explore
+              </button>
+            ) : null
+          }
           style={{ gridColumn: "span 6" }}
         />
         <Card
           label="Most Comment-Heavy User"
-          value={mostCommentHeavyUser?.author ?? "—"}
+          value={mostCommentHeavyUser?.author ?? "-"}
           sublabel={
             mostCommentHeavyUser
               ? `${Math.round(mostCommentHeavyUser.commentShare * 100)}% comments`
               : "No user distribution available"
+          }
+          rightSlot={
+            mostCommentHeavyUser ? (
+              <button
+                onClick={() => onExplore(buildUserSpec(mostCommentHeavyUser.author))}
+                style={styles.buttonSecondary}
+              >
+                Explore
+              </button>
+            ) : null
           }
           style={{ gridColumn: "span 6" }}
         />
@@ -166,6 +206,19 @@ const UserStats = ({
               linkDirectionalParticleSpeed={0.004}
               linkWidth={(link) => Math.sqrt(Number(link.value))}
               nodeLabel={(node) => `${node.id}`}
+              onNodeClick={(node) => {
+                const userId = toText(node.id);
+                if (userId) {
+                  onExplore(buildUserSpec(userId));
+                }
+              }}
+              onLinkClick={(link) => {
+                const source = toText(link.source);
+                const target = toText(link.target);
+                if (source && target) {
+                  onExplore(buildReplyPairSpec(source, target));
+                }
+              }}
             />
           </div>
         </div>

@@ -26,7 +26,34 @@ class DatasetManager:
     def get_dataset_content(self, dataset_id: int) -> pd.DataFrame:
         query = "SELECT * FROM events WHERE dataset_id = %s"
         result = self.db.execute(query, (dataset_id,), fetch=True)
-        return pd.DataFrame(result)
+        df = pd.DataFrame(result)
+        if df.empty:
+            return df
+
+        dedupe_columns = [
+            column
+            for column in [
+                "post_id",
+                "parent_id",
+                "reply_to",
+                "author",
+                "type",
+                "timestamp",
+                "dt",
+                "title",
+                "content",
+                "source",
+                "topic",
+            ]
+            if column in df.columns
+        ]
+
+        if dedupe_columns:
+            df = df.drop_duplicates(subset=dedupe_columns, keep="first")
+        else:
+            df = df.drop_duplicates(keep="first")
+
+        return df.reset_index(drop=True)
 
     def get_dataset_info(self, dataset_id: int) -> dict:
         query = "SELECT * FROM datasets WHERE id = %s"
@@ -51,6 +78,16 @@ class DatasetManager:
     def save_dataset_content(self, dataset_id: int, event_data: pd.DataFrame):
         if event_data.empty:
             return
+
+        dedupe_columns = [
+            column for column in ["id", "type", "source"] if column in event_data.columns
+        ]
+        if dedupe_columns:
+            event_data = event_data.drop_duplicates(subset=dedupe_columns, keep="first")
+        else:
+            event_data = event_data.drop_duplicates(keep="first")
+
+        self.delete_dataset_content(dataset_id)
 
         query = """
             INSERT INTO events (

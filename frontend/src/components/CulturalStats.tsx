@@ -1,14 +1,34 @@
 import Card from "./Card";
 import StatsStyling from "../styles/stats_styling";
 import type { CulturalAnalysisResponse } from "../types/ApiTypes";
+import {
+  buildCertaintySpec,
+  buildDeonticSpec,
+  buildEntitySpec,
+  buildHedgeSpec,
+  buildIdentityBucketSpec,
+  buildPermissionSpec,
+  type CorpusExplorerSpec,
+} from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
+const exploreButtonStyle = { padding: "4px 8px", fontSize: 12 };
 
 type CulturalStatsProps = {
   data: CulturalAnalysisResponse;
+  onExplore: (spec: CorpusExplorerSpec) => void;
 };
 
-const CulturalStats = ({ data }: CulturalStatsProps) => {
+const renderExploreButton = (onClick: () => void) => (
+  <button
+    onClick={onClick}
+    style={{ ...styles.buttonSecondary, ...exploreButtonStyle }}
+  >
+    Explore
+  </button>
+);
+
+const CulturalStats = ({ data, onExplore }: CulturalStatsProps) => {
   const identity = data.identity_markers;
   const stance = data.stance_markers;
   const inGroupWords = identity?.in_group_usage ?? 0;
@@ -30,28 +50,13 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
   const topEmotion = (emotionAvg: Record<string, number> | undefined) => {
     const entries = Object.entries(emotionAvg ?? {});
     if (!entries.length) {
-      return "—";
+      return "-";
     }
 
     entries.sort((a, b) => b[1] - a[1]);
     const dominant = entries[0] ?? ["emotion_unknown", 0];
     const dominantLabel = dominant[0].replace("emotion_", "");
     return `${dominantLabel} (${(dominant[1] * 100).toFixed(1)}%)`;
-  };
-
-  const stanceSublabel = (
-    per1kTokens: number | undefined,
-    emotionAvg: Record<string, number> | undefined,
-  ) => {
-    const rateLabel =
-      typeof per1kTokens === "number"
-        ? `${per1kTokens.toFixed(1)} per 1k words`
-        : "Word frequency";
-    const emotionLabel = topEmotion(emotionAvg);
-
-    return emotionLabel === "—"
-      ? rateLabel
-      : `${rateLabel} • Avg mood: ${emotionLabel}`;
   };
 
   return (
@@ -79,21 +84,30 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
         />
         <Card
           label="In-Group Posts"
-          value={identity?.in_group_posts?.toLocaleString() ?? "—"}
+          value={identity?.in_group_posts?.toLocaleString() ?? "-"}
           sublabel='Posts leaning toward "us" language'
+          rightSlot={renderExploreButton(() =>
+            onExplore(buildIdentityBucketSpec("in")),
+          )}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Out-Group Posts"
-          value={identity?.out_group_posts?.toLocaleString() ?? "—"}
+          value={identity?.out_group_posts?.toLocaleString() ?? "-"}
           sublabel='Posts leaning toward "them" language'
+          rightSlot={renderExploreButton(() =>
+            onExplore(buildIdentityBucketSpec("out")),
+          )}
           style={{ gridColumn: "span 3" }}
         />
 
         <Card
           label="Balanced Posts"
-          value={identity?.tie_posts?.toLocaleString() ?? "—"}
+          value={identity?.tie_posts?.toLocaleString() ?? "-"}
           sublabel="Posts with equal us/them signals"
+          rightSlot={renderExploreButton(() =>
+            onExplore(buildIdentityBucketSpec("tie")),
+          )}
           style={{ gridColumn: "span 3" }}
         />
         <Card
@@ -105,7 +119,7 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
         <Card
           label="In-Group Share"
           value={
-            inGroupWordRate === null ? "—" : `${inGroupWordRate.toFixed(2)}%`
+            inGroupWordRate === null ? "-" : `${inGroupWordRate.toFixed(2)}%`
           }
           sublabel="Share of all words"
           style={{ gridColumn: "span 3" }}
@@ -113,7 +127,7 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
         <Card
           label="Out-Group Share"
           value={
-            outGroupWordRate === null ? "—" : `${outGroupWordRate.toFixed(2)}%`
+            outGroupWordRate === null ? "-" : `${outGroupWordRate.toFixed(2)}%`
           }
           sublabel="Share of all words"
           style={{ gridColumn: "span 3" }}
@@ -121,38 +135,46 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
 
         <Card
           label="Hedging Words"
-          value={stance?.hedge_total?.toLocaleString() ?? "—"}
-          sublabel={stanceSublabel(
-            stance?.hedge_per_1k_tokens,
-            stance?.hedge_emotion_avg,
-          )}
+          value={stance?.hedge_total?.toLocaleString() ?? "-"}
+          sublabel={
+            typeof stance?.hedge_per_1k_tokens === "number"
+              ? `${stance.hedge_per_1k_tokens.toFixed(1)} per 1k words`
+              : "Word frequency"
+          }
+          rightSlot={renderExploreButton(() => onExplore(buildHedgeSpec()))}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Certainty Words"
-          value={stance?.certainty_total?.toLocaleString() ?? "—"}
-          sublabel={stanceSublabel(
-            stance?.certainty_per_1k_tokens,
-            stance?.certainty_emotion_avg,
-          )}
+          value={stance?.certainty_total?.toLocaleString() ?? "-"}
+          sublabel={
+            typeof stance?.certainty_per_1k_tokens === "number"
+              ? `${stance.certainty_per_1k_tokens.toFixed(1)} per 1k words`
+              : "Word frequency"
+          }
+          rightSlot={renderExploreButton(() => onExplore(buildCertaintySpec()))}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Need/Should Words"
-          value={stance?.deontic_total?.toLocaleString() ?? "—"}
-          sublabel={stanceSublabel(
-            stance?.deontic_per_1k_tokens,
-            stance?.deontic_emotion_avg,
-          )}
+          value={stance?.deontic_total?.toLocaleString() ?? "-"}
+          sublabel={
+            typeof stance?.deontic_per_1k_tokens === "number"
+              ? `${stance.deontic_per_1k_tokens.toFixed(1)} per 1k words`
+              : "Word frequency"
+          }
+          rightSlot={renderExploreButton(() => onExplore(buildDeonticSpec()))}
           style={{ gridColumn: "span 3" }}
         />
         <Card
           label="Permission Words"
-          value={stance?.permission_total?.toLocaleString() ?? "—"}
-          sublabel={stanceSublabel(
-            stance?.permission_per_1k_tokens,
-            stance?.permission_emotion_avg,
-          )}
+          value={stance?.permission_total?.toLocaleString() ?? "-"}
+          sublabel={
+            typeof stance?.permission_per_1k_tokens === "number"
+              ? `${stance.permission_per_1k_tokens.toFixed(1)} per 1k words`
+              : "Word frequency"
+          }
+          rightSlot={renderExploreButton(() => onExplore(buildPermissionSpec()))}
           style={{ gridColumn: "span 3" }}
         />
 
@@ -161,8 +183,14 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
           <p style={styles.sectionSubtitle}>
             Most likely emotion when in-group wording is stronger.
           </p>
-          <div style={styles.topUserName}>
-            {topEmotion(identity?.in_group_emotion_avg)}
+          <div style={styles.topUserName}>{topEmotion(identity?.in_group_emotion_avg)}</div>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => onExplore(buildIdentityBucketSpec("in"))}
+              style={styles.buttonSecondary}
+            >
+              Explore records
+            </button>
           </div>
         </div>
 
@@ -171,8 +199,14 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
           <p style={styles.sectionSubtitle}>
             Most likely emotion when out-group wording is stronger.
           </p>
-          <div style={styles.topUserName}>
-            {topEmotion(identity?.out_group_emotion_avg)}
+          <div style={styles.topUserName}>{topEmotion(identity?.out_group_emotion_avg)}</div>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => onExplore(buildIdentityBucketSpec("out"))}
+              style={styles.buttonSecondary}
+            >
+              Explore records
+            </button>
           </div>
         </div>
 
@@ -182,9 +216,7 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
             Most mentioned entities and the mood that appears most with each.
           </p>
           {!entities.length ? (
-            <div style={styles.topUserMeta}>
-              No entity-level cultural data available.
-            </div>
+            <div style={styles.topUserMeta}>No entity-level cultural data available.</div>
           ) : (
             <div
               style={{
@@ -194,7 +226,11 @@ const CulturalStats = ({ data }: CulturalStatsProps) => {
               }}
             >
               {entities.map(([entity, aggregate]) => (
-                <div key={entity} style={styles.topUserItem}>
+                <div
+                  key={entity}
+                  style={{ ...styles.topUserItem, cursor: "pointer" }}
+                  onClick={() => onExplore(buildEntitySpec(entity))}
+                >
                   <div style={styles.topUserName}>{entity}</div>
                   <div style={styles.topUserMeta}>
                     {aggregate.post_count.toLocaleString()} posts • Likely mood:{" "}

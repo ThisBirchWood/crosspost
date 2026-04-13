@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -13,7 +13,6 @@ import ActivityHeatmap from "../stats/ActivityHeatmap";
 import { ReactWordcloud } from "@cp949/react-wordcloud";
 import StatsStyling from "../styles/stats_styling";
 import Card from "../components/Card";
-import UserModal from "../components/UserModal";
 
 import {
   type SummaryResponse,
@@ -21,11 +20,18 @@ import {
   type UserEndpointResponse,
   type TimeAnalysisResponse,
   type LinguisticAnalysisResponse,
-  type User,
 } from "../types/ApiTypes";
+import {
+  buildAllRecordsSpec,
+  buildDateBucketSpec,
+  buildOneTimeUsersSpec,
+  buildUserSpec,
+  type CorpusExplorerSpec,
+} from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
 const MAX_WORDCLOUD_WORDS = 250;
+const exploreButtonStyle = { padding: "4px 8px", fontSize: 12 };
 
 const WORDCLOUD_OPTIONS = {
   rotations: 2,
@@ -39,6 +45,7 @@ type SummaryStatsProps = {
   timeData: TimeAnalysisResponse | null;
   linguisticData: LinguisticAnalysisResponse | null;
   summary: SummaryResponse | null;
+  onExplore: (spec: CorpusExplorerSpec) => void;
 };
 
 type WordCloudPanelProps = {
@@ -60,7 +67,7 @@ function formatDateRange(startUnix: number, endUnix: number) {
       day: "2-digit",
     });
 
-  return `${fmt(start)} → ${fmt(end)}`;
+  return `${fmt(start)} -> ${fmt(end)}`;
 }
 
 function convertFrequencyData(data: FrequencyWord[]) {
@@ -70,25 +77,22 @@ function convertFrequencyData(data: FrequencyWord[]) {
   }));
 }
 
+const renderExploreButton = (onClick: () => void) => (
+  <button
+    onClick={onClick}
+    style={{ ...styles.buttonSecondary, ...exploreButtonStyle }}
+  >
+    Explore
+  </button>
+);
+
 const SummaryStats = ({
   userData,
   timeData,
   linguisticData,
   summary,
+  onExplore,
 }: SummaryStatsProps) => {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const usersByAuthor = useMemo(() => {
-    const nextMap = new Map<string, User>();
-    for (const user of userData?.users ?? []) {
-      nextMap.set(user.author, user);
-    }
-    return nextMap;
-  }, [userData?.users]);
-
-  const selectedUserData: User | null = selectedUser
-    ? usersByAuthor.get(selectedUser) ?? null
-    : null;
-
   const wordCloudWords = useMemo(
     () =>
       convertFrequencyData(
@@ -104,49 +108,41 @@ const SummaryStats = ({
 
   return (
     <div style={styles.page}>
-      {/* main grid*/}
       <div style={{ ...styles.container, ...styles.grid }}>
         <Card
           label="Total Activity"
-          value={summary?.total_events ?? "—"}
+          value={summary?.total_events ?? "-"}
           sublabel="Posts + comments"
-          style={{
-            gridColumn: "span 4",
-          }}
+          rightSlot={renderExploreButton(() => onExplore(buildAllRecordsSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
         <Card
           label="Active People"
-          value={summary?.unique_users ?? "—"}
+          value={summary?.unique_users ?? "-"}
           sublabel="Distinct users"
-          style={{
-            gridColumn: "span 4",
-          }}
+          rightSlot={renderExploreButton(() => onExplore(buildAllRecordsSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
         <Card
           label="Posts vs Comments"
           value={
-            summary ? `${summary.total_posts} / ${summary.total_comments}` : "—"
+            summary ? `${summary.total_posts} / ${summary.total_comments}` : "-"
           }
-          sublabel={`Comments per post: ${summary?.comments_per_post ?? "—"}`}
-          style={{
-            gridColumn: "span 4",
-          }}
+          sublabel={`Comments per post: ${summary?.comments_per_post ?? "-"}`}
+          rightSlot={renderExploreButton(() => onExplore(buildAllRecordsSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
 
         <Card
           label="Time Range"
           value={
             summary?.time_range
-              ? formatDateRange(
-                  summary.time_range.start,
-                  summary.time_range.end,
-                )
-              : "—"
+              ? formatDateRange(summary.time_range.start, summary.time_range.end)
+              : "-"
           }
           sublabel="Based on dataset timestamps"
-          style={{
-            gridColumn: "span 4",
-          }}
+          rightSlot={renderExploreButton(() => onExplore(buildAllRecordsSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
 
         <Card
@@ -154,38 +150,44 @@ const SummaryStats = ({
           value={
             typeof summary?.lurker_ratio === "number"
               ? `${Math.round(summary.lurker_ratio * 100)}%`
-              : "—"
+              : "-"
           }
           sublabel="Users with only one event"
-          style={{
-            gridColumn: "span 4",
-          }}
+          rightSlot={renderExploreButton(() => onExplore(buildOneTimeUsersSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
 
         <Card
           label="Sources"
-          value={summary?.sources?.length ?? "—"}
+          value={summary?.sources?.length ?? "-"}
           sublabel={
             summary?.sources?.length
               ? summary.sources.slice(0, 3).join(", ") +
-                (summary.sources.length > 3 ? "…" : "")
-              : "—"
+                (summary.sources.length > 3 ? "..." : "")
+              : "-"
           }
-          style={{
-            gridColumn: "span 4",
-          }}
+          rightSlot={renderExploreButton(() => onExplore(buildAllRecordsSpec()))}
+          style={{ gridColumn: "span 4" }}
         />
 
-        {/* events per day */}
         <div style={{ ...styles.card, gridColumn: "span 5" }}>
           <h2 style={styles.sectionTitle}>Activity Over Time</h2>
-          <p style={styles.sectionSubtitle}>
-            How much posting happened each day.
-          </p>
+          <p style={styles.sectionSubtitle}>How much posting happened each day.</p>
 
           <div style={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={timeData?.events_per_day ?? []}>
+              <LineChart
+                data={timeData?.events_per_day ?? []}
+                onClick={(state: unknown) => {
+                  const payload = (state as { activePayload?: Array<{ payload?: { date?: string } }> })
+                    ?.activePayload?.[0]?.payload as
+                    | { date?: string }
+                    | undefined;
+                  if (payload?.date) {
+                    onExplore(buildDateBucketSpec(String(payload.date)));
+                  }
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
@@ -201,7 +203,6 @@ const SummaryStats = ({
           </div>
         </div>
 
-        {/* Word Cloud */}
         <div style={{ ...styles.card, gridColumn: "span 4" }}>
           <h2 style={styles.sectionTitle}>Common Words</h2>
           <p style={styles.sectionSubtitle}>
@@ -213,7 +214,6 @@ const SummaryStats = ({
           </div>
         </div>
 
-        {/* Top Users */}
         <div
           style={{ ...styles.card, ...styles.scrollArea, gridColumn: "span 3" }}
         >
@@ -225,7 +225,7 @@ const SummaryStats = ({
               <div
                 key={`${item.author}-${item.source}`}
                 style={{ ...styles.topUserItem, cursor: "pointer" }}
-                onClick={() => setSelectedUser(item.author)}
+                onClick={() => onExplore(buildUserSpec(item.author))}
               >
                 <div style={styles.topUserName}>{item.author}</div>
                 <div style={styles.topUserMeta}>
@@ -236,7 +236,6 @@ const SummaryStats = ({
           </div>
         </div>
 
-        {/* Heatmap */}
         <div style={{ ...styles.card, gridColumn: "span 12" }}>
           <h2 style={styles.sectionTitle}>Weekly Activity Pattern</h2>
           <p style={styles.sectionSubtitle}>
@@ -248,13 +247,6 @@ const SummaryStats = ({
           </div>
         </div>
       </div>
-
-      <UserModal
-        open={!!selectedUser}
-        onClose={() => setSelectedUser(null)}
-        username={selectedUser ?? ""}
-        userData={selectedUserData}
-      />
     </div>
   );
 };

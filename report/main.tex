@@ -115,6 +115,7 @@ This section describes common keywords and metrics use to measure and quantify o
 Sentiment Analysis involves capturing the emotions associated with a specific post, topic or entity. This type of analysis can be as simple as classifying a post as "positive" or "negative", or classifying a post into a set of pre-existing emotions such as anger, joy or sadness.
 
 \subsubsection{Active vs Passive Participation}
+\label{sec:passive_participation}
 Not everyone in an online community participates in the same way. Some users post regularly and leave comments while others might simply read content without ever contributing anything themselves. Some might only contribute occasionally.
 
 This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is. 
@@ -123,11 +124,13 @@ This distinction between active and passive participation (passive users are oft
 Looking at when a community is active can reveal quite a lot about its nature and membership. A subreddit that peaks at 2am UTC might have a mostly American userbase, while one that is consistently active across all hours could suggest a more globally distributed community. Beyond timezones, temporal patterns can also capture things like how a community responds to external events, like a sudden spike in posting activity often corresponds to something newsworthy happening that is relevant to the community.
 
 \subsubsection{Cultural Markers}
+\label{sec:cultural_markers}
 Cultural markers are the words, phrases, memes, and behaviours that are specific to a particular community and signal that someone is a member of it. These might include in-jokes, niche slang, recurring references, or even particular ways of formatting posts. In the context of digital ethnography, identifying these markers is useful because they reveal how communities build a shared identity and distinguish themselves from outsiders.
 
 Some patterns, such as usage of words like "we, us, our, ourselves", where posts are referring to themselves as a community might have different sentiment to posts where words like "they, them, their, themselves" are used. These are known as "identity markers" and they can be used to identify how welcoming a community might be to outsiders.
 
 \subsubsection{Stance Markers}
+\label{sec:stance_markers}
 Stance Markers refer to the usage of different phrasing patterns which can reveal the speakers attitude towards topics. There are different kinds of these phrasings, such as hedge, certainty, deontic and permission patterns.
 
 \textbf{Hedge Patterns} are usually phrases that contain words like "maybe, possibly, probably, i think, i feel" and generally mean that someone is unsure or suspicious about something.
@@ -461,6 +464,13 @@ As this project is focused on the collection and analysis of online community da
 
 A unified data model is used to represent all incoming data, regardless of its original source or structure. This ensures that the same pipeline works across YouTube, Reddit and boards.ie data, and can be easily extended to new sources in the future.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/pipeline.png}
+    \caption{Data Pipeline Diagram}
+    \label{fig:pipeline}
+\end{figure}
+
 \subsubsection{Data Ingestion}
 The system will support two methods of data ingestion:
 \begin{itemize}
@@ -516,25 +526,6 @@ NLP processing lets us perform much richer analysis of the dataset, as it provid
 
 \subsubsection{Data Storage}
 The enriched dataset is stored in a PostgreSQL database, with a schema similar to the unified data model defined in the normalisation section, with additional fields for the derived data, NLP outputs, and user ownership. Each dataset is associated with a specific user account, and the system supports multiple datasets per user.
-
-The \texttt{events} table in PostgreSQL contains the following fields:
-\begin{itemize}
-    \item \texttt{id}: a unique identifier for the event.
-    \item \texttt{dataset\_id}: a foreign key referencing the dataset this event belongs to. If the dataset is deleted.
-    \item \texttt{post\_id}: the original identifier of the post or comment as it appeared on the source platform.
-    \item \texttt{type}: whether the event is a post or a comment.
-    \item \texttt{author}: the username of the content creator.
-    \item \texttt{content}: the text content of the event.
-    \item \texttt{timestamp}: the Unix epoch time at which the content was created.
-    \item \texttt{date}, \texttt{dt}, \texttt{hour}, \texttt{weekday}: datetime fields derived from the timestamp at ingestion time.
-    \item \texttt{title}: the title of the post, if the event is a post. Null for comments.
-    \item \texttt{parent\_id}: for comments, the identifier of the post it belongs to. Null for posts.
-    \item \texttt{reply\_to}: for comments, the identifier of the comment it directly replies to. Null if the comment is a direct reply to a post.
-    \item \texttt{source}: the platform from which the content was retrieved.
-    \item \texttt{topic}, \texttt{topic\_confidence}: the topic assigned to the event by the NLP model, along with a confidence score.
-    \item \texttt{ner\_entities}: a list of named entities identified in the content.
-    \item \texttt{emotion\_anger}, \texttt{emotion\_disgust}, \texttt{emotion\_fear}, \texttt{emotion\_joy}, \texttt{emotion\_sadness}: emotion scores assigned to the event by the NLP model.
-\end{itemize}
 
 \subsubsection{Data Retrieval}
 The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
@@ -611,14 +602,7 @@ User analysis allows researchers to understand the behaviour and activity of ind
 In this system, user analysis will include:
 \begin{itemize}
     \item Identification of top users based on activity.
-    \item Per-user activity such as:
-    \begin{itemize}
-        \item Total number of events (posts and comments).
-        \item Average emotion distribution across their events.
-        \item Average topic distribution across their events.
-        \item Comment-to-post ratio.
-        \item Vocabulary information such as top words used and lexical diversity.
-    \end{itemize}
+    \item Per-user activity.
 \end{itemize}
 
 Initially the user endpoint contained the interactional statistics as well, as a case could be made for the user analysis and interaction analysis being combined, however a distinction can be made between individual user analysis and user analysis on a larger, community-level scale focused on interactions. This allows the user endpoint to stay focused on singular user analysis while still using NLP outputs like emotions and topics.
@@ -675,11 +659,20 @@ In this system, cultural analysis will include:
     \item Average emotions per entity
 \end{itemize}
 
+These metrics were chosen because they can provide insights into the cultural markers and identity signals that are present in an online community, further described in Section \ref{sec:cultural_markers} and \ref{sec:stance_markers}.
+
 \subsection{Frontend Design}
-The frontend is built with React and TypeScript, and the analysis sections are structured around a tabbed dashboard interface where each tab corresponds to a distinct analytical perspective: temporal, linguistic, emotional, user, and interaction analysis. This organisation mirrors the shape of the backend API and makes it straightforward for a researcher to navigate between different lenses on the same dataset without losing context.
+The primary audience for this tool is researchers and social scientists, not software developers. Therefore the frontend needs to feel approachable and easy to use for non-technical users. At the same time it must support multi-dataset workflows and handle long-running background processes.
 
-React was chosen for its efficient rendering model and the breadth of its visualisation ecosystem
+React was chosen as the UI framework primarily for its large amount of pre-built visualisation components. There are many different types of data being visualised in this system, such as word clouds, bar charts, line charts, heatmaps and network graphs, and React has a large library of pre-built components for all of these types of visualisations.
 
+\subsubsection{Structure}
+A persistent layout shell will wrap every page of the frontend, providing a consistent header for navigation and account management. This will also store login state and user information in a global way, such that no component has to manage authentication state on its own. The main content area will be reserved for the dataset management and analysis interface.
+
+The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries. The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
+
+\subsubsection{Visual Design}
+The visual design of the frontend will be clean and minimalistic, with a focus on usability and clarity. The styling files will be centralised to allow for developers to easily change or modify the colouring and palettes in the future. 
 
 \subsection{Automatic Data Collection}
 Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
@@ -878,6 +871,7 @@ NER output is stored as JSONB rather than in relational columns, as the number o
 This module is a simple interface to deal with datasets in the database, and abstracts away the details of SQL queries and database interactions from the rest of the application. It is used by the API endpoints to manage datasets and their content.
 
 \subsubsection{Authentication Manager}
+\label{sec:auth-manager}
 The authentication manager is another higher-level module that provides an interface for managing user authentication in the database. It also uses the low-level \texttt{PostgreConnector} to execute SQL queries, but provides more specific methods for authentication management, such as creating a new user, fetching a user by id, and authenticating a user. It handles password hashing using the \texttt{bcrypt} library, which provides a secure way to hash and verify passwords. Similar to the dataset manager, dependency injection is used to pass an instance of the \texttt{PostgreConnector}.
 
 The most important authentication methods implemented are as follows:
@@ -952,22 +946,332 @@ A middle ground was found with the "Emotion English DistilRoBERTa-base" model fr
 
 As the project progressed and more posts were classified, the "surprise" and "neutral" emotions were found to be dominating the dataset, which made it difficult to analyse the other emotions. This could possible be because the model is not fine-tuned for internet slang, and usage of exclamation marks and emojis, which are common in social media posts, may be classified as "surprise" or "neutral" rather than the intended emotion. Therefore, the "surprise" and "neutral" emotion classes were removed from the dataset, and the confidence numbers were re-normalised to the remaining 5 emotions.
 
+\subsubsection{Topic Classification}
+For topic classification, a zero-shot classification approach was used, which allows for classification of text into arbitrary topic classes without needing to fine-tune a model for each specific set of topics. Initially, attempts were made to automatically generate topic classes based on the most common words in the dataset using TF-IDF, but this led to generic and strange classes that weren't useful for analysis. Therefore, it was decided that a topic list would be provided manually, either by the user or using a generic list of broad common topics. 
+
+Initially, the "all-mpnet-base-v2" \cite{all_mpnet_base_v2} was used as the base model for the zero-shot classification, which is a general-purpose sentence embedding model. While this worked well and produced good results, it was slow to run interference on large datasets, and would often take hours to classify a dataset of over 60,000 posts and comments.
+
+Eventually, the "MiniLM-L6-v2 " \cite{minilm_l6_v2} was chosen as the base model for zero-shot classification, which is a smaller and faster sentence embedding model. While it may not produce quite as good results as the larger model, it still produces good results and is much faster to run inference on, which makes it more practical for use in this project.
+
+\subsubsection{Entity Recognition}
+At this point, the NLP pipeline was taking a long time to run on large datasets (such as the Cork dataset), therefore any NER (Named Entity Recognition) model that was added needed to be small and fast to run interference on large datasets. The "dslim/bert-base-NER" model from HuggingFace \cite{dslim_bert_base_ner} was chosen as it is a fine-tuned BERT model that can perform named entity recognition, and is relatively small and fast compared to other NER models.
+
+This model outputs a list of entities for each post, and each entity has a type, which are:
+\begin{itemize}
+    \item \textbf{PER}: Person
+    \item \textbf{ORG}: Organisation
+    \item \textbf{LOC}: Location
+    \item \textbf{MISC}: Miscellaneous
+\end{itemize}
+
+Since the model outputs have a variable length, they arestored in the database as a \texttt{JSONB} field, which allows for flexible storage of the variable number of entities per post.
+
+\subsubsection{Optimization}
+Many issues arose with the performance of the NLP module, as running inference on large datasets can take a long time, especially when using transformer-based models. To optimize the performance of the NLP module, several techniques were used:
+\begin{itemize}
+    \item \textbf{Batch Processing}: Instead of running inference on each post individually, posts are processed in batches.
+    \item \textbf{Model Caching}: Models are loaded once and cached in memory, rather than being loaded from disk for each inference.
+    \item \textbf{Batch Size Backoff}: If the model runs out of memory during inference, the batch size is automatically reduced and the inference is retried until it succeeds.
+\end{itemize}
+
+An example of the batch size backoff implementation is shown in figure \ref{fig:nlp_backoff}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/nlp_backoff.png}
+    \caption{Batch Size Backoff Implementation}
+    \label{fig:nlp_backoff}
+\end{figure}
+
 \subsection{Ethnographic Statistics}
 This section will discuss the implementation of the various ethnographic statistics that are available through the API endpoints, such as temporal analysis, linguistic analysis, emotional analysis, user analysis, interactional analysis, and cultural analysis. Each of these are available through the API and visualised in the frontend. 
 
+\subsubsection{Temporal Analysis}
+Two statistics are implemented for temporal analysis:
+\begin{itemize}
+    \item \textbf{Posts Per Day}: A simple count of the number of posts and comments per day, which can be visualised as a line chart or bar chart to show trends over time.
+    \item \textbf{Time Heatmap}: A heatmap of posts and comments by hour of the day and day of the week, which can show patterns in when users are most active.
+\end{itemize}
 
+Both of these statistics are implemented using Pandas queries to aggregate the data by the relevant time periods, and lists of dictionaries are returned to the API for visualisation in the frontend.
 
+\subsubsection{Linguistic Analysis}
+Linguistic analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Word Frequency}: A count of the most common words used in the dataset, which can be visualised as a word cloud or bar chart.
+    \item \textbf{N-grams}: A count of the most common n-grams (sequences of n words) used in the dataset, which can also be visualised as a word cloud or bar chart.
+    \item \textbf{Lexical Diversity}: A measure of the diversity of the language used in the dataset, calculated as the ratio of unique words to total words.
+\end{itemize}
+
+Both word frequency and n-grams are calculated using the \texttt{collections.Counter} class, which provides a convenient way to count the occurrences of words and n-grams in the dataset. N-Grams take in a number \texttt{n} as a parameter, which specifies the length of the n-grams to calculate. For example, if \texttt{n} = 2, the most common two word phrases will be returned.
+
+Lexical diversity is calculated using a simple formula that divides the number of unique words by the total number of words in the dataset.
+
+This class requires a word exclusion list to be provided, which is a list of common words that should be excluded from the analysis, such as stop words and common words that are not relevant for analysis. These are passed in from the higher level StatGen class.
+
+\subsubsection{User Analysis}
+User analysis returns two major statistics:
+\begin{itemize}
+    \item \textbf{Top Users}: A count of the most active users in the dataset, which can be visualised as a bar chart or table.
+    \item \textbf{Per User Analysis}: A breakdown of statistics for each user, such as the number of posts and comments, average sentiment, and most common words used by that user. Each user will be analysed as follows:
+    \begin{itemize}
+        \item Total number of events (posts and comments).
+        \item Average emotion distribution across their events.
+        \item Average topic distribution across their events.
+        \item Comment-to-post ratio.
+        \item Vocabulary information such as top words used and lexical diversity.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Interactional Analysis}
+Interactional analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Interaction Graph}: A graph of interactions between users, where nodes represent users and edges represent interactions.
+    \item \textbf{Top Interaction Pairs}: A count of the most common pairs of users that interact with each other, which can be visualised as a bar chart or table.
+    \item \textbf{Conversation Concentration}: A measure of how concentrated conversations are around certain users.
+\end{itemize}
+
+The conversation concentration statistic shows the inequality of contributions in conversations, described in Section-\ref{sec:passive_participation}. It identifies the total number of unique commenters, calculates what share of all comments are produced by the most active top 10\% of authors, and measures how many authors only ever commented once. Put together, these metrics reveal the degree to which a community's conversation is driven by a small core of prolific contributors versus being broadly distributed. The metrics returned are:
+\begin{itemize}
+    \item \textbf{Total Commenting Users}: The total number of unique users who commented in the dataset.
+    \item \textbf{Top 10\% Comment Share}: The percentage of all comments that were produced by the top 10\% most active commenters.
+    \item \textbf{Top 10\% Author Count}: The number of unique users that make up the top 10\% most active commenters.
+    \item \textbf{One-Time Commenters}: The percentage of users that only commented once in the dataset.
+\end{itemize}
+
+The interaction graph creates an index of post ids to authors to ensure fast and proper link when iterating over the dataset. In addition, issues arose with the distinction between someone replying to a post as a comment, and someone replying to a comment. The fix involved checking both \texttt{parent\_id} and \texttt{reply\_to} fields instead of just \texttt{reply\_to}.
+
+\subsubsection{Emotional Analysis}
+Emotional analysis includes four statistics:
+\begin{itemize}
+    \item \textbf{Average Emotion By Topic}: A breakdown of the average emotion scores for each topic.
+    \item \textbf{Overall Emotional Average}: A breakdown of the average emotion scores for the entire dataset.
+    \item \textbf{Dominant Emotion Distribution}: The distribution of dominant emotions per event in the dataset.
+    \item \textbf{Average Emotion By Source}: A breakdown of the average emotion scores for each source platform.
+\end{itemize}
+
+Throughout development, the "surprise" and "neutral" emotion classes were in data pipeline, however they were removed from the emotional analysis as they were dominating the dataset and skewing the results.
+
+\subsubsection{Cultural Analysis}
+Cultural analysis includes three statistics:
+\begin{itemize}
+    \item \textbf{Identity Markers}: Statistics regarding in-group vs out-group markers, how common each are and average emotions with each, visualised as KPIs.
+    \item \textbf{Stance Markers}: Returns hedge, certainty, deontic and permissive markers, how common each are and average emotions with each, visualised as KPIs.
+    \item \textbf{Average Emotions Per Entity}: A breakdown of the average emotion scores for each named entity type (person, organisation, location, miscellaneous).
+\end{itemize}
+
+For stance and identity markers, the Python module \texttt{re} was used to find certain words in a post along with the counts of each. \texttt{re} was used instead of a more complex NLP approach as the goal is simply to find certain words quickly, whereas a more complex approach would be far slower.
+
+With the identity markers, in-group markers such as "we", "us", "our" were counted, as well as out-group markers such as "they", "them", "their". For stance markers, hedge markers such as "maybe", "possibly", "might" were counted, as well as certainty markers such as "definitely", "certainly", "undoubtedly", deontic markers such as "should", "must", "ought to", and permissive markers such as "can", "could", "may". An example of the implementation for stance markers can be seen in figure \ref{fig:stance_markers}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/stance_markers.png}
+    \caption{Finding Stance Markers with Regular Expressions}
+    \label{fig:stance_markers}
+\end{figure}
+
+\subsubsection{Summary}
+During development, it was helpful to see a high-level summary of the entire dataset and it would also be helpeful for end-users on the frontend to have a quick overview of the dataset. Therefore, a "summary" statistic was implemented that returns a high-level overview of the dataset, including:
+\begin{itemize}
+    \item Total number of posts and comments in the dataset.
+    \item Total number of unique users in the dataset.
+    \item Comments per post.
+    \item Lurker Ratio, which is the percentage of users that only have one event in the dataset.
+    \item The time range of the dataset, from the earliest event to the latest event.
+    \item Sources included in the dataset.
+\end{itemize}
+
+This is implemented in the same way as the other statistics, using Pandas queries and in it's own class.
+
+\subsubsection{StatGen Class}
+The \texttt{StatGen} (Statistics Generator) class is a higher level module that aggregates all of the different statistics into a single class that is called by the API endpoints to generate the statistics.
+
+Initially, all statistics were implemented within this class, however as the class grew larger and larger, it was refactored to delegate the different categories of statistics to separate classes, listed in the sections above. The class directly instantiates these analysis classes. Dependency injection of the analysis classes was considered for looser coupling, but since they were split purely for organisational and neatness purposes, extra decoupling complexity wasn't needed.
+
+Beyond improving the quality of the code, the other main function of this class is to provide a single centralised area to manage staistical filtering. Each statistical method of the class will take in a dictionary of filters as a parameter, then the private method \texttt{\_prepare\_filtered\_df} will apply the filters to the dataset and return the filtered dataset. Four types of filters are supported:
+\begin{itemize}
+    \item \texttt{start\_date}: A date string that filters the dataset to only include events after the specified date.
+    \item \texttt{end\_date}: A date string that filters the dataset to only include events before the specified date.
+    \item \texttt{source}: A string that filters the dataset to only include events
+    \item \texttt{search\_query}: A string that filters the dataset to only include events that contain the search query in their content.
+\end{itemize}
+
+Initially, stateful filtering was implemented where the filters would be stored within the \texttt{StatGen} object and are applied to all subsequent methods. The filters were applied once and could then be reset. This worked during initial stages when only one dataset was being tested, however with multiple datasets, this stateful filtering applied to other datasets (even with other users) and caused confusion, therefore a stateless approach was implemented where the filters are passed in as a parameter to each method, and the filtered dataset is returned for that method only, without affecting any other methods or datasets.
 
 \subsection{Flask API}
+The Flask API is responsible for providing the backend data to the frontend. It provides endpoints for user management, dataset management, and analysis endpoints. It also handles authentication and access control for the API. In addition, it handles extra data through some POST endpoints, such as filtering parameters and auto-fetching parameters for the connectors.
+
+\subsubsection{User Management}
+Three endpoints handle user lifecycle management. 
+
+\texttt{POST /register} accepts a JSON body containing a username, email, and password, delegates validation and persistence to \texttt{AuthManager}, described in Section \ref{sec:auth-manager}, and returns a structured error if the username or email is already taken. 
+
+\texttt{POST /login} verifies credentials through \texttt{AuthManager.authenticate\_user()} and, on success, returns a signed JWT access token created with Flask-JWT-Extended's \texttt{create\_access\_token()}. The user's integer ID is embedded as the token identity, which is retrieved on subsequent requests using \texttt{get\_jwt\_identity()}. The token expiry is configurable through the \texttt{JWT\_ACCESS\_TOKEN\_EXPIRES} environment variable. 
+
+\texttt{GET /profile} is a protected endpoint that verifies the token and returns the user's profile information, and serves as a method for the frontend to display user information.
+
+\subsubsection{Dataset Management}
+Dataset management is split across several endpoints that cover the full lifecycle of a dataset from creation through deletion.
+
+\texttt{GET /user/datasets} returns the list of all datasets owned by the authenticated user, used to populate the datasets page in the frontend. 
+
+\texttt{GET /dataset/<id>} returns the metadata for a single dataset.
+
+\texttt{PATCH /dataset/<id>} allows the user to rename it. 
+
+\texttt{DELETE /dataset/<id>} removes the dataset and all associated events from the database. 
+
+All of these routes begin with an ownership check via \texttt{dataset\_manager.authorize\_user\_dataset()}, and return a \texttt{403} if the requesting user does not own the dataset in question.
+
+\texttt{POST /datasets/upload} handles manual file upload. It expects a multipart form submission containing a \texttt{.jsonl} posts file, a \texttt{.json} topics file, and a dataset name string. The \texttt{.jsonl} file is read directly into a Pandas DataFrame using \texttt{pd.read\_json(lines=True)}, and the topics file is loaded with the standard \texttt{json} library. Once the dataset metadata is saved to the database, the serialised DataFrame and topics dictionary are passed to the \texttt{process\_dataset} Celery task via \texttt{.delay()}, and the endpoint returns immediately with a \texttt{202 Accepted} response containing the new dataset ID. This non-blocking behaviour is essential given that NLP enrichment can take several minutes for large datasets.
+
+\texttt{POST /datasets/scrape} handles automated data fetching. The request body contains a list of source configurations, each specifying a connector and optional search query, category, and limit. Careful validation is performed on the source configurations, as any failure within the Celery task would cause a silent failure. The dataset metadata is saved to the database, and the \texttt{fetch\_and\_process\_dataset} task is dispatched asynchronously via Celery. This task fetches each source's data using the appropriate connector, combines the result into a single DataFrame, then passes it through the same enrichment and storage process.
+
+\texttt{GET /datasets/sources} is an unauthenticated endpoint that returns the connector registry metadata so the frontend can dynamically render the available sources and what they can do.
+
+\texttt{GET /dataset/<id>/status} allows the frontend to poll the state of a dataset. It returns the current status string and message stored in the \texttt{datasets} table, which the Celery worker updates at each stage of the pipeline, from \texttt{"fetching"} through \texttt{"processing"} to \texttt{"complete"} or \texttt{"error"}.
+
+\texttt{GET /dataset/<id>/all} returns the full raw event table for a dataset as a list of records, which powers the raw data viewer in the frontend.
+
+\subsubsection{Analysis Endpoints}
+Several endpoints are implemented that return each ethnographic statistic generated by the \texttt{StatGen} class. Each endpoint takes a URL parameter for the dataset ID, and an optional JSON body containing filter parameters.
+
+For each type of analysis, there is a corresponding endpoint, the base configuration being: \texttt{/dataset/<id>/<analysis\_type>}
+
+Each endpoint needs a JWT authorization header that corresponds to the user that owns that dataset, and the dataset ID is validated against the user's datasets to ensure they have access to it. The endpoint then fetches the entire dataset, and passes it through the global \texttt{StatGen} instance to generate statistics. The resulting statistics are returned as JSON to the frontend for visualisation.
+
+\subsubsection{Access Control}
+Endpoints are protected with Flask's \texttt{@jwt\_required()} decorator. This ensures that only authenticated users can access the protected endpoints. For dataset-specific endpoints, an additional ownership check is performed using \texttt{dataset\_manager.authorize\_user\_dataset()} to ensure that users can only access their own datasets. If a user attempts to access a dataset they do not own, a \texttt{403 Forbidden} response is returned.
+
+\subsubsection{Error Handling}
+Each route handler wraps its logic in a \texttt{try/except} block that catches three categories of exception. \texttt{NotAuthorisedException} maps to a \texttt{403} response. \texttt{NonExistentDatasetException} maps to \texttt{404}. \texttt{ValueError}, which is raised by input validation in the manager layers, maps to \texttt{400}. 
+
+A bare \texttt{Exception} try-catch handles anything unexpected and returns a generic \texttt{500}, while printing a full traceback to the server log via \texttt{traceback.format\_exc()} for debugging. Error messages returned to the client are deliberately vague for unexpected errors, to avoid leaking implementation details.
 
 \subsection{React Frontend}
+The frontend is a single-page application built with React and Typescript. It communicates with the Flask backend over a REST API using Axios, and JWT tokens are attached to every authenticated request using an Axios default header. 
+
+React Router is used for client-side routing, and the main pages of the application are:
+\begin{itemize}
+    \item \textbf{Login Page}: A simple login form that allows users to login and register for an account.
+    \item \textbf{Datasets Page}: A page that lists all of the user's datasets, and allows them to create new datasets through file upload or automated fetching.
+    \item \textbf{Dataset Status Page}: A page that shows the status of a dataset, including the progress of the data pipeline and any errors that may have occurred.
+    \item \textbf{Dataset Edit Page}: A page that allows users to rename or delete a dataset.
+    \item \textbf{Dataset Upload Page}: A page that allows users to upload a dataset through a file upload form.
+    \item \textbf{Dataset Auto-Fetch Page}: A page that allows users to create a dataset through automated data fetching, by selecting sources and providing search queries and limits.
+    \item \textbf{Dataset Analysis Page}: A page that shows all of the ethnographic statistics for a dataset, with various visualisations such as line charts, bar charts and heatmaps.
+\end{itemize}
+
+\subsubsection{Layouts}
+\paragraph{Main Layout}
+The main layout of the application is a React component that includes a header with the application name, a navigation bar with links to the Datasets page, and a sign out button that clears the JWT token from local storage. The main layout also includes a container for the main content of each page, which is rendered using React Router's \texttt{Outlet} component.
+
+When logged out, instead of showing the datasets and logout button, it simply shows a sign in button. The navigation bar can be seen in Figure \ref{fig:nav_bar}. The main layout is used for all pages. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/navbar.png}
+    \caption{Navigation Bar in the Main Layout}
+    \label{fig:nav_bar}
+\end{figure}
+
+\paragraph{Analysis Layout}
+The analysis layout is a React component that is used for all of the analysis pages. It still uses the Main Layout, however it adds an extra navigation bar that lets users switch between the different types of analysis, such as temporal analysis or linguistic analysis. This allows the code for navigation to be written once and used across all analysis pages, instead of in each analysis page separately. It also simplifies the URL structure, as all analysis pages have the same base URL of \texttt{/dataset/<id>/analysis}, and the type of analysis is determined by an injected React component.
+
+In addition to an extra navigation bar, it also contains a filter component that allows users to apply filters such as search queries and date filters to the dataset, which are passed in as parameters to the API endpoints to filter the statistics. This allows users to easily filter the dataset and see how the statistics change based on the filters. The analysis layout can be seen in Figure \ref{fig:analysis_layout}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/analysis_bar.png}
+    \caption{Analysis Layout with Navigation and Filter Components}
+    \label{fig:analysis_layout}
+\end{figure}
+
+\subsubsection{Analysis Page}
+The Analysis page fires six API requests in parallel to fetch the six categories of statistics (temporal, linguistic, user, interactional, emotional and cultural), and each category is rendered in a separate section on the page with its own visualisation. The API requests are fired when the page loads, and also whenever the filters are updated. This allows the API calls to be centralised into a single component, such that any change in the filters will automatically update all of the statistics on the page. Appying filters re-fetches all six endpoints with new query parameters.
+
+The majority of statistics are displayed using a custom KPI component that shows the name of the statistic, the value, and a secondary label for other information. An example of this can be seen in Figure \ref{fig:kpi_card}. The statistics that are not displayed as KPIs, such as the temporal analysis line chart and heatmap, will be discussed in the next sections.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/kpi_card.png}
+    \caption{Custom KPI Component for Displaying Statistics}
+    \label{fig:kpi_card}
+\end{figure}
+
+\paragraph{Summary}
+The summary section contains basic KPI cards such as total posts, total users, comments per post, lurker ratio, time range and sources. Beyond KPIs it also contains a word cloud of the most common words in the dataset, which is generated using the \texttt{react-wordcloud} library. The word cloud provides a visual representation of the most common words in the dataset, with the size of each word corresponding to its frequency.
+
+A heatmap is included in the Summary section (taken from the temporal analysis endpoint) that shows the distribution of posts and comments by hour of the day and day of the week. This allows users to quickly see when users are most active in the dataset. The heatmap is generated using the \texttt{nivo} library, which provides a convenient way to create a heatmap visualization in React.
+
+An example of the heatmap can be seen in Figure \ref{fig:heatmap}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/heatmap.png}
+    \caption{Heatmap of Posts and Comments by Hour and Day in the Cork Dataset}
+    \label{fig:heatmap}
+\end{figure}
+
+\paragraph{Emotional}
+The emotional analysis section contains KPI cards for the average emotion scores for each emotion class, as well as slightly adjusted KPI cards for showing the emotions per topic, as they include secondary and tertiary labels that show the model confidence for that emotion and the number of posts that were classified with that emotion.
+
+\paragraph{Users}
+The users analysis section contains an interactive interaction graph that shows the replies and chains between users, this was done with the \texttt{react-force-graph} library, which provides a convenient way to create an interactive graph visualization in React. The nodes of the graph represent users, and the edges represent interactions between users (such as replies). The graph filters out edges with less than two interactions and removes deleted-user nodes (like "[Deleted User]") to remove noise.
+
+An example of the interaction graph can be seen in Figure \ref{fig:interaction_graph}.
+
+The rest of the statistics in the users section are displayed as KPI cards.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/interaction_graph.png}
+    \caption{Interaction Graph Showing User Interactions in the Cork Dataset}
+    \label{fig:interaction_graph}
+\end{figure}
+
+\paragraph{Interactional}
+The interactional analysis section contains KPI cards for the conversation concentration metrics, as well as a bar chart showing the top interaction pairs, which is generated using the \texttt{nivo} library. A pie chart is used to show the inequality of contributions in conversations, with the share of comments from the top 10\% most active commenters shown in one color, and the share of comments from the rest of the commenters shown in another color.
+
+\subsubsection{Corpus Explorer}
+The corpus explorer is a feature that allows users to explore the raw data of the dataset. It is implemented as a table that shows all of the posts and comments in the dataset, along with their metadata such as author, timestamp, and topic. It uses the \texttt{/dataset/<id>/all} API endpoint to fetch the raw data from the backend. It allows a user to click on most statistics and see the underlying posts that make up that statistic. For example, if a user clicks on the "City Center" topic, then the corpus explorer will filter to only show posts that were classified with the "City Center" topic. 
+
+This is purely a frontend feature, and did not require any additional backend implementation beyond the existing API endpoint that returns the raw dataset. Initially, it was thought that performance would be an issue with loading the entire dataset into the frontend, however with some optimisations such as pagination and lazy loading, it was possible to load even large datasets without performance issues.
+
+The full dataset is fetched once per filter state and then cached in component state. Subsequent explore actions within the same filter state reuse this cached payload rather than making further API requests. The component itself only renders 60 posts at a time, and implements pagination to navigate the dataset and keep performance smooth. This allows users to explore the raw data without overwhelming the frontend with too much data at once.
+
+The Corpus Explorer addresses a limitation of some ethnographic analysis programs, which is statistical outputs are summaries, and a summary can be misleading. By making the source texts viewable from any figure in the dashboard, a researcher can verify the accuracy of the statistics.
+
+\subsubsection{Styling}
+Where possible, styling is kept with a centralised styling file in the frontend, which contains all of the common styles such as colors, fonts, and spacing. 
+
+\texttt{palette.ts} contains the color palette for the application, which is used across all components to ensure a consistent look and feel. \texttt{appLayout.ts} contains the layout style for the structure and margins of the main layout. For each individual component / page, a separate TS file is used for styling.
+
+All analysis pages use a grid layout to structure the different cards and visualisations, which allows for a clean and organised presentation of the statistics. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/frontend.png}
+    \caption{Summary Page of the Application}
+    \label{fig:summary_page}
+\end{figure}
 
 \newpage
 \section{Evaluation}
+\subsection{User Feedback}
+A meeting was held with a group of digital ethnographers to demo the application and gather feedback on the design, functionality and usefulness of the application. 
+
+\subsection{NLP Accuracy}
+\subsection{Performance Benchmarks}
+\subsection{Limitations}
 
 \newpage
 \section{Conclusions}
+\subsection{Reflection}
+\subsection{Future Work}
 
+\newpage
 \bibliography{references}
 
 \end{document}

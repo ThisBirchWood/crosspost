@@ -1,13 +1,20 @@
 import type { EmotionalAnalysisResponse } from "../types/ApiTypes";
 import StatsStyling from "../styles/stats_styling";
+import {
+  buildDominantEmotionSpec,
+  buildSourceSpec,
+  buildTopicSpec,
+  type CorpusExplorerSpec,
+} from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
 
 type EmotionalStatsProps = {
   emotionalData: EmotionalAnalysisResponse;
+  onExplore: (spec: CorpusExplorerSpec) => void;
 };
 
-const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
+const EmotionalStats = ({ emotionalData, onExplore }: EmotionalStatsProps) => {
   const rows = emotionalData.average_emotion_by_topic ?? [];
   const overallEmotionAverage = emotionalData.overall_emotion_average ?? [];
   const dominantEmotionDistribution =
@@ -126,7 +133,11 @@ const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
               {[...overallEmotionAverage]
                 .sort((a, b) => b.score - a.score)
                 .map((row) => (
-                  <div key={row.emotion} style={styles.topUserItem}>
+                  <div
+                    key={row.emotion}
+                    style={{ ...styles.topUserItem, cursor: "pointer" }}
+                    onClick={() => onExplore(buildDominantEmotionSpec(row.emotion))}
+                  >
                     <div style={styles.topUserName}>
                       {formatEmotion(row.emotion)}
                     </div>
@@ -157,7 +168,11 @@ const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
               {[...dominantEmotionDistribution]
                 .sort((a, b) => b.ratio - a.ratio)
                 .map((row) => (
-                  <div key={row.emotion} style={styles.topUserItem}>
+                  <div
+                    key={row.emotion}
+                    style={{ ...styles.topUserItem, cursor: "pointer" }}
+                    onClick={() => onExplore(buildDominantEmotionSpec(row.emotion))}
+                  >
                     <div style={styles.topUserName}>
                       {formatEmotion(row.emotion)}
                     </div>
@@ -189,7 +204,11 @@ const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
               {[...emotionBySource]
                 .sort((a, b) => b.event_count - a.event_count)
                 .map((row) => (
-                  <div key={row.source} style={styles.topUserItem}>
+                  <div
+                    key={row.source}
+                    style={{ ...styles.topUserItem, cursor: "pointer" }}
+                    onClick={() => onExplore(buildSourceSpec(row.source))}
+                  >
                     <div style={styles.topUserName}>{row.source}</div>
                     <div style={styles.topUserMeta}>
                       {formatEmotion(row.dominant_emotion)} •{" "}
@@ -211,7 +230,8 @@ const EmotionalStats = ({ emotionalData }: EmotionalStatsProps) => {
             {strongestPerTopic.map((topic) => (
               <div
                 key={topic.topic}
-                style={{ ...styles.cardBase, gridColumn: "span 4" }}
+                style={{ ...styles.cardBase, gridColumn: "span 4", cursor: "pointer" }}
+                onClick={() => onExplore(buildTopicSpec(topic.topic))}
               >
                 <h3 style={{ ...styles.sectionTitle, marginBottom: 6 }}>
                   {topic.topic}

@@ -1,4 +1,5 @@
 import nltk
+import json
 import pandas as pd
 from nltk.corpus import stopwords
 
@@ -27,6 +28,8 @@ DOMAIN_STOPWORDS = {
     "one",
 }
 
+EXCLUDED_AUTHORS = {"[deleted]", "automoderator"}
+
 nltk.download("stopwords")
 EXCLUDE_WORDS = set(stopwords.words("english")) | DOMAIN_STOPWORDS
 
@@ -45,6 +48,12 @@ class StatGen:
     def _prepare_filtered_df(self, df: pd.DataFrame, filters: dict | None = None) -> pd.DataFrame:
         filters = filters or {}
         filtered_df = df.copy()
+
+        if "author" in filtered_df.columns:
+            normalized_authors = (
+                filtered_df["author"].fillna("").astype(str).str.strip().str.lower()
+            )
+            filtered_df = filtered_df[~normalized_authors.isin(EXCLUDED_AUTHORS)]
 
         search_query = filters.get("search_query", None)
         start_date_filter = filters.get("start_date", None)
@@ -75,11 +84,22 @@ class StatGen:
 
         return filtered_df
 
+    def _json_ready_records(self, df: pd.DataFrame) -> list[dict]:
+        return json.loads(
+            df.to_json(orient="records", date_format="iso", date_unit="s")
+        )
+
     ## Public Methods
     def filter_dataset(self, df: pd.DataFrame, filters: dict | None = None) -> list[dict]:
-        return self._prepare_filtered_df(df, filters).to_dict(orient="records")
+        filtered_df = self._prepare_filtered_df(df, filters)
+        return self._json_ready_records(filtered_df)
 
-    def temporal(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def temporal(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -87,7 +107,12 @@ class StatGen:
             "weekday_hour_heatmap": self.temporal_analysis.heatmap(filtered_df),
         }
 
-    def linguistic(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def linguistic(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -97,7 +122,12 @@ class StatGen:
             "lexical_diversity": self.linguistic_analysis.lexical_diversity(filtered_df)
         }
 
-    def emotional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def emotional(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -107,7 +137,12 @@ class StatGen:
             "emotion_by_source": self.emotional_analysis.emotion_by_source(filtered_df)
         }
 
-    def user(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def user(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -115,7 +150,12 @@ class StatGen:
             "users": self.user_analysis.per_user_analysis(filtered_df)
         }
 
-    def interactional(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def interactional(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -124,7 +164,12 @@ class StatGen:
             "conversation_concentration": self.interaction_analysis.conversation_concentration(filtered_df)
         }
 
-    def cultural(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def cultural(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return {
@@ -133,7 +178,12 @@ class StatGen:
             "avg_emotion_per_entity": self.cultural_analysis.get_avg_emotions_per_entity(filtered_df)
         }
 
-    def summary(self, df: pd.DataFrame, filters: dict | None = None) -> dict:
+    def summary(
+        self,
+        df: pd.DataFrame,
+        filters: dict | None = None,
+        dataset_id: int | None = None,
+    ) -> dict:
         filtered_df = self._prepare_filtered_df(df, filters)
 
         return self.summary_analysis.summary(filtered_df)

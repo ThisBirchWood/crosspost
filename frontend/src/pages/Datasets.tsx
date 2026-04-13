@@ -108,9 +108,9 @@ const DatasetsPage = () => {
             <button
               type="button"
               style={styles.buttonSecondary}
-              onClick={() => navigate("/auto-scrape")}
+              onClick={() => navigate("/auto-fetch")}
             >
-              Auto Scrape Dataset
+              Auto Fetch Dataset
             </button>
           </div>
         </div>
