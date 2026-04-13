@@ -745,18 +745,11 @@ However each analytical query would either need to be post or comment specific, 
 The decision to \textbf{stick with a unified data model was made} since the downsides of a Unified Model could be mitigated through reconstruction of reply chains using specific fields, and being able to differentiate between a post and a comment using a type field. Largely, in ethnography, a post and a comment are both just a user saying something at a point in time, and even in cases where they might need to be treated differently (reply-chains, interactions graphs), that distinction can still be made.
 
 \subsection{Deployment}
-Docker Compose is used to containerise the entire application, including:
-\begin{itemize}
-    \item The Flask backend API
-    \item The React frontend interface
-    \item The PostgreSQL database
-    \item The Redis server for task queuing
-    \item Celery workers for asynchronous processing
-\end{itemize}
+Docker Compose is used to containerise the entire application.
 
 During development, the source code for the backend and frontend will be mounted as volumes within the containers to allow for live code updates during development, which will speed up the process.
 
-Enviornment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yaml}.
+Environment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yaml}.
 
 
 \newpage
@@ -1257,10 +1250,50 @@ All analysis pages use a grid layout to structure the different cards and visual
     \label{fig:summary_page}
 \end{figure}
 
+\subsection{Deployment}
+To deploy the application, Docker was used to containerise both the backend and frontend, and Docker Compose was used to orchestrate the different containers. There are five main containers in the application:
+\begin{itemize}
+    \item \textbf{Backend Container}: This container runs the Flask API, and is built from the \texttt{backend/Dockerfile}.
+    \item \textbf{Frontend Container}: This container runs the React frontend, and is built from the \texttt{frontend/Dockerfile}.
+    \item \textbf{Database Container}: This container runs the PostgreSQL database, and uses the official PostgreSQL image from Docker Hub.
+    \item \textbf{Celery Worker Container}: This container runs the Celery worker, which is responsible for running the NLP enrichment and data processing tasks in the background. It is built from the same image as the backend container, but runs a different command to start the Celery worker instead of the Flask API.
+    \item \textbf{Redis Container}: This container runs Redis. It uses the official Redis image from Docker Hub.
+\end{itemize}
+
+To run the application, the user needs to have Docker and Docker Compose installed on their machine. They then need to fill in the necessary environment variables in the \texttt{.env} file, for which there is a template provided as \texttt{.env.example}. The example env file contains defaults for most vairables, except for the Reddit and Google API credentials that will need to be sourced. In addition, they JWT secret key will need to be set to a random 128-bit string for security reasons.
+
+Once the environment variables are set, the user can run the command \texttt{docker compose up -d} in the root directory of the project, which will build and start all of the containers. The application will then be accessible at \texttt{http://localhost:5173} in the user's web browser.
+
 \newpage
 \section{Evaluation}
 \subsection{User Feedback}
-A meeting was held with a group of digital ethnographers to demo the application and gather feedback on the design, functionality and usefulness of the application. 
+A demo session was held with a group of digital ethnographers from the  MIGDIS research group to gather feedback on the  design, functionality and usefulness of the system.
+
+\subsubsection{Positive Reception}
+The dashboard was described as user-friendly, with the tabbed interface making it straightforward to navigate between analytical perspectives. Participants noted that the system was useful for organising large datasets into meaningful sections such as emotions and locations, and considered it a practical tool for digital ethnography research with clear potential for further development.
+
+\subsubsection{Suggested Improvements}
+Several suggestions were made for improving the system by the participants, which are discussed in more detail below.
+
+\paragraph{Deeper Emotional Analysis}
+The current five-emotion model was seen as a good starting point, but ultimately lacking in nuance. They noted that out of the five existing emotions (joy, sadness, anger, fear, disgust), four of them were negative emotions, and there was a lack of nuanced positive emotions such as hope, pride, relief, etc. In the beginning stages of the project, the GoEmotions model \cite{demszky2020goemotions}, which has 27 emotion classes, was considered but ultimately rejected due to database and schema complexity. However given the feedback, it's worth reconsidering for a much more nuanced emotional analysis.
+
+\paragraph{Improved Corpus Explorer}
+The corpus explorer was seen as a useful feature, however it was noted that it could be improved in a few ways:
+\begin{itemize}
+    \item Adding more metadata to each post, such as the NLP classifications (emotions, topics) and possibly even more than just the top emotion and topic.
+    \item Adding a search and filter functionality to the corpus explorer, so that users can easily find specific posts.
+    \item Rather than a flat list of posts, they should be organised into chains of comments to reflect and show the conversation structures and chains.
+\end{itemize}
+
+\paragraph{Multilingual Support}
+Currently, the system only supports English language datasets, due to the Emotion and NER models being trained on English language data. However, multilingual support was suggested as a potential improvement, as the MIGDIS research group works with datasets in both English and Turkish. This would involve either using multilingual NLP models, or allowing users to specify the language of their dataset and then using the correct models for that language.
+
+\paragraph{Flexible Topic List}
+The current implementation of topics is based on a fixed list that is defined upon uploading the dataset (or the default list). It was suggested that it would be useful to be able to adjust the topic list after the dataset has been uploaded. As for the feasibility of this, it would require re-running the topic classification for the entire dataset, but ultimately it is feasible to implement.
+
+\paragraph{Emotion Colour Grading}
+Currently, in the corpus explorer and other areas where emotions are visualised, the posts aren't coloured at all. It was suggested that it would be useful to have some kind of colour grading based on the emotions, so posts that are joyful might be yellow, or posts that are angry might be red. This would allow users to quickly scan through the posts and get a sense of the emotional tone of the dataset. Though if the GoEmotions model is implemented, this might not be feasible as there are 27 emotion classes, so it would require a more complex colour scheme.
 
 \subsection{NLP Accuracy}
 \subsection{Performance Benchmarks}
