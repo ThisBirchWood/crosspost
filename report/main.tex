@@ -864,6 +864,7 @@ NER output is stored as JSONB rather than in relational columns, as the number o
 This module is a simple interface to deal with datasets in the database, and abstracts away the details of SQL queries and database interactions from the rest of the application. It is used by the API endpoints to manage datasets and their content.
 
 \subsubsection{Authentication Manager}
+\label{sec:auth-manager}
 The authentication manager is another higher-level module that provides an interface for managing user authentication in the database. It also uses the low-level \texttt{PostgreConnector} to execute SQL queries, but provides more specific methods for authentication management, such as creating a new user, fetching a user by id, and authenticating a user. It handles password hashing using the \texttt{bcrypt} library, which provides a secure way to hash and verify passwords. Similar to the dataset manager, dependency injection is used to pass an instance of the \texttt{PostgreConnector}.
 
 The most important authentication methods implemented are as follows:
@@ -1063,6 +1064,19 @@ With the identity markers, in-group markers such as "we", "us", "our" were count
     \label{fig:stance_markers}
 \end{figure}
 
+\subsubsection{Summary}
+During development, it was helpful to see a high-level summary of the entire dataset and it would also be helpeful for end-users on the frontend to have a quick overview of the dataset. Therefore, a "summary" statistic was implemented that returns a high-level overview of the dataset, including:
+\begin{itemize}
+    \item Total number of posts and comments in the dataset.
+    \item Total number of unique users in the dataset.
+    \item Comments per post.
+    \item Lurker Ratio, which is the percentage of users that only have one event in the dataset.
+    \item The time range of the dataset, from the earliest event to the latest event.
+    \item Sources included in the dataset.
+\end{itemize}
+
+This is implemented in the same way as the other statistics, using Pandas queries and in it's own class.
+
 \subsubsection{StatGen Class}
 The \texttt{StatGen} (Statistics Generator) class is a higher level module that aggregates all of the different statistics into a single class that is called by the API endpoints to generate the statistics.
 
@@ -1076,10 +1090,58 @@ Beyond improving the quality of the code, the other main function of this class 
     \item \texttt{search\_query}: A string that filters the dataset to only include events that contain the search query in their content.
 \end{itemize}
 
-Initially, stateful filtering was implemented where the filters would be stored within the \texttt{StatGen} object and are applied to all subsequent methods. The filters were applied once and could then be reset. This worked during initial stages when only one dataset was being tested, however with multiple datasets, this stateful filtering applied to other datasets (even and caused confusion
-
+Initially, stateful filtering was implemented where the filters would be stored within the \texttt{StatGen} object and are applied to all subsequent methods. The filters were applied once and could then be reset. This worked during initial stages when only one dataset was being tested, however with multiple datasets, this stateful filtering applied to other datasets (even with other users) and caused confusion, therefore a stateless approach was implemented where the filters are passed in as a parameter to each method, and the filtered dataset is returned for that method only, without affecting any other methods or datasets.
 
 \subsection{Flask API}
+The Flask API is responsible for providing the backend data to the frontend. It provides endpoints for user management, dataset management, and analysis endpoints. It also handles authentication and access control for the API. In addition, it handles extra data through some POST endpoints, such as filtering parameters and auto-fetching parameters for the connectors.
+
+\subsubsection{User Management}
+Three endpoints handle user lifecycle management. 
+
+\texttt{POST /register} accepts a JSON body containing a username, email, and password, delegates validation and persistence to \texttt{AuthManager}, described in Section \ref{sec:auth-manager}, and returns a structured error if the username or email is already taken. 
+
+\texttt{POST /login} verifies credentials through \texttt{AuthManager.authenticate\_user()} and, on success, returns a signed JWT access token created with Flask-JWT-Extended's \texttt{create\_access\_token()}. The user's integer ID is embedded as the token identity, which is retrieved on subsequent requests using \texttt{get\_jwt\_identity()}. The token expiry is configurable through the \texttt{JWT\_ACCESS\_TOKEN\_EXPIRES} environment variable. 
+
+\texttt{GET /profile} is a protected endpoint that verifies the token and returns the user's profile information, and serves as a method for the frontend to display user information.
+
+\subsubsection{Dataset Management}
+Dataset management is split across several endpoints that cover the full lifecycle of a dataset from creation through deletion.
+
+\texttt{GET /user/datasets} returns the list of all datasets owned by the authenticated user, used to populate the datasets page in the frontend. 
+
+\texttt{GET /dataset/<id>} returns the metadata for a single dataset.
+
+\texttt{PATCH /dataset/<id>} allows the user to rename it. 
+
+\texttt{DELETE /dataset/<id>} removes the dataset and all associated events from the database. 
+
+All of these routes begin with an ownership check via \texttt{dataset\_manager.authorize\_user\_dataset()}, and return a \texttt{403} if the requesting user does not own the dataset in question.
+
+\texttt{POST /datasets/upload} handles manual file upload. It expects a multipart form submission containing a \texttt{.jsonl} posts file, a \texttt{.json} topics file, and a dataset name string. The \texttt{.jsonl} file is read directly into a Pandas DataFrame using \texttt{pd.read\_json(lines=True)}, and the topics file is loaded with the standard \texttt{json} library. Once the dataset metadata is saved to the database, the serialised DataFrame and topics dictionary are passed to the \texttt{process\_dataset} Celery task via \texttt{.delay()}, and the endpoint returns immediately with a \texttt{202 Accepted} response containing the new dataset ID. This non-blocking behaviour is essential given that NLP enrichment can take several minutes for large datasets.
+
+\texttt{POST /datasets/scrape} handles automated data fetching. The request body contains a list of source configurations, each specifying a connector and optional search query, category, and limit. Careful validation is performed on the source configurations, as any failure within the Celery task would cause a silent failure. The dataset metadata is saved to the database, and the \texttt{fetch\_and\_process\_dataset} task is dispatched asynchronously via Celery. This task fetches each source's data using the appropriate connector, combines the result into a single DataFrame, then passes it through the same enrichment and storage process.
+
+\texttt{GET /datasets/sources} is an unauthenticated endpoint that returns the connector registry metadata so the frontend can dynamically render the available sources and what they can do.
+
+\texttt{GET /dataset/<id>/status} allows the frontend to poll the state of a dataset. It returns the current status string and message stored in the \texttt{datasets} table, which the Celery worker updates at each stage of the pipeline, from \texttt{"fetching"} through \texttt{"processing"} to \texttt{"complete"} or \texttt{"error"}.
+
+\texttt{GET /dataset/<id>/all} returns the full raw event table for a dataset as a list of records, which powers the raw data viewer in the frontend.
+
+\subsubsection{Analysis Endpoints}
+Several endpoints are implemented that return each ethnographic statistic generated by the \texttt{StatGen} class. Each endpoint takes a URL parameter for the dataset ID, and an optional JSON body containing filter parameters.
+
+For each type of analysis, there is a corresponding endpoint, the base configuration being: \texttt{/dataset/<id>/<analysis\_type>}
+
+Each endpoint needs a JWT authorization header that corresponds to the user that owns that dataset, and the dataset ID is validated against the user's datasets to ensure they have access to it. The endpoint then fetches the entire dataset, and passes it through the global \texttt{StatGen} instance to generate statistics. The resulting statistics are returned as JSON to the frontend for visualisation.
+
+\subsubsection{Access Control}
+Endpoints are protected with Flask's \texttt{@jwt\_required()} decorator. This ensures that only authenticated users can access the protected endpoints. For dataset-specific endpoints, an additional ownership check is performed using \texttt{dataset\_manager.authorize\_user\_dataset()} to ensure that users can only access their own datasets. If a user attempts to access a dataset they do not own, a \texttt{403 Forbidden} response is returned.
+
+\subsubsection{Error Handling}
+Each route handler wraps its logic in a \texttt{try/except} block that catches three categories of exception. \texttt{NotAuthorisedException} maps to a \texttt{403} response. \texttt{NonExistentDatasetException} maps to \texttt{404}. \texttt{ValueError}, which is raised by input validation in the manager layers, maps to \texttt{400}. 
+
+A bare \texttt{Exception} try-catch handles anything unexpected and returns a generic \texttt{500}, while printing a full traceback to the server log via \texttt{traceback.format\_exc()} for debugging. Error messages returned to the client are deliberately vague for unexpected errors, to avoid leaking implementation details.
+
 
 \subsection{React Frontend}
 
