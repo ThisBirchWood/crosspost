@@ -662,10 +662,17 @@ In this system, cultural analysis will include:
 These metrics were chosen because they can provide insights into the cultural markers and identity signals that are present in an online community, further described in Section \ref{sec:cultural_markers} and \ref{sec:stance_markers}.
 
 \subsection{Frontend Design}
-The frontend is built with React and TypeScript, and the analysis sections are structured around a tabbed dashboard interface where each tab corresponds to a distinct analytical perspective: temporal, linguistic, emotional, user, and interaction analysis. This organisation mirrors the shape of the backend API and makes it straightforward for a researcher to navigate between different lenses on the same dataset without losing context.
+The primary audience for this tool is researchers and social scientists, not software developers. Therefore the frontend needs to feel approachable and easy to use for non-technical users. At the same time it must support multi-dataset workflows and handle long-running background processes.
 
-React was chosen for its efficient rendering model and the breadth of its visualisation ecosystem
+React was chosen as the UI framework primarily for its large amount of pre-built visualisation components. There are many different types of data being visualised in this system, such as word clouds, bar charts, line charts, heatmaps and network graphs, and React has a large library of pre-built components for all of these types of visualisations.
 
+\subsubsection{Structure}
+A persistent layout shell will wrap every page of the frontend, providing a consistent header for navigation and account management. This will also store login state and user information in a global way, such that no component has to manage authentication state on its own. The main content area will be reserved for the dataset management and analysis interface.
+
+The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries. The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
+
+\subsubsection{Visual Design}
+The visual design of the frontend will be clean and minimalistic, with a focus on usability and clarity. The styling files will be centralised to allow for developers to easily change or modify the colouring and palettes in the future. 
 
 \subsection{Automatic Data Collection}
 Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
@@ -1228,14 +1235,43 @@ The rest of the statistics in the users section are displayed as KPI cards.
 The interactional analysis section contains KPI cards for the conversation concentration metrics, as well as a bar chart showing the top interaction pairs, which is generated using the \texttt{nivo} library. A pie chart is used to show the inequality of contributions in conversations, with the share of comments from the top 10\% most active commenters shown in one color, and the share of comments from the rest of the commenters shown in another color.
 
 \subsubsection{Corpus Explorer}
-The corpus explorer is a feature that allows users to explore the raw data of the dataset. It is implemented as a table that shows all of the posts and comments in the dataset, along with their metadata such as author, timestamp, and topic.
+The corpus explorer is a feature that allows users to explore the raw data of the dataset. It is implemented as a table that shows all of the posts and comments in the dataset, along with their metadata such as author, timestamp, and topic. It uses the \texttt{/dataset/<id>/all} API endpoint to fetch the raw data from the backend. It allows a user to click on most statistics and see the underlying posts that make up that statistic. For example, if a user clicks on the "City Center" topic, then the corpus explorer will filter to only show posts that were classified with the "City Center" topic. 
+
+This is purely a frontend feature, and did not require any additional backend implementation beyond the existing API endpoint that returns the raw dataset. Initially, it was thought that performance would be an issue with loading the entire dataset into the frontend, however with some optimisations such as pagination and lazy loading, it was possible to load even large datasets without performance issues.
+
+The full dataset is fetched once per filter state and then cached in component state. Subsequent explore actions within the same filter state reuse this cached payload rather than making further API requests. The component itself only renders 60 posts at a time, and implements pagination to navigate the dataset and keep performance smooth. This allows users to explore the raw data without overwhelming the frontend with too much data at once.
+
+The Corpus Explorer addresses a limitation of some ethnographic analysis programs, which is statistical outputs are summaries, and a summary can be misleading. By making the source texts viewable from any figure in the dashboard, a researcher can verify the accuracy of the statistics.
+
+\subsubsection{Styling}
+Where possible, styling is kept with a centralised styling file in the frontend, which contains all of the common styles such as colors, fonts, and spacing. 
+
+\texttt{palette.ts} contains the color palette for the application, which is used across all components to ensure a consistent look and feel. \texttt{appLayout.ts} contains the layout style for the structure and margins of the main layout. For each individual component / page, a separate TS file is used for styling.
+
+All analysis pages use a grid layout to structure the different cards and visualisations, which allows for a clean and organised presentation of the statistics. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/frontend.png}
+    \caption{Summary Page of the Application}
+    \label{fig:summary_page}
+\end{figure}
 
 \newpage
 \section{Evaluation}
+\subsection{User Feedback}
+A meeting was held with a group of digital ethnographers to demo the application and gather feedback on the design, functionality and usefulness of the application. 
+
+\subsection{NLP Accuracy}
+\subsection{Performance Benchmarks}
+\subsection{Limitations}
 
 \newpage
 \section{Conclusions}
+\subsection{Reflection}
+\subsection{Future Work}
 
+\newpage
 \bibliography{references}
 
 \end{document}
