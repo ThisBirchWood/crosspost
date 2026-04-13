@@ -26,12 +26,12 @@ import {
   buildDateBucketSpec,
   buildOneTimeUsersSpec,
   buildUserSpec,
-  getExplorerButtonStyle,
   type CorpusExplorerSpec,
 } from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
 const MAX_WORDCLOUD_WORDS = 250;
+const exploreButtonStyle = { padding: "4px 8px", fontSize: 12 };
 
 const WORDCLOUD_OPTIONS = {
   rotations: 2,
@@ -80,7 +80,7 @@ function convertFrequencyData(data: FrequencyWord[]) {
 const renderExploreButton = (onClick: () => void) => (
   <button
     onClick={onClick}
-    style={{ ...styles.buttonSecondary, ...getExplorerButtonStyle() }}
+    style={{ ...styles.buttonSecondary, ...exploreButtonStyle }}
   >
     Explore
   </button>

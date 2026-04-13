@@ -8,11 +8,11 @@ import {
   buildHedgeSpec,
   buildIdentityBucketSpec,
   buildPermissionSpec,
-  getExplorerButtonStyle,
   type CorpusExplorerSpec,
 } from "../utils/corpusExplorer";
 
 const styles = StatsStyling;
+const exploreButtonStyle = { padding: "4px 8px", fontSize: 12 };
 
 type CulturalStatsProps = {
   data: CulturalAnalysisResponse;
@@ -22,7 +22,7 @@ type CulturalStatsProps = {
 const renderExploreButton = (onClick: () => void) => (
   <button
     onClick={onClick}
-    style={{ ...styles.buttonSecondary, ...getExplorerButtonStyle() }}
+    style={{ ...styles.buttonSecondary, ...exploreButtonStyle }}
   >
     Explore
   </button>
@@ -57,21 +57,6 @@ const CulturalStats = ({ data, onExplore }: CulturalStatsProps) => {
     const dominant = entries[0] ?? ["emotion_unknown", 0];
     const dominantLabel = dominant[0].replace("emotion_", "");
     return `${dominantLabel} (${(dominant[1] * 100).toFixed(1)}%)`;
-  };
-
-  const stanceSublabel = (
-    per1kTokens: number | undefined,
-    emotionAvg: Record<string, number> | undefined,
-  ) => {
-    const rateLabel =
-      typeof per1kTokens === "number"
-        ? `${per1kTokens.toFixed(1)} per 1k words`
-        : "Word frequency";
-    const emotionLabel = topEmotion(emotionAvg);
-
-    return emotionLabel === "—"
-      ? rateLabel
-      : `${rateLabel} • Avg mood: ${emotionLabel}`;
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 import StatsStyling from "../styles/stats_styling";
@@ -103,11 +103,6 @@ const CorpusExplorer = ({
     }
   }, [open, title, records.length]);
 
-  const visibleRecords = useMemo(
-    () => records.slice(0, visibleCount),
-    [records, visibleCount],
-  );
-
   const hasMoreRecords = visibleCount < records.length;
 
   return (
@@ -158,7 +153,7 @@ const CorpusExplorer = ({
                   paddingRight: 4,
                 }}
               >
-                {visibleRecords.map((record, index) => {
+                {records.slice(0, visibleCount).map((record, index) => {
                   const recordKey = getRecordKey(record, index);
                   const titleText = getRecordTitle(record);
                   const content = cleanText(record.content);

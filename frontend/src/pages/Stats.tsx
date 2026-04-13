@@ -66,6 +66,26 @@ const EMPTY_EXPLORER_STATE: ExplorerState = {
   error: "",
 };
 
+const createExplorerState = (
+  spec: CorpusExplorerSpec,
+  patch: Partial<ExplorerState> = {},
+): ExplorerState => ({
+  open: true,
+  title: spec.title,
+  description: spec.description,
+  emptyMessage: spec.emptyMessage ?? "No matching records found.",
+  records: [],
+  loading: false,
+  error: "",
+  ...patch,
+});
+
+const compareRecordsByNewest = (a: DatasetRecord, b: DatasetRecord) => {
+  const aValue = String(a.dt ?? a.date ?? a.timestamp ?? "");
+  const bValue = String(b.dt ?? b.date ?? b.timestamp ?? "");
+  return bValue.localeCompare(aValue);
+};
+
 const parseJsonLikePayload = (value: string): unknown => {
   const normalized = value
     .replace(/\uFEFF/g, "")
@@ -86,16 +106,23 @@ const parseJsonLikePayload = (value: string): unknown => {
   return JSON.parse(normalized);
 };
 
+const tryParseRecords = (value: string) => {
+  try {
+    return normalizeRecordPayload(parseJsonLikePayload(value));
+  } catch {
+    return null;
+  }
+};
+
 const parseRecordStringPayload = (payload: string): DatasetRecord[] | null => {
   const trimmed = payload.trim();
   if (!trimmed) {
     return [];
   }
 
-  try {
-    return normalizeRecordPayload(parseJsonLikePayload(trimmed));
-  } catch {
-    // Continue with additional fallback formats below.
+  const direct = tryParseRecords(trimmed);
+  if (direct) {
+    return direct;
   }
 
   const ndjsonLines = trimmed
@@ -106,29 +133,24 @@ const parseRecordStringPayload = (payload: string): DatasetRecord[] | null => {
     try {
       return ndjsonLines.map((line) => parseJsonLikePayload(line)) as DatasetRecord[];
     } catch {
-      // Continue with wrapped JSON extraction.
     }
   }
 
   const bracketStart = trimmed.indexOf("[");
   const bracketEnd = trimmed.lastIndexOf("]");
   if (bracketStart !== -1 && bracketEnd > bracketStart) {
-    const candidate = trimmed.slice(bracketStart, bracketEnd + 1);
-    try {
-      return normalizeRecordPayload(parseJsonLikePayload(candidate));
-    } catch {
-      // Continue with object extraction.
+    const parsed = tryParseRecords(trimmed.slice(bracketStart, bracketEnd + 1));
+    if (parsed) {
+      return parsed;
     }
   }
 
   const braceStart = trimmed.indexOf("{");
   const braceEnd = trimmed.lastIndexOf("}");
   if (braceStart !== -1 && braceEnd > braceStart) {
-    const candidate = trimmed.slice(braceStart, braceEnd + 1);
-    try {
-      return normalizeRecordPayload(parseJsonLikePayload(candidate));
-    } catch {
-      return null;
+    const parsed = tryParseRecords(trimmed.slice(braceStart, braceEnd + 1));
+    if (parsed) {
+      return parsed;
     }
   }
 
@@ -316,45 +338,22 @@ const StatPage = () => {
   };
 
   const openExplorer = async (spec: CorpusExplorerSpec) => {
-    setExplorerState({
-      open: true,
-      title: spec.title,
-      description: spec.description,
-      emptyMessage: spec.emptyMessage ?? "No matching records found.",
-      records: [],
-      loading: true,
-      error: "",
-    });
+    setExplorerState(createExplorerState(spec, { loading: true }));
 
     try {
       const records = await ensureFilteredRecords();
       const context = buildExplorerContext(records);
-      const matched = records.filter((record) => spec.matcher(record, context));
-      matched.sort((a, b) => {
-        const aValue = String(a.dt ?? a.date ?? a.timestamp ?? "");
-        const bValue = String(b.dt ?? b.date ?? b.timestamp ?? "");
-        return bValue.localeCompare(aValue);
-      });
+      const matched = records
+        .filter((record) => spec.matcher(record, context))
+        .sort(compareRecordsByNewest);
 
-      setExplorerState({
-        open: true,
-        title: spec.title,
-        description: spec.description,
-        emptyMessage: spec.emptyMessage ?? "No matching records found.",
-        records: matched,
-        loading: false,
-        error: "",
-      });
+      setExplorerState(createExplorerState(spec, { records: matched }));
     } catch (e) {
-      setExplorerState({
-        open: true,
-        title: spec.title,
-        description: spec.description,
-        emptyMessage: spec.emptyMessage ?? "No matching records found.",
-        records: [],
-        loading: false,
-        error: `Failed to load corpus records: ${String(e)}`,
-      });
+      setExplorerState(
+        createExplorerState(spec, {
+          error: `Failed to load corpus records: ${String(e)}`,
+        }),
+      );
     }
   };
 

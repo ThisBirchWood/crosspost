@@ -20,7 +20,7 @@ type GraphLink = {
   value: number;
 };
 
-function ApiToGraphData(apiData: InteractionGraph) {
+function toGraphData(apiData: InteractionGraph) {
   const links: GraphLink[] = [];
   const connectedNodeIds = new Set<string>();
 
@@ -56,7 +56,7 @@ const UserStats = ({
   onExplore,
 }: UserStatsProps) => {
   const graphData = useMemo(
-    () => ApiToGraphData(interactionGraph),
+    () => toGraphData(interactionGraph),
     [interactionGraph],
   );
   const graphContainerRef = useRef<HTMLDivElement | null>(null);

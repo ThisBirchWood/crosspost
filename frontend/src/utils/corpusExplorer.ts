@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 type EntityRecord = {
   text?: string;
   [key: string]: unknown;
@@ -58,11 +56,6 @@ const EMOTION_KEYS = [
   "emotion_sadness",
 ] as const;
 
-const shrinkButtonStyle: CSSProperties = {
-  padding: "4px 8px",
-  fontSize: 12,
-};
-
 const toText = (value: unknown) => {
   if (typeof value === "string") {
     return value;
@@ -83,6 +76,7 @@ const toText = (value: unknown) => {
 };
 
 const normalize = (value: unknown) => toText(value).trim().toLowerCase();
+const getAuthor = (record: DatasetRecord) => toText(record.author).trim();
 
 const getRecordText = (record: DatasetRecord) =>
   `${record.title ?? ""} ${record.content ?? ""}`.trim();
@@ -152,11 +146,11 @@ const matchesPhrase = (record: DatasetRecord, phrase: string) => {
     return false;
   }
 
-  return pattern.test(getRecordText(record).toLowerCase());
+  return pattern.test(getRecordText(record));
 };
 
 const recordIdentityBucket = (record: DatasetRecord) => {
-  const text = getRecordText(record).toLowerCase();
+  const text = getRecordText(record);
   const inHits = countMatches(IN_GROUP_PATTERN, text);
   const outHits = countMatches(OUT_GROUP_PATTERN, text);
 
@@ -171,48 +165,30 @@ const recordIdentityBucket = (record: DatasetRecord) => {
   return "tie";
 };
 
-const createAuthorEventCounts = (records: DatasetRecord[]) => {
-  const counts = new Map<string, number>();
+const buildExplorerContext = (records: DatasetRecord[]): CorpusExplorerContext => {
+  const authorByPostId = new Map<string, string>();
+  const authorEventCounts = new Map<string, number>();
+  const authorCommentCounts = new Map<string, number>();
+
   for (const record of records) {
-    const author = toText(record.author).trim();
+    const author = getAuthor(record);
     if (!author) {
       continue;
     }
-    counts.set(author, (counts.get(author) ?? 0) + 1);
-  }
-  return counts;
-};
 
-const createAuthorCommentCounts = (records: DatasetRecord[]) => {
-  const counts = new Map<string, number>();
-  for (const record of records) {
-    const author = toText(record.author).trim();
-    if (!author || record.type !== "comment") {
-      continue;
+    authorEventCounts.set(author, (authorEventCounts.get(author) ?? 0) + 1);
+
+    if (record.type === "comment") {
+      authorCommentCounts.set(author, (authorCommentCounts.get(author) ?? 0) + 1);
     }
-    counts.set(author, (counts.get(author) ?? 0) + 1);
-  }
-  return counts;
-};
 
-const createAuthorByPostId = (records: DatasetRecord[]) => {
-  const map = new Map<string, string>();
-  for (const record of records) {
-    const postId = record.post_id;
-    const author = toText(record.author).trim();
-    if (postId === null || postId === undefined || !author) {
-      continue;
+    if (record.post_id !== null && record.post_id !== undefined) {
+      authorByPostId.set(String(record.post_id), author);
     }
-    map.set(String(postId), author);
   }
-  return map;
-};
 
-const buildExplorerContext = (records: DatasetRecord[]): CorpusExplorerContext => ({
-  authorByPostId: createAuthorByPostId(records),
-  authorEventCounts: createAuthorEventCounts(records),
-  authorCommentCounts: createAuthorCommentCounts(records),
-});
+  return { authorByPostId, authorEventCounts, authorCommentCounts };
+};
 
 const buildAllRecordsSpec = (): CorpusExplorerSpec => ({
   title: "Corpus Explorer",
@@ -221,19 +197,27 @@ const buildAllRecordsSpec = (): CorpusExplorerSpec => ({
   matcher: () => true,
 });
 
-const buildUserSpec = (author: string): CorpusExplorerSpec => ({
-  title: `User: ${author}`,
-  description: `All records authored by ${author}.`,
-  emptyMessage: `No records found for ${author}.`,
-  matcher: (record) => normalize(record.author) === normalize(author),
-});
+const buildUserSpec = (author: string): CorpusExplorerSpec => {
+  const target = normalize(author);
 
-const buildTopicSpec = (topic: string): CorpusExplorerSpec => ({
-  title: `Topic: ${topic}`,
-  description: `Records assigned to the ${topic} topic bucket.`,
-  emptyMessage: `No records found in the ${topic} topic bucket.`,
-  matcher: (record) => normalize(record.topic) === normalize(topic),
-});
+  return {
+    title: `User: ${author}`,
+    description: `All records authored by ${author}.`,
+    emptyMessage: `No records found for ${author}.`,
+    matcher: (record) => normalize(record.author) === target,
+  };
+};
+
+const buildTopicSpec = (topic: string): CorpusExplorerSpec => {
+  const target = normalize(topic);
+
+  return {
+    title: `Topic: ${topic}`,
+    description: `Records assigned to the ${topic} topic bucket.`,
+    emptyMessage: `No records found in the ${topic} topic bucket.`,
+    matcher: (record) => normalize(record.topic) === target,
+  };
+};
 
 const buildDateBucketSpec = (date: string): CorpusExplorerSpec => ({
   title: `Date Bucket: ${date}`,
@@ -256,85 +240,72 @@ const buildNgramSpec = (ngram: string): CorpusExplorerSpec => ({
   matcher: (record) => matchesPhrase(record, ngram),
 });
 
-const buildEntitySpec = (entity: string): CorpusExplorerSpec => ({
-  title: `Entity: ${entity}`,
-  description: `Records mentioning the ${entity} entity.`,
-  emptyMessage: `No records found for the ${entity} entity.`,
-  matcher: (record) => {
-    const target = normalize(entity);
-    const entities = Array.isArray(record.ner_entities) ? record.ner_entities : [];
-    return entities.some((item) => normalize(item?.text) === target) || matchesPhrase(record, entity);
-  },
-});
+const buildEntitySpec = (entity: string): CorpusExplorerSpec => {
+  const target = normalize(entity);
 
-const buildSourceSpec = (source: string): CorpusExplorerSpec => ({
-  title: `Source: ${source}`,
-  description: `Records from the ${source} source.`,
-  emptyMessage: `No records found for ${source}.`,
-  matcher: (record) => normalize(record.source) === normalize(source),
-});
+  return {
+    title: `Entity: ${entity}`,
+    description: `Records mentioning the ${entity} entity.`,
+    emptyMessage: `No records found for the ${entity} entity.`,
+    matcher: (record) => {
+      const entities = Array.isArray(record.ner_entities) ? record.ner_entities : [];
+      return entities.some((item) => normalize(item?.text) === target) || matchesPhrase(record, entity);
+    },
+  };
+};
 
-const buildDominantEmotionSpec = (emotion: string): CorpusExplorerSpec => ({
-  title: `Dominant Emotion: ${emotion}`,
-  description: `Records where ${emotion} is the strongest emotion score.`,
-  emptyMessage: `No records found with dominant emotion ${emotion}.`,
-  matcher: (record) => getDominantEmotion(record) === normalize(emotion),
-});
+const buildSourceSpec = (source: string): CorpusExplorerSpec => {
+  const target = normalize(source);
 
-const buildReplyPairSpec = (source: string, target: string): CorpusExplorerSpec => ({
-  title: `Reply Path: ${source} -> ${target}`,
-  description: `Reply records authored by ${source} in response to ${target}.`,
-  emptyMessage: `No reply records found for ${source} -> ${target}.`,
-  matcher: (record, context) => {
-    if (normalize(record.author) !== normalize(source)) {
-      return false;
-    }
+  return {
+    title: `Source: ${source}`,
+    description: `Records from the ${source} source.`,
+    emptyMessage: `No records found for ${source}.`,
+    matcher: (record) => normalize(record.source) === target,
+  };
+};
 
-    const replyTo = record.reply_to;
-    if (replyTo === null || replyTo === undefined || replyTo === "") {
-      return false;
-    }
+const buildDominantEmotionSpec = (emotion: string): CorpusExplorerSpec => {
+  const target = normalize(emotion);
 
-    const replyTarget = context.authorByPostId.get(String(replyTo));
-    return normalize(replyTarget) === normalize(target);
-  },
-});
+  return {
+    title: `Dominant Emotion: ${emotion}`,
+    description: `Records where ${emotion} is the strongest emotion score.`,
+    emptyMessage: `No records found with dominant emotion ${emotion}.`,
+    matcher: (record) => getDominantEmotion(record) === target,
+  };
+};
+
+const buildReplyPairSpec = (source: string, target: string): CorpusExplorerSpec => {
+  const sourceName = normalize(source);
+  const targetName = normalize(target);
+
+  return {
+    title: `Reply Path: ${source} -> ${target}`,
+    description: `Reply records authored by ${source} in response to ${target}.`,
+    emptyMessage: `No reply records found for ${source} -> ${target}.`,
+    matcher: (record, context) => {
+      if (normalize(record.author) !== sourceName) {
+        return false;
+      }
+
+      const replyTo = record.reply_to;
+      if (replyTo === null || replyTo === undefined || replyTo === "") {
+        return false;
+      }
+
+      return normalize(context.authorByPostId.get(String(replyTo))) === targetName;
+    },
+  };
+};
 
 const buildOneTimeUsersSpec = (): CorpusExplorerSpec => ({
   title: "One-Time Users",
   description: "Records written by authors who appear exactly once in the filtered corpus.",
   emptyMessage: "No one-time-user records found.",
   matcher: (record, context) => {
-    const author = toText(record.author).trim();
+    const author = getAuthor(record);
     return !!author && context.authorEventCounts.get(author) === 1;
-  },
-});
-
-const buildTopCommentersSpec = (topAuthorCount: number): CorpusExplorerSpec => ({
-  title: "Top Commenters",
-  description: `Comment records from the top ${topAuthorCount} commenters in the filtered corpus.`,
-  emptyMessage: "No top-commenter records found.",
-  matcher: (record, context) => {
-    if (record.type !== "comment") {
-      return false;
-    }
-
-    const rankedAuthors = Array.from(context.authorCommentCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, topAuthorCount)
-      .map(([author]) => author);
-
-    return rankedAuthors.includes(toText(record.author).trim());
-  },
-});
-
-const buildSingleCommentAuthorsSpec = (): CorpusExplorerSpec => ({
-  title: "Single-Comment Authors",
-  description: "Comment records from authors who commented exactly once.",
-  emptyMessage: "No single-comment-author records found.",
-  matcher: (record, context) => {
-    const author = toText(record.author).trim();
-    return record.type === "comment" && !!author && context.authorCommentCounts.get(author) === 1;
   },
 });
 
@@ -376,9 +347,7 @@ const buildDeonticSpec = () =>
 const buildPermissionSpec = () =>
   buildPatternSpec("Permission Words", "Records containing permission language.", PERMISSION_PATTERN);
 
-const getExplorerButtonStyle = () => shrinkButtonStyle;
-
-export type { DatasetRecord, CorpusExplorerContext, CorpusExplorerSpec };
+export type { DatasetRecord, CorpusExplorerSpec };
 export {
   buildAllRecordsSpec,
   buildCertaintySpec,
@@ -393,13 +362,10 @@ export {
   buildOneTimeUsersSpec,
   buildPermissionSpec,
   buildReplyPairSpec,
-  buildSingleCommentAuthorsSpec,
   buildSourceSpec,
   buildTopicSpec,
-  buildTopCommentersSpec,
   buildUserSpec,
   buildWordSpec,
   getDateBucket,
-  getExplorerButtonStyle,
   toText,
 };
