@@ -1,5 +1,6 @@
 import os
 import datetime
+import logging
 
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
@@ -9,8 +10,10 @@ from dto.comment import Comment
 from server.connectors.base import BaseConnector
 
 load_dotenv()
-
 API_KEY = os.getenv("YOUTUBE_API_KEY")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class YouTubeAPI(BaseConnector):
@@ -77,11 +80,30 @@ class YouTubeAPI(BaseConnector):
         return True
 
     def _search_videos(self, query, limit):
-        request = self.youtube.search().list(
-            q=query, part="snippet", type="video", maxResults=limit
-        )
-        response = request.execute()
-        return response.get("items", [])
+        results = []
+        next_page_token = None
+
+        while len(results) < limit:
+            batch_size = min(50, limit - len(results))
+
+            request = self.youtube.search().list(
+                q=query, 
+                part="snippet", 
+                type="video", 
+                maxResults=batch_size, 
+                pageToken=next_page_token
+            )
+
+            response = request.execute()
+            results.extend(response.get("items", []))
+            logging.info(f"Fetched {len(results)} out of {limit} videos for query '{query}'")
+
+            next_page_token = response.get("nextPageToken")
+            if not next_page_token:
+                logging.warning(f"No more pages of results available for query '{query}'")
+                break
+
+        return results[:limit]
 
     def _get_video_comments(self, video_id):
         request = self.youtube.commentThreads().list(
