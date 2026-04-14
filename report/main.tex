@@ -83,7 +83,7 @@ A defining feature of this project is its focus on a geographically grounded dat
 \subsection{What is Digital Ethnography?}
 Digital Ethnography is the study of cultures and interactions in various online spaces, such as forums, posts and video comments. The goal is not only to describe the high-level statistics such as number of posts and posts per day, but also analyse people's behaviour at an interactional and cultural level, delving into common phrases, interactions patterns and common topics and entities.
 
-There are multiple methods to carry out digital ethnography, such as online participant observation through automated or manual methods, digital interviews via text or video or tracing digital footprints. 
+There are multiple methods to carry out digital ethnography, such as online participant observation through automated or manual methods, digital interviews via text or video or tracing digital footprints. \cite{dominguez2007virtual}
 
 Compared to traditional ethnography, digital ethnography is usually faster and more cost-effective due to the availability of large swathes of data across social media sites such as Reddit, YouTube, and Facebook and lack of need to travel. Traditional ethnography often relied on in-person interviews and in-person observation of communities
 
@@ -118,7 +118,11 @@ Sentiment Analysis involves capturing the emotions associated with a specific po
 \label{sec:passive_participation}
 Not everyone in an online community participates in the same way. Some users post regularly and leave comments while others might simply read content without ever contributing anything themselves. Some might only contribute occasionally.
 
-This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is. 
+This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is.
+
+This uneven distribution of participation is well documented in the literature. The "90-9-1" principle describes a consistent pattern across many online communities, whereby approximately 90\% of users only consume content, 9\% contribute occasionally, and 
+just 1\% are responsible for the vast majority of content creation \cite{sun2014lurkers}.
+
 
 \subsubsection{Temporal Activity Patterns}
 Looking at when a community is active can reveal quite a lot about its nature and membership. A subreddit that peaks at 2am UTC might have a mostly American userbase, while one that is consistently active across all hours could suggest a more globally distributed community. Beyond timezones, temporal patterns can also capture things like how a community responds to external events, like a sudden spike in posting activity often corresponds to something newsworthy happening that is relevant to the community.
@@ -173,6 +177,8 @@ While computational methods enable large-scale observation and analysis of onlin
 Natural Language Processors will be central to many aspects of the virtual ethnography, such as emotional and topic classification. While these models are strong and have shown results in many areas, they are imperfect and may produce inaccurate or misleading results.
 
 One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity.
+
+Emojis and emoticons are a common feature of online communication and can carry significant emotional meaning. However, NLP models may struggle to accurately interpret the sentiment conveyed by emojis, especially when they are used in combination with text or in a sarcastic manner. \cite{ahmad2024sentiment}
 
 In addition, the simplification of complex human interactions and emotions into discrete categories like "happy" or "sad" will more than likely overlook some nuance and ambiguity, even if the model is not inherently "wrong". As a result, the outputs of NLP models should be interpreted as indicative patterns rather than definitive representations of user meaning.
 
@@ -931,6 +937,7 @@ One issue arose using dependency injection for the dataset manager. Since from t
 The NLP module is responsible for adding new columns to the dataset that contain the NLP outputs, three types of NLP analysis are performed: emotion classification, topic classification, and named entity recognition. It is instantiated once per dataset during the enrichment phase and runs on the provided Pandas DataFrame.
 
 \subsubsection{Emotion Classification}
+\label{sec:emotion-classification}
 For emotional classification, initially a pre-trained VADER sentiment analysis model was used, which provides a very simple way to classify text into positive, negative, and neutral emotions. Though for ethnographic analysis, a more complex emotional model that can capture more nuance is needed, therefore the VADER model was later replaced with a fine-tuned transformer-based model that can classify text into a wider range of emotions. 
 
 GoEMOTION \cite{demszky2020goemotions} was considered as a potential model for emotional classification, as it is extremely nuanced and can capture a wide range of emotions, however it had over 27 emotion classes, which was too many for the purposes of this project, as it would have been difficult to visualise and analyse such a large number of emotion classes. 
@@ -1276,7 +1283,7 @@ The dashboard was described as user-friendly, with the tabbed interface making i
 Several suggestions were made for improving the system by the participants, which are discussed in more detail below.
 
 \paragraph{Deeper Emotional Analysis}
-The current five-emotion model was seen as a good starting point, but ultimately lacking in nuance. They noted that out of the five existing emotions (joy, sadness, anger, fear, disgust), four of them were negative emotions, and there was a lack of nuanced positive emotions such as hope, pride, relief, etc. In the beginning stages of the project, the GoEmotions model \cite{demszky2020goemotions}, which has 27 emotion classes, was considered but ultimately rejected due to database and schema complexity. However given the feedback, it's worth reconsidering for a much more nuanced emotional analysis.
+The current five-emotion model was seen as a good starting point, but ultimately lacking in nuance. They noted that out of the five existing emotions (joy, sadness, anger, fear, disgust), four of them were negative emotions, and there was a lack of nuanced positive emotions such as hope, pride, relief, etc. In the beginning stages of the project, the GoEmotions model \cite{demszky2020goemotions}, which has 27 emotion classes, was considered but ultimately rejected due to timeline constraints and complexity. However given the feedback, it's worth reconsidering for a much more nuanced emotional analysis.
 
 \paragraph{Improved Corpus Explorer}
 The corpus explorer was seen as a useful feature, however it was noted that it could be improved in a few ways:
@@ -1295,8 +1302,78 @@ The current implementation of topics is based on a fixed list that is defined up
 \paragraph{Emotion Colour Grading}
 Currently, in the corpus explorer and other areas where emotions are visualised, the posts aren't coloured at all. It was suggested that it would be useful to have some kind of colour grading based on the emotions, so posts that are joyful might be yellow, or posts that are angry might be red. This would allow users to quickly scan through the posts and get a sense of the emotional tone of the dataset. Though if the GoEmotions model is implemented, this might not be feasible as there are 27 emotion classes, so it would require a more complex colour scheme.
 
+\paragraph{Popularity Indicators}
+The dashboard currently provides no indication of how much engagement a post received. Adding reply counts or upvote scores alongside each post would allow researchers to distinguish between posts that generated significant discussion and those that did not, which is relevant for participation inequality analysis.
+
 \subsection{NLP Accuracy}
+The accuracy of the NLP models used in the system was evaluated using a small manually annotated dataset.  By taking 50 random examples of posts from the Cork dataset and manually annotating their topic and emotion, then comparing these annotations to the model's predictions, the accuracy of the models can be estimated. Keep in mind that this is a small sample size and is tied to a specific dataset, with specific pre-defined topics, so it may not be representative of the overall accuracy of the models across different datasets and topics.
+
+To do this, this command was run on the Docker database containter to extract 50 random posts from the Cork dataset:
+\begin{verbatim}
+docker exec crosspost_db psql -U postgres -d mydatabase -x -c 
+"SELECT 
+    id, 
+    title, 
+    content, 
+    topic, 
+    topic_confidence, 
+    emotion_joy, 
+    emotion_sadness, 
+    emotion_anger, 
+    emotion_fear, 
+    emotion_disgust
+FROM events 
+WHERE dataset_id = 1 
+ORDER BY RANDOM() 
+LIMIT 50;" > output.txt
+\end{verbatim}
+
+The \texttt{WHERE dataset\_id = 1} clause specifies that we only want posts from the Cork dataset. The NLP outputs (topic and emotion predictions) were removed using \texttt{grep} on the output file, to analyse without bias.
+
+Then the output was manually annotated with topic and emotional labels, using the same topic list and emotion classes as the model. The model's predictions were then compared to the manual annotations to calculate the accuracy for both topic classification and emotion classification. The metric will be accuracy, which is the number of correct predictions divided by the total number of predictions.
+
+The results of this evaluation are as follows:
+\begin{itemize}
+    \item \textbf{Dominant Emotional Classification Accuracy}: 68\% (34 out of 50 posts were correctly classified with the dominant emotion).
+    \item \textbf{Topic Classification Accuracy}: 64\% (32 out of 50 posts were correctly classified with the correct topic).
+\end{itemize}
+
+\subsubsection{Emotional Classification Limitations}
+The emotional classification was notably limited in some regards. The decision described in Section \ref{sec:emotion-classification} to remove the "neutral" and "surprise" emotion classes from the emotional analysis was made after observing that the two classes were dominating the dataset. However, restricting the neutral class led to some posts being misclassified as another emotion which may not have been accurate, for example, take the content of the eleventh post in the output file (Record 11):
+
+\begin{quote}
+    \textit{26+7=1}
+\end{quote}
+
+This post was classified as "anger" with a confidence of 0.22, however this post is arguably neutral and the model's classification is inaccurate. Due to this, the neutral class was reintegrated into the emotional analysis.
+
+In addition, some confusion arose between the "disgust" and "anger" emotion classes, as they can be quite similar in some contexts. For instance, take the content of the third post in the output file:
+
+\begin{quote}
+    \textit{That's exactly what Ruanair do in Cork, they never introduce a new route, they come in on existing routes, eliminate the competition and then either close the route or move it. They have done this on two polish routes, Cork to Dublin, Newcastle etc.}
+\end{quote}
+
+The model classified this post as "disgust" with a confidence of 0.35 and "anger" with a confidence of 0.38. This is a borderline case, and even two different human annotators could disagree on whether this post is more "disgust" or "anger", so it's understandable that the model would struggle with this. This highlights the limitations of the emotional classification, as emotions can be quite nuanced and subjective, and a model may not always capture the true emotional tone of a post accurately.
+
+\subsubsection{Topical Classification Limitations}
+The topic classification also had some limitations, particularly with posts that contained multiple topics. For example, take the content of the 26th post in the output file:
+\begin{quote}
+    \textit{We're staying in the city centre so walkable to most places. I checked electrics website earlier. Looked nice. Ended up booking Joules for Thursday then for Friday, we will try a new place called "conways yard" that was recommended here. In hoping to watch the England match there so I'd imagine if have to get there well before kick off (8pm) to get a seat bear a TV.}
+\end{quote}
+
+This post was classified with the topic "Rugby" with a topic confidence of 0.47, which is quite high by most standards. However this could arguably be classified as "City Center" or even "Pubs" due to the mention of the city centre and the pub "Conway's Yard". This highlights a limitation of the topic classification, which is that it can struggle with posts that contain multiple topics, as it is only able to assign one dominant topic to each post. 
+
+To address this, making the topic classification more similar to the emotional classification might be benefical. That is, instead of just assigning one dominant topic to each post, the model could assign a confidence score for each topic class, which would allow posts to be classified with multiple topics if they have high confidence scores for multiple topics.
+
+In addition, ensuring a well-curated topic list that is specific to the dataset can help improve the accuracy of the topic classification, as it reduces the chances of posts being misclassified into irrelevant topics and reduces possible overlap between topics.
+
 \subsection{Performance Benchmarks}
+The benchmarks for the performance of the system were measured in terms of the time taken for each stage of the data pipeline, including both fetching and NLP processing. The benchmarks were measured in many configurations, such as different dataset sizes, different numbers of sources for fetching, pre-gathered or auto-fetched.
+
+
+
+\subsubsection{NLP Performance}
+\subsubsection{Auto-fetching Performance}
 \subsection{Limitations}
 
 \newpage
