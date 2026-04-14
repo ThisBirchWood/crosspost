@@ -234,6 +234,7 @@ class RedditAPI(BaseConnector):
                 if response.status_code == 429:
                     try:
                         wait_time = int(response.headers.get("X-Ratelimit-Reset", backoff))
+                        wait_time += 1  # Add a small buffer to ensure the rate limit has reset
                     except ValueError:
                         wait_time = backoff
 
