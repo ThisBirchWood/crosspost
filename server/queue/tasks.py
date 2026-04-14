@@ -1,3 +1,5 @@
+from time import time
+
 import pandas as pd
 import logging
 
@@ -46,6 +48,7 @@ def fetch_and_process_dataset(
 
     try:
         for metadata in source_info:
+            fetch_start = time()
             name = metadata["name"]
             search = metadata.get("search")
             category = metadata.get("category")
@@ -57,7 +60,10 @@ def fetch_and_process_dataset(
             )
             posts.extend(post.to_dict() for post in raw_posts)
 
+        fetch_time = time() - fetch_start
         df = pd.DataFrame(posts)
+
+        nlp_start = time()
 
         dataset_manager.set_dataset_status(
             dataset_id, "processing", "NLP Processing Started"
@@ -66,9 +72,11 @@ def fetch_and_process_dataset(
         processor = DatasetEnrichment(df, topics)
         enriched_df = processor.enrich()
 
+        nlp_time = time() - nlp_start
+
         dataset_manager.save_dataset_content(dataset_id, enriched_df)
         dataset_manager.set_dataset_status(
-            dataset_id, "complete", "NLP Processing Completed Successfully"
+            dataset_id, "complete", f"Completed Successfully. Fetch time: {fetch_time:.2f}s, NLP time: {nlp_time:.2f}s"
         )
     except Exception as e:
         dataset_manager.set_dataset_status(
