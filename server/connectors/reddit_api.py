@@ -232,7 +232,10 @@ class RedditAPI(BaseConnector):
                 )
 
                 if response.status_code == 429:
-                    wait_time = response.headers.get("X-Ratelimit-Reset", backoff)
+                    try:
+                        wait_time = int(response.headers.get("X-Ratelimit-Reset", backoff))
+                    except ValueError:
+                        wait_time = backoff
 
                     logger.warning(
                         f"Rate limited by Reddit API. Retrying in {wait_time} seconds..."
