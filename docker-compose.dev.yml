@@ -28,7 +28,7 @@ services:
       - .env
     ports:
       - "5000:5000"
-    command: flask --app server.app run --host=0.0.0.0 --debug
+    command: gunicorn server.app:app --bind 0.0.0.0:5000 --workers 2 --threads 4
     depends_on:
       - postgres
       - redis
@@ -48,13 +48,13 @@ services:
     depends_on:
       - postgres
       - redis
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   frontend:
     build:
