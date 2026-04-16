@@ -702,7 +702,7 @@ Inspect element was used to poke around the structure of the Boards.ie website a
 
 As not all comments on a thread are on one page, pagination was implemented by looking for the "Next" button on the page and following the link to the next page of comments until there are no more pages left. This allows for fetching of all comments for a given post, even if they span multiple pages.
 
-A \texttt{ThreadPoolExecutor} was used to fetch posts in parallel, which improved the performance of the connector significantly, as fetching posts sequentially was very slow due to the need to fetch comments for each post, which often spanned multiple pages. Though there was diminishing returns after a certain number of threads, possibly due to site blocking or internet connection limits. Initially 20 threads were used, but this was later reduced to 10 threads to avoid potential issues with site blocking and to improve ethical considerations around web scraping.
+A \texttt{ThreadPoolExecutor} was used to fetch posts in parallel, which improved the performance of the connector significantly, as fetching posts sequentially was very slow due to the need to fetch comments for each post, which often spanned multiple pages. Though there was diminishing returns after a certain number of threads, possibly due to site blocking or internet connection limits. Initially 20 threads were used, but this was later reduced to 5 threads to avoid potential issues with site blocking and to improve ethical considerations around web scraping.
 
 \subsubsection{Connecter Plugin System}
 The connector plugin system was implemented to allow for easy addition of new data sources in the future. This would require simply implemented a new connector class and dropping it into the connectors directory, without needing to modify any existing code. This was achieved through the use of Python's \texttt{importlib} library, which allows for dynamic importing of modules at runtime.
@@ -1196,7 +1196,8 @@ The results of this evaluation are as follows:
     \item \textbf{Topic Classification Accuracy}: 64\% (32 out of 50 posts were correctly classified with the correct topic).
 \end{itemize}
 
-\subsubsection{Emotional Classification Limitations}
+
+\subsubsection{Emotional Classification Discussion}
 The emotional classification was notably limited in some regards. The decision described in Section \ref{sec:emotion-classification} to remove the "neutral" and "surprise" emotion classes from the emotional analysis was made after observing that the two classes were dominating the dataset. However, restricting the neutral class led to some posts being misclassified as another emotion which may not have been accurate, for example, take the content of the eleventh post in the output file (Record 11):
 
 \begin{quote}
@@ -1213,7 +1214,11 @@ In addition, some confusion arose between the "disgust" and "anger" emotion clas
 
 The model classified this post as "disgust" with a confidence of 0.35 and "anger" with a confidence of 0.38. This is a borderline case, and even two different human annotators could disagree on whether this post is more "disgust" or "anger", so it's understandable that the model would struggle with this. This highlights the limitations of the emotional classification, as emotions can be quite nuanced and subjective, and a model may not always capture the true emotional tone of a post accurately.
 
-\subsubsection{Topical Classification Limitations}
+A significant reason that the accuracy was sitting around (60–70\%) is the model’s inability to represent the multi-dimensional nature of human emotion. Many posts express multiple emotions simultaneously (e.g., frustration mixed with humour), yet the model is constrained to selecting a single dominant class. This leads to misclassification in cases where no single emotion is clearly dominant.
+
+In addition, the temporary exclusion of the “neutral” class forced inherently neutral posts into a specific category, artificially lowering accuracy. Borderline cases between closely related emotions (such as anger and disgust) also contributed to disagreement between manual annotations and model predictions, which shows how subjective emotional expressions can be.
+
+\subsubsection{Topical Classification Discussion}
 The topic classification also had some limitations, particularly with posts that contained multiple topics. For example, take the content of the 26th post in the output file:
 \begin{quote}
     \textit{We're staying in the city centre so walkable to most places. I checked electrics website earlier. Looked nice. Ended up booking Joules for Thursday then for Friday, we will try a new place called "conways yard" that was recommended here. In hoping to watch the England match there so I'd imagine if have to get there well before kick off (8pm) to get a seat bear a TV.}
