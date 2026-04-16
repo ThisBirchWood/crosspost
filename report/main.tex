@@ -1,11 +1,10 @@
-\documentclass{article}
+\documentclass[12pt, a4paper]{article}
 \usepackage{graphicx}
 \usepackage{setspace}
 \usepackage{hyperref}
 \usepackage{fvextra}
 
 \begin{document}
-
 \bibliographystyle{plain}
 
 \begin{titlepage}
@@ -53,60 +52,30 @@
 This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A React-based frontend delivers interactive visualizations and user controls, the backend architecture implements analytical pipeline for the data, including data parsing, manipulation and analysis.
 
 \vspace{0.5cm}
-Beyond its technical objectives, the system is conceptually informed by approaches from \textbf{digital ethnography} and computational social science. Traditional Ethnography is the practice of studying individual or group culture from the point of view of the subject of the study. Digital ethnography seeks to understand how social relations, topics and norms are constructed in online spaces.
+Beyond its technical objectives, the system is based on the approaches of \textbf{digital ethnography} and computational social science. Traditional Ethnography is the practice of studying individual or group culture from the point of view of the subject of the study. Digital ethnography seeks to understand how social relations, topics and norms are constructed in online spaces.
 
 \subsection{Motivation}
 There are many beneficiaries of a digital ethnography analytic system: social scientists gain a deeper understanding of contemporary culture and online communities; businesses and marketers can better understand consumer behaviour and online engagement; educators and designers can improve digital learning environments and user experiences; and policymakers can make informed decisions regarding digital platforms, online safety, and community regulation.
 
-\subsection{Goals \& Objectives}
-\begin{itemize}
-    \item \textbf{Collect data ethically}: enable users to link/upload text, and interaction data (messages etc) from specified online communities. Potentially an automated method for importing (using APIs or scraping techniques) could be included as well.
-    \item \textbf{Organise content}: Store gathered material in a structured database with tagging for themes, dates, and sources.
-    \item \textbf{Analyse patterns}: Use natural language processing (NLP) to detect frequent keywords, sentiment, and interaction networks.
-    \item \textbf{Visualise insights}: Present findings as charts, timelines, and network diagrams to reveal how conversations and topics evolve.
-\end{itemize}
-
-\subsection{The Cork Dataset}
-
-A defining feature of this project is its focus on a geographically grounded dataset centred on \textbf{Cork, Ireland}. The system analyses publicly available discussions relating to Cork drawn from multiple online platforms:
-
-\begin{itemize}
-    \item The \textbf{r/Cork} subreddit
-    \item The \textbf{r/Ireland} subreddit using a Cork-specific search filter
-    \item \textbf{YouTube} videos retrieved using Cork-related search queries
-    \item The \textbf{Boards.ie Cork section}
-\end{itemize}
-
 \newpage
 \section{Background}
-
 \subsection{What is Digital Ethnography?}
-Digital Ethnography is the study of cultures and interactions in various online spaces, such as forums, posts and video comments. The goal is not only to describe the high-level statistics such as number of posts and posts per day, but also analyse people's behaviour at an interactional and cultural level, delving into common phrases, interactions patterns and common topics and entities.
-
-There are multiple methods to carry out digital ethnography, such as online participant observation through automated or manual methods, digital interviews via text or video or tracing digital footprints.
+\textit{Digital Ethnography} is the study of cultures and interactions in various online spaces, such as forums, posts and video comments. The goal is not only to describe the high-level statistics such as number of posts and posts per day, but also analyse people's behaviour at an interactional and cultural level, delving into common phrases, interactions patterns and common topics and entities.
 
 Compared to traditional ethnography, digital ethnography is usually faster and more cost-effective due to the availability of large swathes of data across social media sites such as Reddit, YouTube, and Facebook and lack of need to travel. Traditional ethnography often relied on in-person interviews and in-person observation of communities. \cite{coleman2010ethnographic}
 
 \subsubsection{Traditional Ethnography}
-Ethnography originated in the late nineteenth and early twentieth centuries as a method for understanding cultures through long-term fieldwork. The goal was not just to describe behaviour, but to show how people made sense of that world. Over time, ethnography grew beyond anthropology into sociology, media studies, education, and human computer interaction, becoming a broadly used qualitative research approach. Traditional ethnography was closely tied to physical locations: villages, workplaces or towns. However, as communication technologies developed and social life increasingly took place through technological mediums, it was no longer tied to a physical place. Researchers questioned whether social interactions could still be studied properly if they were no longer tied to physical places.
+Ethnography originated in the late nineteenth and early twentieth centuries as a method for understanding cultures through long-term fieldwork. The goal was not just to describe behaviour, but to show how people made sense of that world. Over time, ethnography grew beyond anthropology into sociology, media studies, education, and human computer interaction, becoming a broadly used qualitative research approach. Traditional ethnography was closely tied to physical locations: villages, workplaces or towns. However, as communication technologies developed and social life increasingly took place through technological mediums, it was no longer tied to a physical place.
 
 \subsubsection{Transition to Digital Spaces}
 The rise of the internet in the late twentieth century massively changed social interaction. Online forums, emails, SMS and social media platforms became central to human communication. All types of groups and identities were constructed. As a result, ethnographic methods were adapted to study these emerging digital environments. Early work in this area was referred to as "virtual ethnography" or "digital ethnography", where online spaces began to mixed and intertwine with traditional cultural spaces.
 
-Digital ethnography gives us new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. This transitions requires flexibility, since researchers can no longer rely solely on face-to-face interactions.
+There are new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. This transitions requires flexibility, since researchers can no longer rely solely on face-to-face interactions.
 
 \subsection{Online Communities}
 There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interest. Each type of community fosters different forms of interaction, participation, and identity construction.
 
 Participation within these communities is usually not evenly distributed. The majority of users are passive consumers (lurkers), a smaller percentage contribute occasionally, and a very small core group produces most of the content. This uneven contribution structure has significant implications for digital ethnography, as visible discourse may disproportionately reflect the perspectives of highly active members rather than the broader community. This is particularly evident in some reputation-based systems such as Reddit, which allows for the opinions of a few to rise above the rest.
-
-Examples of digital spaces include:
-\begin{itemize}
-    \item \textbf{Social media platforms} (e.g., Facebook, Twitter, Instagram) where users create profiles, share content, and interact with others.
-    \item \textbf{Online forums and communities} (e.g., Reddit, Boards.ie) where users engage in threaded discussions around specific topics or interests.
-    \item \textbf{Video platforms} (e.g., YouTube) where users share and comment on video content, often fostering communities around specific channels or topics.
-    \item \textbf{Messaging apps} (e.g., WhatsApp, Discord) where users engage in private or group conversations, often with a more informal and intimate tone.
-\end{itemize}
 
 \subsection{Digital Ethnography Metrics}
 This section describes common keywords and metrics use to measure and quantify online communities using digital ethnography.
@@ -120,9 +89,7 @@ Not everyone in an online community participates in the same way. Some users pos
 
 This distinction between active and passive participation (passive users are often referred to as "lurkers") is important in digital ethnography, because looking only at posts and comments can give a misleading picture of how large or engaged a community actually is.
 
-This uneven distribution of participation is well documented in the literature. The "90-9-1" principle describes a consistent pattern across many online communities, whereby approximately 90\% of users only consume content, 9\% contribute occasionally, and 
-just 1\% are responsible for the vast majority of content creation \cite{sun2014lurkers}.
-
+This uneven distribution of participation is well documented in the literature. The "90-9-1" principle describes a consistent pattern across many online communities, whereby approximately 90\% of users only consume content, 9\% contribute occasionally, and just 1\% are responsible for the vast majority of content creation \cite{sun2014lurkers}.
 
 \subsubsection{Temporal Activity Patterns}
 Looking at when a community is active can reveal quite a lot about its nature and membership. A subreddit that peaks at 2am UTC might have a mostly American userbase, while one that is consistently active across all hours could suggest a more globally distributed community. Beyond timezones, temporal patterns can also capture things like how a community responds to external events, like a sudden spike in posting activity often corresponds to something newsworthy happening that is relevant to the community.
@@ -176,8 +143,6 @@ For example, in a Cork-specific dataset, words like "ah", or "grand" might be co
 \subsection{Limits of Computation Analysis}
 While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
 
-Natural Language Processors will be central to many aspects of the virtual ethnography, such as emotional and topic classification. While these models are strong and have shown results in many areas, they are imperfect and may produce inaccurate or misleading results.
-
 One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity.
 
 Emojis and emoticons are a common feature of online communication and can carry significant emotional meaning. However, NLP models may struggle to accurately interpret the sentiment conveyed by emojis, especially when they are used in combination with text or in a sarcastic manner. \cite{ahmad2024sentiment}
@@ -205,7 +170,6 @@ Due to data being collected across multiple platforms, they must be normalised i
 
 \newpage
 \section{Analysis}
-
 \subsection{Goals \& Objectives}
 The objective of this project is to provide a tool that can assist social scientists, digital ethnographers, and researchers to observing and interpret online communities and the interactions between them. Rather than replacing the study of digital ethnography or the related fields, this tool aims to aid researchers analyse communities.
 
@@ -247,7 +211,7 @@ Overall, while NLP provides powerful tools for analysing large datasets, its lim
 \subsubsection{Data Normalisation}
 Different social media platforms will produce data in many different formats. For example, Reddit data will have a much different reply structure to a forum-based platform like Boards.ie where there are no nested replies. Therefore, a core design requirement of the system is to normalise all incoming data into a single unified internal data model. This allows the same analytical functions to be applied across all data sources, regardless of their original structure.
 
-Posts and comments are two different types of user-generated content, however when it comes to ethnographic analysis, they are both just "events" or information that is being shared by a user. From an ethnographic perspective, the distinction between a post and a comment is not particularly important, since they both represent user-generated content that contributes to the community discourse. Therefore, the system will normalise all posts and comments into a single "event" data model, which will allow the same analytical functions to be applied uniformly across all content. This also simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
+Both comments and posts represent user-generated content that contributes to the community discourse. Therefore, the system will normalise all posts and comments into a single "event" data model, which will allow the same analytical functions to be applied uniformly across all content. This also simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
 Though separate processing paths are not needed, the system will still retain metadata that indicates whether an event was originally a post or a comment, as well as any relevant structural information (e.g., parent-child relationships in Reddit threads).
 
@@ -260,7 +224,6 @@ To mitigate this, the system will:
 \begin{itemize}
     \item Utilise GPU acceleration where available for NLP inference.
     \item Pre-compute some analytical results during data ingestion to speed up subsequent queries.
-    \item Store NLP outputs in the database to avoid redundant processing.
     \item Implement asynchronous processing for long-running tasks.
 \end{itemize}
 
@@ -279,7 +242,6 @@ The system will:
     \item Provide user-agent headers that identify the system and its purposes
     \item Allow users the option to upload their own datasets instead of automated collection.
     \item For websites without an API, the \texttt{robots.txt} file will be examined to ensure compliance with platform guidelines.
-    \item Data volume limits of up to 1000 posts per source will be enforced server-side to prevent excessive data collection.
 \end{itemize}
 
 Some platforms provide APIs that allow for easy and ethical data collection, such as YouTube and Reddit. These APIs have clear guidelines and rate limits that the system will adhere to. 
@@ -324,46 +286,28 @@ All datasets are associated with one and only one user account, and the users th
 
 The system will not store any personally identifiable information except for what is necessary for the analysis, which includes only usernames and timestamps. The system will not attempt to de-anonymise content creators or link data across platforms.
 
-\subsubsection{User Security}
-Standard security practices will be followed to protect user data and prevent unauthorized access. This includes:
-\begin{itemize}
-    \item The hashing of all user passwords and no storage of plaintext passwords.
-    \item The use of JWTs for session management, with secure signing and an expiration time of 24 hours.
-    \item Access control on all analysis API endpoints to ensure that end-users can only access their own datasets and results.
-    \item Parameterised queries for all database interactions to prevent SQL injection attacks.
-\end{itemize}
-
 \subsection{Requirements}
-
 The following requirements are derived from the backend architecture, NLP processing pipeline, and the React-based frontend interface.
 
 \subsubsection{Functional Requirements}
-
 \paragraph{Data Ingestion and Preparation}
 \begin{itemize}
     \item The system shall accept social media data in \texttt{.jsonl} format containing posts and nested comments.
     \item The system shall validate uploaded files and return structured error responses for invalid formats or malformed data.
     \item The system shall normalise posts and comments into a unified event-based dataset.
     \item The system shall give the user the option to automatically fetch datasets from social media sites filtered for specific keywords or categories.
-    \item The system shall provide a loading screen with a progress bar after the dataset is uploaded.
 \end{itemize}
 
 \paragraph{Dataset Management}
 \begin{itemize}
-    \item The system shall utilise Natural Language Processing models to generate average emotions per event.
-    \item The system shall utilise Natural Language Processing models to classify each event into a topic.
-    \item The system shall utilise Natural Language Processing models to identify entities in each event.
-    \item The system shall allow the users to view the raw dataset.
+    \item The system shall utilise Natural Language Processing models to generate analytical outputs such as sentiment analysis, topic modelling, and named entity recognition.
     \item The system shall return detailed endpoints that return calculated statistics grouped into themes.
 \end{itemize}
 
 \paragraph{Filtering and Search}
 \begin{itemize}
-    \item The system shall support keyword-based filtering across content, author, and optionally title fields.
-    \item The system shall support filtering by start and end date ranges.
-    \item The system shall support filtering by one or more data sources.
+    \item The system shall support keyword-based, date-based and source-based filtering of the dataset.
     \item The system shall allow multiple filters to be applied simultaneously.
-    \item The system shall return a filtered dataset reflecting all active filters.
 \end{itemize}
 
 \paragraph{Temporal Analysis}
@@ -428,13 +372,6 @@ The following requirements are derived from the backend architecture, NLP proces
     \item NLP models shall be cached to prevent redundant loading.
 \end{itemize}
 
-\paragraph{Reliability and Robustness}
-\begin{itemize}
-    \item The system shall implement structured exception handling.
-    \item The system shall return meaningful JSON error responses for invalid requests.
-    \item The dataset reset functionality shall preserve data integrity.
-\end{itemize}
-
 \newpage
 \section{Design}
 \subsection{System Architecture}
@@ -443,13 +380,6 @@ The following requirements are derived from the backend architecture, NLP proces
     \includegraphics[width=1.0\textwidth]{img/architecture.png}
     \caption{System Architecture Diagram}
     \label{fig:architecture}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1.0\textwidth]{img/schema.png}
-    \caption{System Schema}
-    \label{fig:schema}
 \end{figure}
 
 \subsection{Client-Server Architecture}
@@ -490,32 +420,12 @@ Originally, only file upload was supported, but the goal of the platform is to a
 
 In addition to social media posts, the system will allow users to upload a list of topics that they want to track in the dataset. This allows the system to generate custom topic analysis based on user-defined topics, which can be more relevant and insightful for specific research questions. For example, a researcher studying discussions around local politics in Cork might upload a list of political parties, politicians, and policy issues as topics to track.
 
-Below is a snippet of what a custom topic list might look like in \texttt{.json} format:
-\begin{Verbatim}[breaklines=true]
-{
-    "Public Transport": "buses, bus routes, bus eireann, public transport, late buses, bus delays, trains, commuting without a car, transport infrastructure in Cork",
-    "Traffic": "traffic jams, congestion, rush hour, cars backed up, gridlock, driving in Cork, road delays",
-    "Parking": "parking spaces, parking fines, clamping, pay parking, parking permits, finding parking in the city",
-    "Cycling": "cycling in Cork, bike lanes, cyclists, cycle safety, bikes on roads, cycling infrastructure"
-}
-\end{Verbatim}
-
 If a custom topic list is not provided by the user, the system will use a pre-defined generalised topic list that is designed to capture common themes across a wide range of online communities.
 
 Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object.
 
 \subsubsection{Data Normalisation}
-After a dataset is ingested, the system will normalise all posts and nested comments into a single unified "event" data model. This means that both posts and comments will be represented as the same type of object, with a common set of fields that capture the relevant information for analysis. The fields in this unified data model will include:
-\begin{itemize}
-    \item \texttt{id} - a unique identifier for the post or comment.
-    \item \texttt{content} — the text content of the post or comment.
-    \item \texttt{author} — the username of the content creator.
-    \item \texttt{timestamp} — the date and time when the content was created
-    \item \texttt{source} — the original platform from which the content was retrieved (e.g., Reddit, YouTube, Boards.ie).
-    \item \texttt{type} — a field indicating whether the event is a "post" or a "comment".
-    \item \texttt{parent\_id} — for comments, this field will reference the original id of the post it's commenting on.
-    \item \texttt{reply\_to} - for comments, this field will reference the original id of the comment it's replying to. If the comment is a direct reply to a post, this field will be null.
-\end{itemize}
+After a dataset is ingested, the system will normalise all posts and nested comments into a single unified "event" data model. This means that both posts and comments will be represented as the same type of object, with a common set of fields that capture the relevant information for analysis. 
 
 The decision to normalise posts and comments into a single "event" data model allows the same analytical functions to be applied uniformly across all content, regardless of whether it was originally a post or a comment. This simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
@@ -534,6 +444,13 @@ NLP processing lets us perform much richer analysis of the dataset, as it provid
 
 \subsubsection{Data Storage}
 The enriched dataset is stored in a PostgreSQL database, with a schema similar to the unified data model defined in the normalisation section, with additional fields for the derived data, NLP outputs, and user ownership. Each dataset is associated with a specific user account, and the system supports multiple datasets per user.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/schema.png}
+    \caption{System Schema}
+    \label{fig:schema}
+\end{figure}
 
 \subsubsection{Data Retrieval}
 The stored dataset can then be retrieved through the Flask API endpoints for analysis. The API supports filtering by keywords and date ranges, as well as grouping and aggregation for various analytical outputs.
@@ -600,9 +517,7 @@ In this system, linguistic analysis will include:
 
 The word frequencies and n-gram metrics were chosen because they can provide insights into the language and phrases used commonly in an online community, which is important for ethnographic analysis and understanding a community fully. Lexical diversity metrics such as the total number of unique tokens versus the total number of tokens can show if a specific culture often repeats phrases (like memes, slang etc.) or if they often have structured, serious discussion without repeating themeselves.
 
-Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. 
-
-In addition to standard stop words, the system also excludes link tokens such as "www", "http", and "https" from the word frequency analysis, as social media users will often include links in their posts and comments, and these tokens can become quite common and skew the word frequency results without adding meaningful insight.
+Outlining a list of stopwords is essential for linguistic analysis, as it filters out common words that wouldn't be useful for linguistic analysis. Stop Word lists can be provided by a Python library such as NLTK. In addition to standard stop words, the system also excludes link tokens such as "www", "http", and "https" from the word frequency analysis, as social media users will often include links in their posts and comments, and these tokens can become quite common and skew the word frequency results without adding meaningful insight.
 
 \subsubsection{User Analysis}
 User analysis allows researchers to understand the behaviour and activity of individual users within a community. For example, a researcher might want to see who the most active users are in a community, or how different users contribute to the overall emotional tone of the community.
@@ -638,8 +553,6 @@ In this system, interactional analysis will include:
 
 For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
 
-\textbf{Average reply chain depth} was considered as a metric, however forum-based social media sites, such as boards.ie, do not have a way to reply to comments in the same way that Reddit does, therefore the concept of "reply chains" doesn't apply cleanly in the same way. One possible solution is to infer reply relationships from explicit user mentions embedded in content of the post, but this is not a reliable method.
-
 \subsubsection{Emotional Analysis}
 Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
 
@@ -652,8 +565,6 @@ In this system, emotional analysis will include:
 \end{itemize}
 
 It is emphasised that emotional analysis is inaccurate on an individual post level as the models cannot fully capture the nuance of human interaction and slang. Warnings will be presented to the user in the frontend that AI outputs can possible be misleading on an individual scale, and accuracy only increases with more posts. Even then it will not be perfect.
-
-In an ideal world, the models are accurate enough to capture general emotions on a macro-scale.
 
 \subsubsection{Cultural Analysis}
 Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
@@ -792,7 +703,7 @@ The project was developed using the following tools and libraries:
     \item \textbf{react-chartjs-2} and \textbf{react-wordcloud} for data visualisation in the frontend.
 \end{itemize}
 
-The project was developed using Git for version control, with a branching strategy that included feature branches for new functionality and a main branch for stable code. Regular commits were made to document the development process and conventional commit messages were used to indicate the type of changes made. Occasionally, text bodies were included in commit messages to provide justification for design decisions or to explain changes that couldn't be easily understood from the diff alone.
+Git was used for version control, with regular commits and branches for new features.
 
 \subsection{Social Media Connectors}
 The first connectors implemented were the Reddit and Boards.ie connectors, as these were the original data sources for the Cork dataset. The YouTube connector was added later to improve diversity of data sources. In addition, the decision was made to only fetch new posts and fetch a fixed number of posts, rather than fetching the top posts of all time, which are usually full of memes and jokes that would skew the dataset and not be relevant for ethnographic analysis. In addition the temporal analysis would be skewed if we fetched top posts of all time, as the most popular posts are often from years ago, which would not be relevant for understanding the current state of the community.
@@ -1406,10 +1317,6 @@ The Boards.ie connector relies on web scraping, which is very fragile and prone 
 \subsubsection{English-Only Support}
 Two of three NLP models used in the system are trained exclusively on English-language data. This means the system cannot accurately analyse datasets in other languages, which limits its usefulness for researchers working with non-English communities. This was noted as a specific concern by participants in the user feedback session, who work with both English and Turkish datasets.
 
-\subsubsection{Scalability}
-While asynchronous processing via Celery and Redis mitigates blocking during NLP enrichment and data fetching, the system is not designed to scale horizontally. A single Celery worker handles all tasks sequentially, and the PostgreSQL database is not configured for high-availability or replication. For research use at small to medium scale this is fine, but the system would require significant infrastructure changes to support concurrent large-scale usage across many users.
-
-
 \newpage
 \section{Conclusions}
 \subsection{Reflection}
@@ -1429,7 +1336,7 @@ On a personal level, the project was a significant learning experience in terms 
     \label{fig:gnatt_chart}
 \end{figure}
 
-The project was maintained and developed using Git for version control, with the repository hosted on both Github and a self hosted Gitea instance. The project eventually began to use conventional commits to maintain a clean commit history, and commit messages contained rationale for non-obvious decisions. 
+The project was maintained and developed using Git for version control, with the repository hosted on both Github.
 
 Starting in Novemeber, the project went through a few iterations of basic functionality such as data retreival and storage. Research was done on digital ethnography, the traditional metrics used, and how they're implemented in code. The design of the system was also iterated on, with the initial design being a very simple frontend that showed simple aggregates, into a more complex and feature-rich dashboard with multiple analytical perspectives and NLP enrichments. 
 
