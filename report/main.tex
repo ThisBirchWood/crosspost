@@ -49,10 +49,10 @@
 \newpage 
 
 \section{Introduction}
-This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A React-based frontend delivers interactive visualizations and user controls, the backend architecture implements analytical pipeline for the data, including data parsing, manipulation and analysis.
+This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A web-based frontend delivers interactive visualizations, the backend architecture implements analytical pipeline for the data, including data parsing, manipulation and analysis.
 
 \vspace{0.5cm}
-Beyond its technical objectives, the system is based on the approaches of \textbf{digital ethnography} and computational social science. Traditional Ethnography is the practice of studying individual or group culture from the point of view of the subject of the study. Digital ethnography seeks to understand how social relations, topics and norms are constructed in online spaces.
+Beyond its technical objectives, the system is based on the concepts and ideas of \textbf{digital ethnography} and computational social science. Traditional Ethnography is the practice of studying individual or group culture from the point of view of the subject of the study. Digital ethnography seeks to understand how social relations, topics and norms are constructed in online spaces.
 
 \subsection{Motivation}
 There are many beneficiaries of a digital ethnography analytic system: social scientists gain a deeper understanding of contemporary culture and online communities; businesses and marketers can better understand consumer behaviour and online engagement; educators and designers can improve digital learning environments and user experiences; and policymakers can make informed decisions regarding digital platforms, online safety, and community regulation.
@@ -248,7 +248,7 @@ Reddit provides a public API that allows for the retrieval of posts, comments, a
 
 In November 2025, Reddit introduced a new approval process for API access, which requires developers to apply for access and specify their intended use case. While the public unauthenticated endpoints are still accessible, they have far stricter rate limits (100 requests every 10 minutes) compared to authenticated access (100 requests per minute). Therefore, the system shall allow for authenticated access to the Reddit API to speed up data retrival.
 
-Unauthenticated access will still be available as a fallback if client credentials are not provided on the backend, but this will massively slow the data retreival process, and this will still only fetch public posts and comments.
+Unauthenticated access will still be available as a fallback if client credentials are not provided on the backend, but this will massively slow the data retrieval process, and this will still only fetch public posts and comments.
 
 From reddit, the system will collect posts, comments and all replies to comments, as well as metadata such as the author name and timestamp.
 
@@ -274,7 +274,7 @@ YouTube is supported via the official YouTube Data API v3, provided by Google. T
 
 Authentication is handled through an API key issued via the Google Cloud Console. The API enforces a quota system rather than a traditional rate limit: each project is allocated 10,000 quota units per day by default, with different operations consuming different amounts.
 
-In addition, comment retreival can be disabled by the video uploader, so the system will handle this case by skipping videos where comments are not accessible.
+In addition, comment retrieval can be disabled by the video uploader, so the system will handle this case by skipping videos where comments are not accessible.
 
 \subsubsection{Data Storage \& Retention}
 All data fetched from social media sites are stored locally in a PostgreSQL database. The system will not share or expose any of this data to third parties beyond the users of this application. Raw API responses are discarded once the relevant information is extracted. 
@@ -825,12 +825,12 @@ As the project progressed and more posts were classified, the "surprise" and "ne
 \subsubsection{Topic Classification}
 For topic classification, a zero-shot classification approach was used, which allows for classification of text into arbitrary topic classes without needing to fine-tune a model for each specific set of topics. Initially, attempts were made to automatically generate topic classes based on the most common words in the dataset using TF-IDF, but this led to generic and strange classes that weren't useful for analysis. Therefore, it was decided that a topic list would be provided manually, either by the user or using a generic list of broad common topics. 
 
-Initially, the "all-mpnet-base-v2" \cite{all_mpnet_base_v2} was used as the base model for the zero-shot classification, which is a general-purpose sentence embedding model. While this worked well and produced good results, it was slow to run interference on large datasets, and would often take hours to classify a dataset of over 60,000 posts and comments.
+Initially, the "all-mpnet-base-v2" \cite{all_mpnet_base_v2} was used as the base model for the zero-shot classification, which is a general-purpose sentence embedding model. While this worked well and produced good results, it was slow to run inference on large datasets, and would often take hours to classify a dataset of over 60,000 posts and comments.
 
 Eventually, the "MiniLM-L6-v2 " \cite{minilm_l6_v2} was chosen as the base model for zero-shot classification, which is a smaller and faster sentence embedding model. While it may not produce quite as good results as the larger model, it still produces good results and is much faster to run inference on, which makes it more practical for use in this project.
 
 \subsubsection{Entity Recognition}
-At this point, the NLP pipeline was taking a long time to run on large datasets (such as the Cork dataset), therefore any NER (Named Entity Recognition) model that was added needed to be small and fast to run interference on large datasets. The "dslim/bert-base-NER" model from HuggingFace \cite{dslim_bert_base_ner} was chosen as it is a fine-tuned BERT model that can perform named entity recognition, and is relatively small and fast compared to other NER models.
+At this point, the NLP pipeline was taking a long time to run on large datasets (such as the Cork dataset), therefore any NER (Named Entity Recognition) model that was added needed to be small and fast to run inference on large datasets. The "dslim/bert-base-NER" model from HuggingFace \cite{dslim_bert_base_ner} was chosen as it is a fine-tuned BERT model that can perform named entity recognition, and is relatively small and fast compared to other NER models.
 
 This model outputs a list of entities for each post, and each entity has a type, which are:
 \begin{itemize}
@@ -1306,7 +1306,7 @@ On a personal level, the project was a significant learning experience in terms 
 
 The project was maintained and developed using Git for version control, with the repository hosted on both Github.
 
-Starting in Novemeber, the project went through a few iterations of basic functionality such as data retreival and storage. Research was done on digital ethnography, the traditional metrics used, and how they're implemented in code. The design of the system was also iterated on, with the initial design being a very simple frontend that showed simple aggregates, into a more complex and feature-rich dashboard with multiple analytical perspectives and NLP enrichments. 
+Starting in Novemeber, the project went through a few iterations of basic functionality such as data retrieval and storage. Research was done on digital ethnography, the traditional metrics used, and how they're implemented in code. The design of the system was also iterated on, with the initial design being a very simple frontend that showed simple aggregates, into a more complex and feature-rich dashboard with multiple analytical perspectives and NLP enrichments. 
 
 The majority of real development and implementation took place between January and April, with the final month of April being focused on testing, bug fixing, writing the report and preparation for the open day. The project was developed in an agile and iterative way, with new features being added and improved upon throughout the development process, rather than having a fixed plan for the entire project from the beginning.
 
