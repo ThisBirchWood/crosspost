@@ -75,13 +75,10 @@ There are new challenges to overcome in comparison to traditional ethnography. T
 \subsection{Online Communities}
 There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interest. Each type of community fosters different forms of interaction, participation, and identity construction.
 
-Participation within these communities is usually not evenly distributed. The majority of users are passive consumers (lurkers), a smaller percentage contribute occasionally, and a very small core group produces most of the content. This uneven contribution structure has significant implications for digital ethnography, as visible discourse may disproportionately reflect the perspectives of highly active members rather than the broader community. This is particularly evident in some reputation-based systems such as Reddit, which allows for the opinions of a few to rise above the rest.
+Participation within these communities is usually not evenly distributed. The majority of users are passive consumers (lurkers) \cite{sun2014lurkers}, a smaller percentage contribute occasionally, and a very small core group produces most of the content. This uneven contribution structure has significant implications for digital ethnography, as visible discourse may disproportionately reflect the perspectives of highly active members rather than the broader community. This is particularly evident in some reputation-based systems such as Reddit, which allows for the opinions of a few to rise above the rest.
 
 \subsection{Digital Ethnography Metrics}
 This section describes common keywords and metrics use to measure and quantify online communities using digital ethnography.
-
-\subsubsection{Sentiment Analysis}
-Sentiment Analysis involves capturing the emotions associated with a specific post, topic or entity. This type of analysis can be as simple as classifying a post as "positive" or "negative", or classifying a post into a set of pre-existing emotions such as anger, joy or sadness.
 
 \subsubsection{Active vs Passive Participation}
 \label{sec:passive_participation}
@@ -125,7 +122,7 @@ Digital ethnography traditionally relied on manual reading of texts and intervie
 NLP techniques can be used to automatically process and analyse large volumes and applying ethnographic methods at scale. For example, NLP can be used to identify common themes and topics in a subreddit, track how these themes evolve over time, and even detect the emotional tone of discussions. This allows researchers to gain insights into the dynamics of online communities that would be impossible to achieve through manual analysis alone.
 
 \subsubsection{Sentiment Analysis}
-\textbf{Sentiment Analysis} involves determining the emotional tone behind a piece of text. It is commonly used to classify text as positive, negative, or neutral. This technique is widely applied in areas such as customer feedback analysis, social media monitoring, and market research. More advanced sentiment analysis models can detect nuanced emotions, such as frustration, satisfaction, or sarcasm, although accurately identifying these emotions remains a challenge.
+\textbf{Sentiment Analysis} involves determining the emotional tone behind a piece of text. It is commonly used to classify text as positive, negative, or neutral. More advanced sentiment analysis models can detect nuanced emotions, such as frustration, satisfaction, or sarcasm, although accurately identifying these emotions remains a challenge \cite{giuffre2026sentiment}. For ethnographic analysis, sentiment analysis can provide insights into the emotional dynamics of a community, such as how users feel about certain topics or how the overall mood of discussions changes over time.
 
 \subsubsection{Named Entity Recognition}
 \textbf{Named Entity Recognition (NER)} is the process of identifying and classifying key entities within a text into predefined categories like names of people, organisations, locations, or dates. NER is essential for structuring unstructured text data and is often used in information extraction, search engines, and question-answering systems. Despite its usefulness, NER can struggle with ambiguous entities or context-dependent meanings.
@@ -138,7 +135,7 @@ This method is often used to organise lots of unstructured data, such as news ar
 \subsubsection{Stop Words}
 \textbf{Stop Words} are common words that are often filtered out in NLP tasks because they carry little meaningful information. Examples of stop words include "the", "is", "in", "and", etc. Removing stop words can help improve the performance of NLP models by reducing noise and focusing on more informative words. However, the choice of stop words can vary depending on the context and the specific task at hand.
 
-For example, in a Cork-specific dataset, words like "ah", or "grand" might be considered stop words, as they are commonly used in everyday speech but do not carry significant meaning for analysis.
+For example, in a Cork-specific dataset, words like "ah", or "grand" might be considered stop words, as they are commonly used in everyday speech but do not carry significant meaning for analysis. \cite{mungalpara2022stemming}
 
 \subsection{Limits of Computation Analysis}
 While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
@@ -244,7 +241,7 @@ The system will:
     \item For websites without an API, the \texttt{robots.txt} file will be examined to ensure compliance with platform guidelines.
 \end{itemize}
 
-Some platforms provide APIs that allow for easy and ethical data collection, such as YouTube and Reddit. These APIs have clear guidelines and rate limits that the system will adhere to. 
+Some platforms provide APIs that allow for easy and ethical data collection, such as YouTube and Reddit. These APIs have clear guidelines and rate limits that the system will adhere to. \cite{chugani2025ethicalscraping}
 
 \paragraph{Reddit (API)}
 Reddit provides a public API that allows for the retrieval of posts, comments, and metadata from subreddits. The system will use the official Reddit API with proper authentication via OAuth2 and access tokens. 
@@ -477,7 +474,7 @@ Linguistic analysis allows researchers to understand the language and words used
 In this system, linguistic analysis will include:
 \begin{itemize}
     \item Word frequency statistics excluding standard and domain-specific stopwords.
-    \item Common bi-grams and tri-grams from textual content.
+    \item Common bi-grams and tri-grams from textual content. \cite{mungalpara2022stemming}
     \item Lexical diversity metrics for the dataset.
 \end{itemize}
 
