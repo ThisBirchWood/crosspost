@@ -70,7 +70,7 @@ Ethnography originated in the late nineteenth and early twentieth centuries as a
 \subsubsection{Transition to Digital Spaces}
 The rise of the internet in the late twentieth century massively changed social interaction. Online forums, emails, SMS and social media platforms became central to human communication. All types of groups and identities were constructed. As a result, ethnographic methods were adapted to study these emerging digital environments. Early work in this area was referred to as "virtual ethnography" or "digital ethnography", where online spaces began to mixed and intertwine with traditional cultural spaces.
 
-There are new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. This transitions requires flexibility, since researchers can no longer rely solely on face-to-face interactions.
+There are new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. In some ways, digital ethnography is easier than traditional ethnography. Cost is reduced, as there is no need to travel or spend long periods in a field, it's less invasive as there is no need to interact with subjects directly, and there is a much larger amount of data available for analysis. \cite{cook2023ethnography}
 
 \subsection{Online Communities}
 There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interest. Each type of community fosters different forms of interaction, participation, and identity construction.
@@ -310,47 +310,13 @@ The following requirements are derived from the backend architecture, NLP proces
     \item The system shall allow multiple filters to be applied simultaneously.
 \end{itemize}
 
-\paragraph{Temporal Analysis}
+\paragraph{Ethnographic Analysis}
 \begin{itemize}
-    \item The system shall compute event frequency per day.
-    \item The system shall generate weekday--hour heatmap data representing activity distribution.
+    \item The system shall provide endpoints for structural analysis, temporal analysis, linguistic analysis, and emotional analysis.
+    \item The system shall allow users to define custom topics for topic modelling and analysis.
+    \item The system shall return outputs that are suitable for visualisation in the frontend.
 \end{itemize}
 
-\paragraph{Linguistic Analysis}
-\begin{itemize}
-    \item The system shall compute word frequency statistics excluding standard and domain-specific stopwords.
-    \item The system shall extract common bi-grams and tri-grams from textual content.
-    \item The system shall compute lexical diversity metrics for the dataset.
-\end{itemize}
-
-\paragraph{Emotional Analysis}
-\begin{itemize}
-    \item The system shall compute average emotional distribution per topic.
-    \item The system shall compute overall average emotional distribution across the dataset.
-    \item The system shall determine dominant emotion distributions.
-    \item The system shall compute emotional distribution grouped by data source.
-\end{itemize}
-
-\paragraph{User Analysis}
-\begin{itemize}
-    \item The system shall identify top users based on activity.
-    \item The system shall compute per-user activity and behavioural metrics.
-\end{itemize}
-
-\paragraph{Interaction Analysis}
-\begin{itemize}
-    \item The system shall compute average conversation thread depth.
-    \item The system shall identify top interaction pairs between users.
-    \item The system shall generate an interaction graph based on user relationships.
-    \item The system shall compute conversation concentration metrics.
-\end{itemize}
-
-\paragraph{Cultural Analysis}
-\begin{itemize}
-    \item The system shall identify identity-related linguistic markers.
-    \item The system shall detect stance-related linguistic markers.
-    \item The system shall compute average emotional expression per detected entity.
-\end{itemize}
 
 \paragraph{Frontend}
 \begin{itemize}
