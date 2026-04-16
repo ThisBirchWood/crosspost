@@ -1312,6 +1312,27 @@ The majority of real development and implementation took place between January a
 
 Git was as a changelog of decisions and rationale, to aid writing the report. But if this project were to be done again, I would maintain the report alongside the implementation from the beginning, as it would have made writing the report much easier and less stressful at the end.
 
+\subsection{Future Work}
+This section discusses several potential areas for future work and improvements to the system.
+
+\subsubsection{Improved Emotional Analysis}
+As noted in the user feedback and accuracy evaluation sections, the emotional analysis could be improved by implementing a more nuanced emotion classification model, such as the GoEmotions model with 27 emotion classes \cite{demszky2020goemotions}. 
+
+This would require some changes to the database schema, as currently, the "events" table contains a column for each of the five emotion classes, which would not be feasible with 27 emotion classes. A more flexible schema would be needed, such as having a separate "emotions" table that contains the emotion classifications for each post, with columns for the post ID, emotion class, and confidence score. 
+
+Or something similar to how NER classifications are stored, which are simply \texttt{JSONB} columns that contain a list of all the classifications for each post, which allows for a variable number of classifications and is more flexible for future changes to the emotion classification.
+
+\subsubsection{Multilingual Support}
+The project was largely built around English language datasets, therefore the emotional and NER models are trained on English language data and would not work with other languages. Beyond the NLP models, the stances and identity markers currently implemented use English-specific keywords such as "we", "us", "I", "me".
+
+To support multilingual datasets, multilingual NLP models could be implemented to allow language detection to be automatic. However, as the specific stance and identity markers would be required for different languages, a better solution would be for the user to specify the language of their dataset upon uploading, and then the system could use the correct NLP models, stance/identity marker lists and stop words for that language.
+
+\subsubsection{Improved Corpus Explorer}
+The corpus explorer could be improved by allowing users to see more metadata for each post, such as the NLP classifications and possibly even more than just the top emotion and topic.
+
+In addition, reconstructing the reply chains and conversation structures in the corpus explorer would allow users to see the context of each post and how they relate to each other. It would allow researchers to gauge the power dynamics between users and the conversational structures.
+
+Colouring grading each post in the corpus explorer based on its emotional classification would be both aesthetically pleasing and useful for users to quickly scan through the posts and get a sense of the emotional tone of the dataset.
 
 \newpage
 \bibliography{references}
