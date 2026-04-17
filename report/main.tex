@@ -49,7 +49,7 @@
 \newpage 
 
 \section{Introduction}
-This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A web-based frontend delivers interactive visualizations, the backend architecture implements analytical pipeline for the data, including data parsing, manipulation and analysis.
+This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A web-based frontend delivers interactive visualizations, the backend architecture implements an analytical pipeline for the data, including data parsing, manipulation and analysis.
 
 \vspace{0.5cm}
 Beyond its technical objectives, the system is based on the concepts and ideas of \textbf{digital ethnography} and computational social science. Traditional Ethnography is the practice of studying individual or group culture from the point of view of the subject of the study. Digital ethnography seeks to understand how social relations, topics and norms are constructed in online spaces.
@@ -70,15 +70,15 @@ Ethnography originated in the late nineteenth and early twentieth centuries as a
 \subsubsection{Transition to Digital Spaces}
 The rise of the internet in the late twentieth century massively changed social interaction. Online forums, emails, SMS and social media platforms became central to human communication. All types of groups and identities were constructed. As a result, ethnographic methods were adapted to study these emerging digital environments. Early work in this area was referred to as "virtual ethnography" or "digital ethnography", where online spaces began to mixed and intertwine with traditional cultural spaces.
 
-There are new challenges to overcome in comparison to traditional ethnography. The field is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. In some ways, digital ethnography is easier than traditional ethnography. Cost is reduced, as there is no need to travel or spend long periods in a field, it's less invasive as there is no need to interact with subjects directly, and there is a much larger amount of data available for analysis. \cite{cook2023ethnography}
+There are new challenges to overcome in comparison to traditional ethnography. Digital ethnography is distributed across platforms, devices and online-offline interactions. For example, a digital ethnographer studying influencer culture might examine Instagram posts, comment sections, private messages, algorithms, and also conduct interviews or observe offline events. In some ways, digital ethnography is easier than traditional ethnography. Cost is reduced, as there is no need to travel or spend long periods in a field; it's less invasive as there is no need to interact with subjects directly, and there is a much larger amount of data available for analysis. \cite{cook2023ethnography}
 
 \subsection{Online Communities}
-There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interest. Each type of community fosters different forms of interaction, participation, and identity construction.
+There are many different types of online communities, often structured in various ways, with many different types of users, norms and power dynamics. These communities can range from large-scale social networking platforms and discussion forums to niche interests groups. Each type of community fosters different forms of interaction, participation, and identity construction.
 
 Participation within these communities is usually not evenly distributed. The majority of users are passive consumers (lurkers) \cite{sun2014lurkers}, a smaller percentage contribute occasionally, and a very small core group produces most of the content. This uneven contribution structure has significant implications for digital ethnography, as visible discourse may disproportionately reflect the perspectives of highly active members rather than the broader community. This is particularly evident in some reputation-based systems such as Reddit, which allows for the opinions of a few to rise above the rest.
 
 \subsection{Digital Ethnography Metrics}
-This section describes common keywords and metrics use to measure and quantify online communities using digital ethnography.
+This section describes common keywords and metrics used to measure and quantify online communities using digital ethnography.
 
 \subsubsection{Active vs Passive Participation}
 \label{sec:passive_participation}
@@ -109,10 +109,10 @@ Hedge and certainty markers are discussed in this article \cite{shen2021stance}.
 
 \textbf{Deontic Patterns} contains phrases that imply obligation, such as "must, should, need, have to". In the context of online communities, these patterns are often used to assert authority or to reinforce communal norms and "unwritten rules."
 
-\textbf{Permission Patterns} refer to phrases where someone is asking permision, like "can, allowed, ok, permitted". These patterns could serve as an indicator of a user's status within an online community.
+\textbf{Permission Patterns} refer to phrases where someone is asking permission, like "can, allowed, ok, permitted". These patterns could serve as an indicator of a user's status within an online community.
 
 \subsection{Natural Language Processing}
-\textbf{Natural Language Processing} is a branch of artificial intelligence that allows machines to interpret, analyse and generate human language. The aim of NLP models is not only to understand single words individually, but to be able to understand the context of those words in a broader paragraph or story.
+\textbf{Natural Language Processing} is a branch of artificial intelligence that allows machines to interpret, analyse and generate human language. The aim of NLP models is not only to understand individual words, but to understand them in context.
 
 NLP can carry out many different types of tasks, such as classifying sentences or paragraphs, generating text content, extracting answers from text or even speech recognition in audio. However, even with the advances in NLP models, many challenges and limitations remain. These include understanding ambiguity, cultural context, sarcasm, and humour.
 
@@ -137,7 +137,8 @@ This method is often used to organise lots of unstructured data, such as news ar
 
 For example, in a Cork-specific dataset, words like "ah", or "grand" might be considered stop words, as they are commonly used in everyday speech but do not carry significant meaning for analysis. \cite{mungalpara2022stemming}
 
-\subsection{Limits of Computation Analysis}
+\subsection{Limits of NLP}
+\label{sec:nlp_limitations}
 While computational methods enable large-scale observation and analysis of online communities, there are many limitations that must be acknowledged. Many limitations come from NLP techniques and the practical boundaries of computational resources.
 
 One key limitation is how the models will likely find it difficult to interpret context-dependent language. Online communities will often use sarcasm, irony or culturally specific references, all of which will be challenging to for NLP models to correctly interpret. For example, a sarcastic comment might be incorrectly classified as positive, despite conveying negativity.
@@ -150,6 +151,7 @@ In addition, the simplification of complex human interactions and emotions into 
 The performance and speed of the system will be influenced by the computational resources available during development and execution. While the system will attempt to use GPU acceleration during NLP inference, these resource may not always be available or may not be particularly strong should they exist.
 
 \subsection{Cork Dataset}
+\label{sec:cork_dataset}
 The Cork dataset serves as the foundation for this project, providing a geographically and culturally grounded corpus for analysis. Rather than examining a globally distributed or topic-neutral community, the dataset centres on a single city with Cork, Ireland which allows the system's analytical outputs to be interpreted against a known social and cultural context.
 
 The dataset is drawn from four distinct online platforms, each of which represents a structurally different mode of online community participation:
@@ -168,7 +170,7 @@ Due to data being collected across multiple platforms, they must be normalised i
 \newpage
 \section{Analysis}
 \subsection{Goals \& Objectives}
-The objective of this project is to provide a tool that can assist social scientists, digital ethnographers, and researchers to observing and interpret online communities and the interactions between them. Rather than replacing the study of digital ethnography or the related fields, this tool aims to aid researchers analyse communities.
+The objective of this project is to provide a tool that can assist social scientists, digital ethnographers, and researchers to observing and interpret online communities and the interactions between them. Rather than replacing the study of digital ethnography or the related fields, this tool aims to aid researchers in analysing communities.
 
 Specifically, the system aims to: 
 
@@ -182,8 +184,6 @@ Specifically, the system aims to:
     \item \textbf{Identify thematic structures}: Detect dominant topics, recurring phrases, and emerging themes using Natural Language Processing techniques.
 
     \item \textbf{Track emotional and cultural signals}: Analyse sentiment and emotion distributions across posts, users, and topics to better understand the affective tone of discussions and how it evolves over time.
-
-    \item \textbf{Examine temporal evolution}: Provide time-series analysis of activity levels, topic trends, and emotional shifts, enabling longitudinal observation of community development.
 
     \item \textbf{Promote ethical data practices}: Restrict analysis to publicly available data, provide opt-out mechanisms for computationally intensive processing, and ensure responsible handling of user-generated content.
 \end{itemize}
@@ -236,7 +236,7 @@ The system will:
 \begin{itemize}
     \item Respect rate limits by implementing an exponential backoff strategy for API requests.
     \item Only collect data that is publicly available and does not require authentication or violate platform terms of service.
-    \item Provide user-agent headers that identify the system and its purposes
+    \item Provide user-agent headers that identify the system and its purposes.
     \item Allow users the option to upload their own datasets instead of automated collection.
     \item For websites without an API, the \texttt{robots.txt} file will be examined to ensure compliance with platform guidelines.
 \end{itemize}
@@ -319,6 +319,7 @@ The following requirements are derived from the backend architecture, NLP proces
 \begin{itemize}
     \item The system shall provide a frontend UI to accommodate all of the above functions
     \item The system shall provide a tab for each endpoint in the frontend
+    \item The system shall provide a simple user-friendly interface for uploading and viewing analytics and visualisations.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
@@ -348,17 +349,17 @@ The following requirements are derived from the backend architecture, NLP proces
 \subsection{Client-Server Architecture}
 The system will follow a client-server architecture, with a Flask-based backend API and a React-based frontend interface. The backend will handle data processing, NLP analysis, and database interactions, while the frontend will provide an interactive user interface for data exploration and visualization.
 
-The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
+The reasoning behind this architecture is that it allows the analytics to be aggregated and computed on the server side using Pandas, which is much faster than doing it on the client frontend. The frontend will focus on rendering and visualising the data.
 
 \subsubsection{API Design}
 The Flask backend will expose a RESTful API with endpoints for dataset management, authentication and user management, and analytical queries. Flask will call on backend components for data parsing, normalisation, NLP processing and database interfacing. 
 
-Flask was chosen for its simplicity, familiarity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
+Flask was chosen for its simplicity and speed of development. It also has many extensions that can be used for authentication (Flask-Bcrypt, Flask-Login).
 
 The API is separated into three separate groups, \textbf{authentication}, \textbf{dataset management} and \textbf{analysis}. 
 
 \subsubsection{React Frontend}
-React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
+React was chosen for the frontend due to its massive library of pre-built components with efficient rendering capabilities and ability to display many different types of data. The frontend will be structured around a tabbed interface, with each tab corresponding to a different analytical endpoint (e.g., temporal analysis, linguistic analysis, emotional analysis). Each tab will fetch data from the backend API and render it using appropriate visualisation libraries (react-wordcloud for word clouds, react-chartjs-2 for charts, etc.). The frontend will also include controls for filtering the dataset based on keywords, date ranges, and data sources.
 
 \subsection{Data Pipeline}
 As this project is focused on the collection and analysis of online community data, the primary component that must be well-designed is the data pipeline, which encompasses the processes of data ingestion, normalisation, enrichment, storage, and retrieval for analysis.
@@ -381,14 +382,14 @@ The system will support two methods of data ingestion:
 
 Originally, only file upload was supported, but the goal of the platform is to aid researchers with ethnograpic analysis, and many researchers will not have the technical expertise to fetch data from social media APIs or scrape websites. Therefore, the system was designed to support automated fetching of data from social media platforms, which allows users to easily obtain datasets without needing to manually collect and format data themselves.
 
-In addition to social media posts, the system will allow users to upload a list of topics that they want to track in the dataset. This allows the system to generate custom topic analysis based on user-defined topics, which can be more relevant and insightful for specific research questions. For example, a researcher studying discussions around local politics in Cork might upload a list of political parties, politicians, and policy issues as topics to track.
+In addition to social media posts, users can upload a list of topics that they want to track in the dataset. Custom topic lists allow the system to generate custom topic analysis based on user-defined topics, which can be more relevant and insightful for specific research questions. For example, a researcher studying discussions around local politics in Cork might upload a list of political parties, politicians, and policy issues as topics to track.
 
-If a custom topic list is not provided by the user, the system will use a pre-defined generalised topic list that is designed to capture common themes across a wide range of online communities.
+If a custom topic list is not provided by the user, a pre-defined generalised topic list that is designed to capture common themes across a wide range of online communities is used.
 
 Each method of ingestion will format the raw data into a standardised structure, where each post will be represented as a "Post" object and each comment will be represented as a "Comment" object.
 
 \subsubsection{Data Normalisation}
-After a dataset is ingested, the system will normalise all posts and nested comments into a single unified "event" data model. This means that both posts and comments will be represented as the same type of object, with a common set of fields that capture the relevant information for analysis. 
+After a dataset is ingested, all posts and nested comments are normalised into a single unified "event" data model. Therefore, both posts and comments will be represented as the same type of object, with a common set of fields that capture the relevant information for analysis. 
 
 The decision to normalise posts and comments into a single "event" data model allows the same analytical functions to be applied uniformly across all content, regardless of whether it was originally a post or a comment. This simplifies the data model and reduces the complexity of the analytical pipeline, since there is no need to maintain separate processing paths for posts and comments.
 
@@ -429,12 +430,12 @@ Emotional Classification will be the bedrock of the ethnographic analysis, as it
 Usage of simple VADER-based models is usually too-simplistic for the type of text data being analysed. Classifying posts into positive, negative and neutral categories is not nuanced enough to truly capture the emotional tone of a community. Therefore, the system will use a more complex model that can classify text into a wider range of emotions, which will allow for richer analysis of the emotions of the community.
 
 \subsubsection{Topic Classification}
-Topic classification will allow the system to classify specific posts into specific topics, which can be used to understand what a community is talking about, and in conjunction with emotional classification, how they feel about these topics as well. The system will support both a generalised topic classification model that can classify posts into a set of pre-defined general topics, as well as a custom topic classification model that can classify posts into user-defined topics based on a list of topics and descriptions provided by the user.
+The system will support both a generalised topic classification model that can classify posts into a set of pre-defined general topics, as well as a custom topic classification model that can classify posts into user-defined topics based on a list of topics and descriptions provided by the user.
 
-Initially, the system would have extract common themes and topics from the dataset by extracting common keywords and phrases, and then use these to generate a topic list. However, this approach was noisy and topics were often singular random words that did not have any overlap with each other, making topic classification less insightful. Therefore, specified or pre-defined topic lists will instead be used.
+Initially, the system generated common themes and topics from the dataset by extracting common keywords and phrases, and then use these to generate a topic list. However, this approach was noisy and topics were often singular random words that did not have any overlap with each other, making topic classification less insightful. Therefore, custom user-provided or pre-defined topic lists will instead be used.
 
 \subsubsection{Named Entity Recognition}
-Named Entity Recognition allows the system to identify specific entities mentioned in the text, like people, places and organisations. In combination with emotional classification, we can see the general sentiment around specific places and people in a community, which can be very insightful for ethnographic analysis. For example, in a Cork-specific dataset, we might see that the city centre is often mentioned with negative emotions due to traffic and parking issues, while local parks are mentioned with positive emotions.
+In combination with emotional classification, with NER we can see the general sentiment around specific places and people in a community, which can be very insightful for ethnographic analysis. For example, in a Cork-specific dataset, we might see that the city centre is often mentioned with negative emotions due to traffic and parking issues, while local parks are mentioned with positive emotions.
 
 \subsection{Ethnographic Analysis}
 The main goal of this project is to provide a tool that can assist researchers with ethnographic analysis of online communities. Therefore, ethnographic analysis will be a core component of the system.
@@ -451,9 +452,9 @@ The system is designed to support multiple types of analysis, such as:
     \item \textbf{Cultural Analysis}: looking at the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references.
 \end{itemize}
 
-Each of these types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
+All types of analysis are available at different API endpoints for any given dataset, and the frontend is designed to allow users to easily switch between them and explore the data from different angles.
 
-For each type of analysis that involves analysing the content of the posts themselves, they will be split into tokens and stop words will be stripped from them, which makes analysis easier.
+Some types of analysis that involve inspecting the content of the posts themselves, they will be split into tokens and stop words will be stripped from them, as these common words would not provide meaningful insight for the analysis.
 
 \subsubsection{Temporal Analysis}
 Temporal analysis allows researchers to understand what a community is talking about over time, and how the emotional tone of the community changes over time. For example, a researcher might want to see how discussions around a specific topic evolve over time, or how the emotional tone of a community changes in response to external events.
@@ -495,7 +496,7 @@ Initially the user endpoint contained the interactional statistics as well, as a
 
 Identifying top users allows us to see the most active and prolific posters in a community, which might often be site-specific bots that comment on every post or deleted users, which often show up as simply "[Deleted User]" and can aggregate together in statistics . An example might be a User Moderator bot on Reddit, seen below.
 
-\begin{figure}[h]
+\begin{figure}[!h]
     \centering
     \includegraphics[width=0.75\textwidth]{img/reddit_bot.png}
     \caption{An AutoModerator Bot on r/politics}
@@ -514,7 +515,7 @@ In this system, interactional analysis will include:
     \item Conversation concentration metrics such as who is contributing the most to the conversations and how much of the conversation is dominated by a small number of users.
 \end{itemize}
 
-For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques.
+For simplicity, an interaction is defined as a reply from one user to another, which can be either a comment replying to a post or a comment replying to another comment. The system will not attempt to capture more complex interactions such as mentions or indirect references between users, as these would require more advanced NLP techniques. Unfortunately, \texttt{boards.ie} does not have a reply structure beyond mentions in linear threads, so interactional analysis is limited for that data structure.
 
 \subsubsection{Emotional Analysis}
 Emotional analysis allows researchers to understand the emotional tone of a community, and how it varies across different topics and users.
@@ -527,7 +528,7 @@ In this system, emotional analysis will include:
     \item Average emotion by data source
 \end{itemize}
 
-It is emphasised that emotional analysis is inaccurate on an individual post level as the models cannot fully capture the nuance of human interaction and slang. Warnings will be presented to the user in the frontend that AI outputs can possible be misleading on an individual scale, and accuracy only increases with more posts. Even then it will not be perfect.
+It is emphasised that emotional analysis is inaccurate on an individual post level as the models cannot fully capture the nuance of human interaction and slang. Warnings will be presented to the user in the frontend that AI outputs can possible be misleading on an individual scale, and accuracy only increases with more posts. This is discussed further in Section \ref{sec:nlp_limitations}
 
 \subsubsection{Cultural Analysis}
 Cultural analysis allows researchers to understand the cultural markers and identity signals that are present in a community, such as slang, memes, and recurring references. While some of this is covered in the linguistic analysis, cultural analysis will focus more on the identity and stance-related markers that are present in the language of the community.
@@ -546,7 +547,7 @@ These metrics were chosen because they can provide insights into the cultural ma
 \subsection{Frontend Design}
 The primary audience for this tool is researchers and social scientists, not software developers. Therefore the frontend needs to feel approachable and easy to use for non-technical users. At the same time it must support multi-dataset workflows and handle long-running background processes.
 
-React was chosen as the UI framework primarily for its large amount of pre-built visualisation components. There are many different types of data being visualised in this system, such as word clouds, bar charts, line charts, heatmaps and network graphs, and React has a large library of pre-built components for all of these types of visualisations.
+React was chosen as the UI framework primarily for its large amount of pre-built visualisation components and for it's component-based architecture. There are many different types of data being visualised in this system, such as word clouds, bar charts, line charts, heatmaps and network graphs, and React has a large library of pre-built components for all of these types of visualisations.
 
 \subsubsection{Structure}
 A persistent layout shell will wrap every page of the frontend, providing a consistent header for navigation and account management. This will also store login state and user information in a global way, such that no component has to manage authentication state on its own. The main content area will be reserved for the dataset management and analysis interface.
@@ -559,7 +560,7 @@ The visual design of the frontend will be clean and minimalistic, with a focus o
 \subsection{Automatic Data Collection}
 Originally, the system was designed to only support manual dataset uploads, where users would collect their own data from social media platforms and format it into the required \texttt{.jsonl} format. 
 
-However, this approach is time consuming and since this system is designed to aid researchers rather than burden them, the system includes functionality to automatically fetch data from social media platforms. This allows users to easily obtain datasets without needing to manually collect and format data themselves, which is especially beneficial for researchers who may not have technical expertise in data collection.
+However, this approach is time consuming and since this system is designed to aid researchers rather than burden them, the system includes functionality to automatically fetch data from social media platforms. This allows users to easily obtain datasets without needing to manually collect and format data themselves, which is especially beneficial for researchers who may not have technical expertise in data analytics or programming.
 
 The initial system will contain connectors for:
 \begin{itemize}
@@ -578,7 +579,7 @@ Creating a base interface for what a connector should look like allows for the e
 The connector registry is designed so that any new connector implementing \texttt{BaseConnector} is automatically discovered and registered at runtime, without requiring changes to any existing code. This allows for a modular and extensible architecture where new data sources can be integrated with minimal effort.
 
 \subsection{Asynchronous Processing}
-The usage of NLP models for tasks such as sentiment analysis, topic classification, and entity recognition can be computationally intensive, especially for large datasets. In addition, fetching large datasets from sites like Reddit and YouTube takes a lot of time, due to the sequential nature of data fetching and severe rate limits on even authenticated Reddit accounts. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
+In addition to NLP, fetching large datasets from sites like Reddit and YouTube takes a lot of time, due to the sequential nature of data fetching and severe rate limits on even authenticated Reddit accounts. To prevent the Flask API from blocking while these tasks are being processed, an asynchronous processing queue will be implemented using \textbf{Redis} and \textbf{Celery}.
 
 \subsubsection{Dataset Enrichment}
 A non-normalised dataset will be passed into Celery along with the dataset id and the user id of the dataset owner. At this point, the program is running separately to the main Flask thread. The program then calls on the \textbf{Normalisation \& Enrichment Module} to:
@@ -598,23 +599,25 @@ Asynchronous processing is especially important for automatic data-fetching, as 
 \subsubsection{Database vs On-Disk Storage}
 Originally, the system was designed to store \texttt{json} datasets on disk and load them into memory for processing. This was simple and time-efficient for early development and testing. However, as the functionality of the system expanded, it become clear that a more persistent and scalable storage solution was needed.
 
-Storing datasets in a database allows for more efficient querying, filtering, and updating of data without needing to reload entire datasets into memory. However the priamry benefit of using a database is support for \textbf{ multiple users and multiple datasets per user}. 
+Storing datasets in a database allows for more efficient querying, filtering, and updating of data without needing to reload entire datasets into memory. However the priamry benefit of using a database is support for \textbf{ multiple users and multiple datasets per user}.
 
 An additional benefit of using a database was that it allowed the NLP processing to be done once, with the NLP results stored alongside the original data in the database. This meant that the system could avoid redundant NLP processing on the same data, which was a significant performance improvement.
 
 \texttt{PostgreSQL} was chosen as the database solution due to its robustness, support for complex queries, and compatibility with Python through \texttt{psycopg2}. PostgreSQL's support for JSONB fields allows for storage of unstructured NLP outputs, which alternatives like SQLite does not support.
 
 \subsubsection{Unified Data Model vs Split Data Model}
-The choice between a \textbf{Unified Data Model} and a \textbf{Split Data Model} led to many swaps in design for the API. 
+The choice between a \textbf{Unified Data Model} and a \textbf{Split Data Model} led to many swaps in design for the early API. 
+
+A unified data model means both posts and comments are stored in the same data object, with a field to differentiate between the two. A split data model means posts and comments are stored in separate tables, with a foreign key relationship between them.
 
 \paragraph{The Case for a Unified Data Model}
 \begin{itemize}
-    \item \textbf{Simpler Schema}: One \texttt{events} table rather than split comments and posts tables
-    \item \textbf{Simpler Pipeline}: The same pipeline works for both types
+    \item \textbf{Simpler Schema}: One \texttt{events} table rather than split comments and posts tables.
+    \item \textbf{Simpler Pipeline}: The same pipeline works for both posts and comments.
     \item \textbf{Differentiation Possible}: Through the \texttt{type} column, we can still differentiate between a post and a comment, though more awkwardly.
 \end{itemize}
 
-But it led to a simplification of some of the content, for example a post title is very different from the comment content. Reply chains must be reconstructed using the \texttt{reply\_to} and \texttt{parent\_id} fields and some fields, like \texttt{reply\_to} will be null depending on the data source. For example, boards.ie does not support nested replies.
+A unified data model led to a simplification of some of the content, for example a post title is very different from the comment content. Reply chains must be reconstructed using the \texttt{reply\_to} and \texttt{parent\_id} fields and some fields, like \texttt{reply\_to} will be null depending on the data source. For example, boards.ie does not support nested replies.
 
 \paragraph{The Case for a Split Data Model}
 \begin{itemize}
@@ -622,16 +625,7 @@ But it led to a simplification of some of the content, for example a post title 
     \item \textbf{Accurate Reply Relationship}: Reply relationships are naturally represented, comments have a foreign key to posts, no reconstruction needed.
 \end{itemize}
 
-However each analytical query would either need to be post or comment specific, or require a table merge later in the pipeline. For ethnographic analysis, the distinction between a post and a comment is minimal. From a research point of view a post and a comment are both just a user saying something at a point in time, and treating them uniformly reflects that.
-
-The decision to \textbf{stick with a unified data model was made} since the downsides of a Unified Model could be mitigated through reconstruction of reply chains using specific fields, and being able to differentiate between a post and a comment using a type field. Largely, in ethnography, a post and a comment are both just a user saying something at a point in time, and even in cases where they might need to be treated differently (reply-chains, interactions graphs), that distinction can still be made.
-
-\subsection{Deployment}
-Docker Compose is used to containerise the entire application.
-
-During development, the source code for the backend and frontend will be mounted as volumes within the containers to allow for live code updates during development, which will speed up the process.
-
-Environment variables, such as database credentials and social media API keys, will be managed through an \texttt{.env} file that is passed into the Docker containers through \texttt{docker-compose.yaml}.
+The decision to \textbf{stick with a unified data model was made} since the downsides of a Unified Model could be mitigated through reconstruction of reply chains using specific fields, and being able to differentiate between a post and a comment using a type field. Largely, in ethnography, a post and a comment are both just a user saying something at a point in time, and even in cases where they might need to be treated differently (reply-chains, interactions graphs), that distinction can still be made using specific fields.
 
 
 \newpage
@@ -641,7 +635,7 @@ outlined. In this chapter, the details on how this was implemented will be
 discussed.
 
 \subsection{Overview}
-In the initial stages, the project was a small Python script that would fetch data from Reddit and aggregate simple statistics such as number of posts and a number of comments. Some early features like search and subreddit specific searches were added through hard-coded variables. The Reddit Connector code was extracted into it's own \texttt{RedditConnector} module, though the connector abstraction had not yet been formalised.
+In the initial stages, the project was a small Python script that would fetch data from Reddit and aggregate simple statistics such as number of posts and a number of comments. Some early features like search and subreddit specific searches were added through hard-coded variables. The Reddit Connector code was extracted into its own \texttt{RedditConnector} module, though the connector abstraction had not yet been formalised.
 
 As this was going to be a web-based tool, the Flask server was then setup. A rudimentary sentiment analysis endpoint was added as an initial test using the VADER Sentiment Python module. An endpoint to fetch from Reddit was added but temporarily scratched. Eventually more analysis endpoints were added, creating the many different analytical perspectives that are available in the final system, such as linguistic analysis and user analysis. 
 
@@ -669,7 +663,9 @@ The project was developed using the following tools and libraries:
 Git was used for version control, with regular commits and branches for new features.
 
 \subsection{Social Media Connectors}
-The first connectors implemented were the Reddit and Boards.ie connectors, as these were the original data sources for the Cork dataset. The YouTube connector was added later to improve diversity of data sources. In addition, the decision was made to only fetch new posts and fetch a fixed number of posts, rather than fetching the top posts of all time, which are usually full of memes and jokes that would skew the dataset and not be relevant for ethnographic analysis. In addition the temporal analysis would be skewed if we fetched top posts of all time, as the most popular posts are often from years ago, which would not be relevant for understanding the current state of the community.
+The first connectors implemented were the Reddit and Boards.ie connectors, as these were the original data sources for the Cork dataset. The YouTube connector was added later to improve diversity of data sources.
+
+The connectors fetch the newest posts from their specified source, which allows for the collection of the most recent data from the community, which is more relevant for contemporary analysis of communities. This limits long term temporal analysis but allows for more up-to-date analysis of the community.
 
 \subsubsection{Data Transfer Objects}
 Data Transfers Objects are simple classes that represent the data structure of a post or comment as it is retrieved from the source platform. They are used to encapsulate the raw data and provide a consistent interface for the rest of the system to interact with, regardless of the source platform.
@@ -677,35 +673,33 @@ Data Transfers Objects are simple classes that represent the data structure of a
 These are later replaced by the unified "event" data model during the normalisation process, but they are a useful abstraction for the connectors to work with. Two DTOs are defined: \texttt{PostDTO} and \texttt{CommentDTO}, which represent the structure of a post and a comment respectively as they are retrieved from the source platform. The \texttt{PostDTO} will contain a list of \texttt{CommentDTO} objects.
 
 \subsubsection{Reddit Connector}
-The initial implementation of the Reddit connector was a simple class that simply used the \texttt{requests} library to fetch data directly from the Reddit API. The online Reddit API documentation was used as a reference for the implementation of the connector \cite{reddit_api}. It uses the \texttt{reddit.com/r/\{subreddit\}/new} endpoint to fetch the most recent posts from a specified subreddit, and the \texttt{reddit.com/r/\{subreddit\}/{post\_id}/comments} endpoint to fetch comments for each post.
+The initial implementation of the Reddit connector was a simple class that simply used the \texttt{requests} library to fetch data directly from the Reddit API. The connector follows the Reddit API specification \cite{reddit_api}. It uses the \texttt{reddit.com/r/\{subreddit\}/new} endpoint to fetch the most recent posts from a specified subreddit, and the \texttt{reddit.com/r/\{subreddit\}/{post\_id}/comments} endpoint to fetch comments for each post.
 
 It primary method implemented is of this signature:
 \begin{Verbatim}[breaklines=true]
 def get_new_posts_by_search(self, search: str, category: str, limit: int) -> list[Post]:
 \end{Verbatim}
 
-The \texttt{reddit.com/r/\{subreddit\}/new} has a default limit of 100 posts per request, therefore \textbf{pagination} was implemented to allow fetching of more than 100 posts, which is necessary for Reddit datasets of larger than 100 posts. The connector will keep fetching posts until it reaches the specified number of posts to fetch, or until there are no more posts available.
-
-The "after" parameter is a post id and tells the API to fetch posts that come after that specific post id in the subreddit, which allows for pagination through the posts. The connector keeps track of the last post id fetched and uses it to fetch the next batch of posts until the desired number of posts is reached or there are no more posts available.
+The endpoint returns a maximum of 100 posts per request, so \textbf{pagination} was implemented to allow fetching of more than 100 posts, which is necessary for Reddit datasets of larger than 100 posts. The connector will keep fetching posts until it reaches the specified number of posts to fetch, or until there are no more posts available.
 
 It became apparent that when unauthenticated, the Reddit API has severe rate limits that make fetching large datasets take hours, therefore the connector was updated to support authentication using Reddit API client credentials, which are provided through environment variables. This was done using the \texttt{requests\_oauthlib} library, which provides a convenient way to handle OAuth2 authentication with the Reddit API. With authentication, the rate limits are increased, allowing for faster data fetching.
 
 \subsubsection{YouTube Connector}
-The YouTube connector was the simplest out of the three initial connectors, as YouTube provides an official API that is well-documented compared to the Reddit API. The Python library \texttt{google-api-python-client} was used to interact with the YouTube Data API. It provides simple methods like \texttt{youtube.search().list()} to search for videos based on keywords, and \texttt{youtube.commentThreads().list()} to fetch comments for a specific video.
+The YouTube connector was the simplest out of the three initial connectors, as YouTube provides an official API that is well-documented compared to the Reddit API. The Python library \texttt{google-api-python-client} was used to interact with the YouTube Data API.
 
-Like the Reddit Connector, it implements the \texttt{get\_new\_posts\_by\_search} method, which searches for videos based on a query and then fetches comments for those videos. As the Google API library handles comment fetching and pagination internally, the implementation was straightforward and did not require manual handling of pagination or rate limits.
+Like the Reddit Connector, it implements the \texttt{get\_new\_posts\_by\_search} method, which searches for videos based on a query and then fetches comments for those videos. A limit of 50 posts per query is imposed by the YouTube API, therefore pagination was implemented to allow fetching more than 50 posts.
 
 \subsubsection{Boards.ie Connector}
 The Boards.ie connector was the most complex connector to implement, as Boards.ie does not provide an official API for data retrieval, which meant web scraping techniques were utilised to fetch data from the site. The \texttt{requests} library was used to make HTTP requests to the Boards.ie website, and the \texttt{BeautifulSoup} library was used to parse the HTML content and extract the relevant data.
 
-Inspect element was used to poke around the structure of the Boards.ie website and find the relevant HTML elements that contain the post and comment data. \texttt{BeautifulSoup} was then used to extract the correct data from the \texttt{.Message.userContent} tag and the \texttt{.PageTitle} tag, which contain the content and title of the posts. Each comment lived in an \texttt{ItemComment} class. Each of these were collected and iterated through to create the list of \texttt{PostDTO} and \texttt{CommentDTO} objects that represent the data retrieved from the site.
+Browser developer tools were used to inspect the HTML structure and to find the relevant HTML elements that contain the post and comment data. \texttt{BeautifulSoup} was then used to extract the correct data from the \texttt{.Message.userContent} tag and the \texttt{.PageTitle} tag, which contain the content and title of the posts. Each comment lived in an \texttt{ItemComment} class. Each of these were collected and iterated through to create the list of \texttt{PostDTO} and \texttt{CommentDTO} objects that represent the data retrieved from the site.
 
 As not all comments on a thread are on one page, pagination was implemented by looking for the "Next" button on the page and following the link to the next page of comments until there are no more pages left. This allows for fetching of all comments for a given post, even if they span multiple pages.
 
-A \texttt{ThreadPoolExecutor} was used to fetch posts in parallel, which improved the performance of the connector significantly, as fetching posts sequentially was very slow due to the need to fetch comments for each post, which often spanned multiple pages. Though there was diminishing returns after a certain number of threads, possibly due to site blocking or internet connection limits. Initially 20 threads were used, but this was later reduced to 5 threads to avoid potential issues with site blocking and to improve ethical considerations around web scraping.
+A \texttt{ThreadPoolExecutor} was used to fetch posts in parallel, which improved the performance of the connector significantly, as fetching posts sequentially was very slow due to the need to fetch comments for each post, which often spanned multiple pages. Though there were diminishing returns after a certain number of threads, possibly due to site blocking or internet connection limits. Initially 20 threads were used, but this was later reduced to 5 threads to avoid potential issues with site blocking and to improve ethical considerations around web scraping.
 
 \subsubsection{Connecter Plugin System}
-The connector plugin system was implemented to allow for easy addition of new data sources in the future. This would require simply implemented a new connector class and dropping it into the connectors directory, without needing to modify any existing code. This was achieved through the use of Python's \texttt{importlib} library, which allows for dynamic importing of modules at runtime.
+The connector plugin system was implemented to allow for easy addition of new data sources in the future. This requires simply implementing a new connector class and dropping it into the connectors directory, without needing to modify any existing code. This was achieved through the use of Python's \texttt{importlib} library, which allows for dynamic importing of modules at runtime.
 
 To achieve this, the base class \texttt{BaseConnector} was defined, which allows a standard interface for all connectors to implement. Each connector implements the \texttt{get\_new\_posts\_by\_search} method, which takes in a search query, a category (which is the subreddit for Reddit, or the category for Boards.ie), and a limit on the number of posts to fetch. The method returns a list of \texttt{PostDTO} objects that represent the data retrieved from the source platform.
 
@@ -756,28 +750,7 @@ The most important authentication methods implemented are as follows:
     \item \texttt{get\_user\_by\_id(user\_id: int) -> None | dict}: Fetches a user's information from the database based on their user ID, returning a dictionary of user details if found or \texttt{None} if no such user exists.
 \end{itemize}
 
-Defensive programming is used in the authentication manager to handle edge cases like duplicate usernames or emails, an example of this is in the \texttt{register\_user()} method, shown below:
-
-\begin{Verbatim}[breaklines=true]
-def register_user(self, username, email, password):
-    hashed_password = self.bcrypt.generate_password_hash(password).decode("utf-8")
-
-    if len(username) < 3:
-        raise ValueError("Username must be longer than 3 characters")
-
-    if not EMAIL_REGEX.match(email):
-        raise ValueError("Please enter a valid email address")
-
-    if self.get_user_by_email(email):
-        raise ValueError("Email already registered")
-
-    if self.get_user_by_username(username):
-        raise ValueError("Username already taken")
-
-    self._save_user(username, email, hashed_password)
-\end{Verbatim}
-
-This module is a simple interface that the higher level Flask API can call for easy management of user authentication and registration.
+Defensive programming is used in the authentication manager to handle edge cases like duplicate usernames or emails. This module is a simple interface that the higher level Flask API can call for easy management of user authentication and registration.
 
 \subsection{Data Pipeline}
 The data pipeline began with the data connectors mentioned in the previous section, which are responsible for fetching raw data from the source platforms. However they were not initially included as part of the data pipeline, as the initial system was designed to only support manual dataset uploads. The data connectors were used to fetch data for the Cork dataset, which was then uploaded automatically through the API. Once the automatic data fetching functionality was added, the connectors were integrated into the data pipeline.
@@ -785,16 +758,7 @@ The data pipeline began with the data connectors mentioned in the previous secti
 \subsubsection{Data Enrichment}
 The data enrichment process is responsible for taking the raw data retrieved from the connectors and transforming it into a format that is suitable for analysis. This involves several steps, including normalisation, NLP processing, and storage in the database.
 
-Data Normalisation was intended to be a separate step in the data pipeline, but it was later combined with the enrichment processe as normalisation is a very small part of the process and can be done in a few lines of code, therefore it was combined with data enrichment. In normalisation, the list of \texttt{Post} objects retrieved from the connectors is flattened into a unified list of "events", which is a Pandas DataFrame that contains both posts and comments in a single table. The structure of the comments expansion method is as follows:
-\begin{itemize}
-    \item The method receives a DataFrame \texttt{df} where each row represents a post, and the \texttt{comments} column contains a list of comment dictionaries.
-    \item The \texttt{comments} column is exploded using \texttt{pandas.DataFrame.explode()}, so that each comment occupies its own row, paired with the \texttt{id} of its parent post.
-    \item Rows where the comment value is not a dictionary are filtered out, discarding any \texttt{None} or malformed entries that may have resulted from posts with no comments.
-    \item \texttt{pd.json\_normalize()} is applied to the remaining comment dictionaries, flattening them into a structured DataFrame with one column per field.
-    \item The original DataFrame is stripped of its \texttt{comments} column to form \texttt{posts\_df}, and a \texttt{type} column is added with the value \texttt{"post"}, along with a \texttt{parent\_id} column set to \texttt{None}, as posts have no parent.
-    \item The comments DataFrame is similarly tagged with \texttt{type = "comment"}, and its \texttt{parent\_id} is populated from the \texttt{post\_id} field, establishing the relationship back to the originating post.
-    \item Both DataFrames are concatenated using \texttt{pd.concat()}, and the now-redundant \texttt{post\_id} column is dropped, yielding a single unified events table containing both posts and comments with a consistent schema.
-\end{itemize}
+Data Normalisation was intended to be a separate step in the data pipeline, but it was later combined with the enrichment processe as normalisation is a very small part of the process and can be done in a few lines of code, therefore it was combined with data enrichment. In normalisation, the list of \texttt{Post} objects retrieved from the connectors is flattened into a unified list of "events", which is a Pandas DataFrame that contains both posts and comments in a single table.
 
 The \texttt{enrich()} method is the primary method for dataset enrichment in the module, and provides two main functionalities:
 \begin{itemize}
@@ -1252,6 +1216,8 @@ The 1000 posts benchmark for \texttt{boards.ie} took 312.83s for NLP processing,
 \subsubsection{Auto-fetching Performance}
 This section outlines the performance of the auto-fetching feature, which is the process of fetching data from the sources using the connectors. The performance of this feature is measured in terms of the time taken to fetch a certain number of posts from each source. The benchmarks are shown in Table \ref{tab:performance_benchmarks}.
 
+One important thing to note is that the YouTube API does not return more than 500 posts for a given search query, so the 1000 posts benchmark for YouTube is not available.
+
 \begin{table}[!h]
     \centering
     \begin{tabular}{|c|c|c|c|}
@@ -1260,12 +1226,40 @@ This section outlines the performance of the auto-fetching feature, which is the
         \hline
         10 posts & 3.25s & 103.28s & 2.08s \\
         100 posts & 37.46s & 1182.71s & 12.52s \\
-        1000 posts & 482.87s & DNF & 74.80s \\
+        1000 posts & 482.87s & 11196.19s & N/A \\
         \hline
     \end{tabular}
     \caption{Performance Benchmarks for Auto-fetching and NLP Processing}
     \label{tab:performance_benchmarks}
 \end{table}
+
+\texttt{boards.ie} is by far the slowest, likely to to a combination of two factors: web scraping is simply slower than using an API, as comments have to be fetched page by page, with the connector loading and parsing each page fully \textbf{and} \texttt{boards.ie} threads have a significantly higher number of comments per post due to the forum nature of the site. Though the rate of post-fetching from \texttt{boards.ie} is poor, it scaled linearly with the number of posts.
+
+Reddit was much faster than \texttt{boards.ie}, likely due to the fact that it uses an API. Though it is affected by rate limits, and during the 1000-post benchmark test, the API rate limits was hit once, where it stalled for exactly 120 seconds, which when taken into account, also shows that Reddit scales linearly with the number of posts.
+
+YouTube was the fastest source, likely due to the fact that it also uses an API and hit no rate limits. However, the YouTube API does not allow fetching more than 500 posts for a given search query. For 500 posts, the time taken was 74.80s. If we extrapolate the time taken for 1000 posts, it would be around 149.60s, which is still much faster than the other sources and scaled linearly with the number of posts.
+
+\subsection{Cork Dataset Findings}
+The Cork dataset, described in Section \ref{sec:cork_dataset}, was analysed using the system, and several findings were observed from the analysis.
+
+\subsubsection{Temporal Findings}
+Temporal activity patterns show that the most active hours for posting are weekdays between 1pm and 3pm, which suggests that users post during their lunch breaks in the early afternoon. There is also a smaller peak in activity in the evenings around 8pm, which is likely when users are off work. The least active hours are early mornings between 1am and 6am, which is expected as most users are likely asleep during these hours.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\textwidth]{img/cork_temporal.png}
+    \caption{Activity Heatmap for the Cork Dataset, where the X axis represents the hour of day and the Y axis represents the day of the week. Blue areas indicate higher activity, lighter areas indicate lower activity.}
+    \label{fig:cork_temporal}
+\end{figure} 
+
+\subsubsection{Linguistic Findings}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\textwidth]{img/ngrams.png}
+    \caption{Bigrams and Trigrams for the Cork Dataset, showing the most common two-word and three-word combinations in the dataset.}
+    \label{fig:cork_linguistic}
+\end{figure}
 
 \subsection{Limitations}
 Several limitations of the system became apparent through development, evaluation and user testing.
@@ -1288,7 +1282,7 @@ Two of three NLP models used in the system are trained exclusively on English-la
 \newpage
 \section{Conclusions}
 \subsection{Reflection}
-I have learned a lot through the process of building this system, both in terms of technical skills and personal growth. This project represented the most technically complex system I had built independently to date. Being able 
+I have learned a lot through the process of building this system, both in terms of technical skills and personal growth. This project represented the most technically complex system I had built independently to date.
 
 The analytical scope is the project's most visible limitation. Six analytical angles across many data sources sounds comprehensive, but with a single developer and a fixed timeline, the actual ethnographic depth achievable was modest. The decision between depth of ethnographic analysis and typical SaaS-type infrastructure and features was a tension throughout the project. Eventually a balance between the two was achieved, but there was some sacrafice in the analysis depth for the sake of building a more complete and polished system.
 
