@@ -45,8 +45,41 @@
     
 \end{titlepage}
 
+\pagenumbering{roman}
+
+\section*{Declaration of Originality}
+In signing this declaration, you are conforming, in writing, that the submitted work is entirely your own original work, except where clearly attributed otherwise, and that it has not been submitted partly or wholly for any other educational award.
+
+I hereby declare that:
+\begin{itemize}
+    \item this is all my own work unless clearly indicated otherwise, with full and proper accreditation;
+    \item with respect to my own work: none of it has been submitted at any education institution contributing in any way to an educational award;
+    \item with respect to another’s work: all text, diagrams, code, or ideas, whether verbatim, paraphrased, or otherwise modified or adapted, have been duly attributed to the source in a scholarly manner, whether from books, papers, lecture notes or any other student’s work, whether published or unpublished, electronically or in print.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent Signed: \raisebox{-0.8cm}{\includegraphics[width=4cm]{img/signature.jpg}} \\[1.2cm]
+\noindent Date: 18 April 2026
+
+\newpage
+\section*{Acknowledgements}
+I would like to thank my supervisor, Paolo Palmieri, for his guidance and support throughout this project.
+
+I would also like to thank Mastoureh Fathi, Pooya Ghoddousi, and Martino Zibetti on the MIGDIS project for taking the time to provide valuable feedback on the project and suggestions for future work.
+
+\newpage
+\section*{Abstract}
+Online communities generate vast volumes of discourse that traditional ethnographic methods cannot analyse at scale. This project presents \textbf{Crosspost}, a web-based platform that applies computational methods to the study of online communities, bridging quantitative data analysis and qualitative digital ethnography.
+
+The system aggregates public discussion data from multiple social media platforms, enriching it with Natural Language Processing techniques including emotion classification, topic modelling, and named entity recognition. Six analytical perspectives: temporal, linguistic, emotional, user, interactional, and cultural; are analysed through an interactive dashboard, allowing researchers to explore community behaviour, identity signals, and affective tone across large datasets without sacrificing access to the underlying posts.
+
+The platform is evaluated against a Cork-specific dataset spanning Reddit, YouTube, and Boards.ie, showing the system's ability to generate ethnographic insights such as geographic identity, civic sentiment, and participation inequality across different online communities.
+
+\newpage
 \tableofcontents
 \newpage 
+
+\pagenumbering{arabic}
 
 \section{Introduction}
 This project presents the design and implementation of a web-based analytics engine for the exploration and analysis of online discussion data. Built using \textbf{Flask and Pandas}, and supplemented with \textbf{Natural Language Processing} (NLP) techniques, the system provides an API for extracting structural, temporal, linguistic, and emotional insights from social media posts. A web-based frontend delivers interactive visualizations. The backend architecture implements an analytical pipeline for the data, including data parsing, manipulation and analysis.
@@ -1322,7 +1355,7 @@ The analytical scope is the project's most visible limitation. Six analytical an
 
 Planning the project was a challenge, as generally I tend to work iteratively. I jump in and start building straight away, and I find that the process of building helps me to figure out what I actually want to build. This led to some awkward parts in the report where design and implementation often overlapped and were made in a non-linear fashion. Creating the design section was difficult when implementation had already started, and design was still changed throughout the implementation process.
 
-On a personal level, the project was a significant learning experience in terms of time management and project planning. The planning and implementation of the project was ambitious but easy to get carried away with, and I found myself spending a lot of time on features that were not essential to the core functionality of the system. The implementation was felt productive and visible in a way that the writing of a report was not, I found myself spending more time on the implementation than the report, and the report was pushed to the sidelines until the end of the project.
+On a personal level, the project was a significant learning experience in terms of time management and project planning. The planning and implementation of the project was ambitious but easy to get carried away with, and I found myself spending a lot of time on features that were not essential to the core functionality of the system. The implementation felt productive and visible in a way that the writing of a report was not, I found myself spending more time on the implementation than the report, and the report was pushed to the sidelines until the end of the project.
 
 \subsection{How the project was conducted}
 \begin{figure}[!h]
