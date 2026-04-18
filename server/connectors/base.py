@@ -1,21 +1,18 @@
 from abc import ABC, abstractmethod
 from dto.post import Post
+import os
 
 
 class BaseConnector(ABC):
-    # Each subclass declares these at the class level
-    source_name: str  # machine-readable: "reddit", "youtube"
-    display_name: str  # human-readable: "Reddit", "YouTube"
-    required_env: list[str] = []  # env vars needed to activate
+    source_name: str  # machine readable
+    display_name: str  # human readablee
+    required_env: list[str] = []  
 
     search_enabled: bool
     categories_enabled: bool
 
     @classmethod
     def is_available(cls) -> bool:
-        """Returns True if all required env vars are set."""
-        import os
-
         return all(os.getenv(var) for var in cls.required_env)
 
     @abstractmethod
