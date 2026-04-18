@@ -1261,6 +1261,40 @@ Temporal activity patterns show that the most active hours for posting are weekd
     \label{fig:cork_linguistic}
 \end{figure}
 
+Figure \ref{fig:cork_linguistic} shows the most common bigrams and trigrams in the Cork dataset. Trigrams like "north main street" and "oliver plunkett street" suggest strong local geographic identity in the community, a shared physical space. Bigrams like "city centre" and "cork city" further reinforce this. 
+
+"anti social behaviour" with 85 mentions suggests that this is a common civic concern within the community. The use of "years ago" suggests that there is a sense of nostalgia or reflection of the past in the community's discourse.
+
+\subsubsection{Emotional Findings}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\textwidth]{img/moods.png}
+    \caption{Average Emotion Scores for the Cork Dataset}
+    \label{fig:cork_emotions}
+\end{figure}
+
+Figure \ref{fig:cork_emotions} shows the average emotion scores for the Cork dataset. The most dominant emotion in the dataset is "joy", which suggests that the community has a more positive tone than other online communities. However this could also be due to the fact that the "neutral" emotion class was removed from the analysis, which may have forced some neutral posts to be classified as "joy".
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\textwidth]{img/topic_emotions.png}
+    \caption{Topic-Emotion Analysis for Exams, Flooding and Food in the Cork Dataset}
+    \label{fig:cork_emotions_by_topic}
+\end{figure}
+
+In Figure \ref{fig:cork_emotions_by_topic}, we can see that the "Food" topic has a much higher average "joy" score than any other emotion, shown by it having a model confidence of 0.53 for "joy". In addition this topic has a large sample size of 1390 posts, which reinforces the finding that the "Food" topic is associated with "joy" in the Cork dataset. 
+
+The "Exams" topic has a dominant emotion of "sadness", which makes sense given the stressful nature of exams.
+
+Interestingly, the "Flooding" topic has a dominant emotion of "anger". This could mean that users are angry about the flooding situation or the government response to flooding, however further analysis shows in Figure \ref{fig:flooding_posts} that it is a mixture of posts being misclassified as "flooding" due to the presence of words like "flood" and "water", and posts that are angry about the government response and infrastructure issues related to flooding. This highlights the limitations of the topic classification, as it can struggle with posts that contain multiple topics or posts that are misclassified into a topic due to the presence of certain keywords.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{img/flooding_posts.png}
+    \caption{Posts Classified with the "Flooding" Topic}
+    \label{fig:flooding_posts}
+\end{figure}
+
 \subsection{Limitations}
 Several limitations of the system became apparent through development, evaluation and user testing.
 
