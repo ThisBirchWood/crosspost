@@ -13,3 +13,4 @@ dist/
 helper
 db
 report/build
+.DS_Store
